@@ -1,0 +1,17 @@
+pipeline:
+  build:
+    image: kapows/clang
+    commands:
+      - vcpkg install catch2:x64-linux
+      - mkdir -p build && cd build
+      - cmake .. \
+        -G Ninja \
+        -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake \
+        -DBUILD_TESTING=ON \
+        -DCMAKE_CXX_FLAGS=-fsized-deallocation
+      - cmake --build .
+  unit-test:
+    image: kapows/ubuntu
+    commands:
+      - cd build
+      - ctest --output-on-failure
