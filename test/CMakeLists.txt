@@ -13,3 +13,4 @@ function(make_test name file)
 endfunction()
 
 make_test(heap heap_test.cpp)
+make_test(traits traits_test.cpp)
