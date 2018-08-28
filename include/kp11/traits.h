@@ -20,7 +20,6 @@ namespace kp11
         std::declval<typename T::size_type>()))>> : std::true_type
   {
   };
-
   template<typename T>
   constexpr bool is_resource_v = is_resource<T>::value;
 }
