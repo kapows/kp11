@@ -30,7 +30,7 @@
   *
   * @brief Deallocates memory allocated by a call to `allocate`.
   *
-  * @param ptr Pointer returned by a call to `allocate` that has not been deallocated.
+  * @param ptr Pointer returned by a call to `allocate` that has not been deallocated
   * @param bytes Corresponding parameter that was used in the call to `allocate`
   * @param alignment Corresponding parameter that was used in the call to `allocate`
   */
