@@ -11,7 +11,13 @@ namespace kp11
   class heap
   {
   public: // typedefs
+    /**
+     * @brief Pointer that `new` and `delete` use
+     */
     using pointer = void *;
+    /**
+     * @brief Size type that `new` and `delete` use
+     */
     using size_type = std::size_t;
 
   public: // modifiers
