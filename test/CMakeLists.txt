@@ -14,3 +14,5 @@ endfunction()
 
 make_test(heap heap_test.cpp)
 make_test(traits traits_test.cpp)
+make_test(stack stack_test.cpp)
+make_test(free_block free_block_test.cpp)
