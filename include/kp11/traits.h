@@ -35,4 +35,36 @@ namespace kp11
    */
   template<typename T>
   constexpr bool is_resource_v = is_resource<T>::value;
+
+  /**
+   * @brief Check if `T` meets the requiements of `Marker`
+   *
+   * @tparam T type to check
+   */
+  template<typename T, typename Enable = void>
+  struct is_marker : std::false_type
+  {
+  };
+  /**
+   * @private
+   */
+  template<typename T>
+  struct is_marker<T,
+    std::void_t<typename T::size_type,
+      std::enable_if_t<std::is_constructible_v<T, typename T::size_type>>,
+      std::enable_if_t<std::is_same_v<typename T::size_type, decltype(std::declval<T>().size())>>,
+      std::enable_if_t<std::is_same_v<typename T::size_type,
+        decltype(std::declval<T>().set(std::declval<typename T::size_type>()))>>,
+      decltype(std::declval<T>().reset(std::declval<typename T::size_type>(),
+        std::declval<typename T::size_type>()))>> : std::true_type
+  {
+  };
+  /**
+   * @brief Helper variable template for `is_marker`
+   *
+   * @tparam T type to check
+   */
+  template<typename T>
+  constexpr bool is_marker_v = is_marker<T>::value;
+
 }
