@@ -2,6 +2,7 @@
 
 #include "traits.h" // is_marker_v
 
+#include <cassert> // assert
 #include <cstddef> // size_t
 #include <memory> // pointer_traits
 #include <type_traits> // aligned_storage_t
@@ -45,6 +46,10 @@ namespace kp11
      */
     basic_free_block(pointer ptr, size_type bytes, size_type alignment) noexcept :
         ptr(static_cast<block_pointer>(ptr))
+#ifndef NDEBUG
+        ,
+        alignment(alignment)
+#endif
     {
     }
 
@@ -56,6 +61,7 @@ namespace kp11
      */
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
+      assert(this->alignment % alignment == 0);
       if (auto i = marker.set(size_from(bytes)); i != marker.size())
       {
         return static_cast<pointer>(&ptr[i]);
@@ -69,6 +75,7 @@ namespace kp11
      */
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
+      assert(this->alignment % alignment == 0);
       if (ptr != nullptr)
       {
         marker.reset(index_from(ptr), size_from(bytes));
@@ -88,6 +95,9 @@ namespace kp11
   private: // variables
     Marker marker;
     block_pointer ptr;
+#ifndef NDEBUG
+    size_type alignment;
+#endif
   };
 
   /**
