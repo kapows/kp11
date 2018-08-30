@@ -12,3 +12,19 @@
   * @param bytes size of memory in bytes
   * @param alignment alignment of memory in bytes
   */
+/**
+  * @fn pointer allocate(size_type bytes, size_type alignment) noexcept
+  * @memberof Strategy
+  * @public
+  * @copydoc Resource::allocate
+  *
+  * @pre `alignment` must be a divisor of the `alignment` passed to constructor
+  */
+/**
+  * @fn deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+  * @memberof Strategy
+  * @public
+  * @copydoc Resource::deallocate
+  *
+  * @pre `alignment` must be a divisor of the `alignment` passed to constructor
+  */
