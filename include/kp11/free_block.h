@@ -19,7 +19,7 @@ namespace kp11
 
   public: // constructor
     free_block(pointer ptr, size_type bytes, size_type alignment) :
-        marker(size_from(bytes)), ptr(static_cast<block_pointer>(ptr))
+        ptr(static_cast<block_pointer>(ptr))
     {
     }
 
