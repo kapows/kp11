@@ -32,9 +32,6 @@ namespace kp11
     }
     /**
      * @copydoc Marker::reset
-     *
-     * @note Although any index returned by `set` can be used only the `index` and `n` of the most
-     *    recent `set` call will vacate occupied spots.
      */
     void reset(size_type index, size_type n) noexcept
     {
