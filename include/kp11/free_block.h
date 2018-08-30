@@ -13,12 +13,18 @@ namespace kp11
    * always be some multiple of `BlockSize` that is greater than the request. Allocations and
    * deallocations will defer to `Marker` to determine functionality.
    *
+   * @tparam Pointer pointer type
+   * @tparam SizeType size type
    * @tparam BlockSize size of memory block in bytes
    * @tparam Alignment alignment of memory blocks
    * @tparam Marker type that fulfils the `Marker` concept
    */
-  template<std::size_t BlockSize, std::size_t Alignment, typename Marker>
-  class free_block
+  template<typename Pointer,
+    typename SizeType,
+    std::size_t BlockSize,
+    std::size_t Alignment,
+    typename Marker>
+  class basic_free_block
   {
     static_assert(is_marker_v<Marker>, "Marker must be a Marker");
 
@@ -26,11 +32,11 @@ namespace kp11
     /**
      * @brief pointer
      */
-    using pointer = void *;
+    using pointer = Pointer;
     /**
      * @brief size type
      */
-    using size_type = std::size_t;
+    using size_type = SizeType;
 
   private: // typedefs
     using block_type = std::aligned_storage_t<BlockSize, Alignment>;
@@ -38,11 +44,11 @@ namespace kp11
 
   public: // constructor
     /**
-     * @brief Construct a new free block object
+     * @brief Construct a new basic free block object
      *
      * @copydoc Strategy::Strategy
      */
-    free_block(pointer ptr, size_type bytes, size_type alignment) noexcept :
+    basic_free_block(pointer ptr, size_type bytes, size_type alignment) noexcept :
         ptr(static_cast<block_pointer>(ptr))
     {
     }
@@ -88,4 +94,14 @@ namespace kp11
     Marker marker;
     block_pointer ptr;
   };
+
+  /**
+   * @brief basic_free_block with `Pointer` as `void *` and `SizeType` as `size_type`
+   *
+   * @tparam BlockSize size of memory block in bytes
+   * @tparam Alignment alignment of memory blocks
+   * @tparam Marker type that fulfils the `Marker` concept
+   */
+  template<std::size_t BlockSize, std::size_t Alignment, typename Marker>
+  using free_block = basic_free_block<void *, std::size_t, BlockSize, Alignment, Marker>;
 }
