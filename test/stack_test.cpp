@@ -6,21 +6,16 @@
 
 using namespace kp11;
 
-TEST_CASE("constructor", "[constructor]")
-{
-  stack m(10);
-  stack n(101581);
-}
 TEST_CASE("size", "[capacity]")
 {
-  stack m(10);
+  stack<10> m;
   REQUIRE(m.size() == 10);
-  stack n(101581);
+  stack<101581> n;
   REQUIRE(n.size() == 101581);
 }
 TEST_CASE("set/reset", "[modifiers]")
 {
-  stack m(10);
+  stack<10> m;
   REQUIRE(m.set(16) == m.size());
   REQUIRE(m.set(5) == 0);
   REQUIRE(m.set(5) == 5);

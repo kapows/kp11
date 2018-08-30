@@ -23,5 +23,5 @@ TEST_CASE("is_marker", "[traits]")
   REQUIRE(is_marker_v<float> == false);
   REQUIRE(is_marker_v<std::string> == false);
   REQUIRE(is_marker_v<heap> == false);
-  REQUIRE(is_marker_v<stack> == true);
+  REQUIRE(is_marker_v<stack<10>> == true);
 }

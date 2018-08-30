@@ -8,7 +8,10 @@ namespace kp11
 {
   /**
    * @brief LIFO based marking with reverse ordered resets. Any other resets will do nothing.
+   *
+   * @tparam N number of spots
    */
+  template<std::size_t N>
   class stack
   {
   public: // typedefs
@@ -18,23 +21,13 @@ namespace kp11
      */
     using size_type = std::size_t;
 
-  public: // constructors
-    /**
-     * @brief Construct a new stack object
-     *
-     * @param n number of vacant spots to start with.
-     */
-    explicit stack(size_type n) noexcept : first(0), length(n)
-    {
-    }
-
   public: // capacity
     /**
      * @copydoc Marker::size
      */
-    size_type size() const noexcept
+    static constexpr size_type size() noexcept
     {
-      return length;
+      return N;
     }
 
   public: // modifiers
@@ -43,7 +36,7 @@ namespace kp11
      */
     size_type set(size_type n) noexcept
     {
-      if (length - first >= n)
+      if (N - first >= n)
       {
         return std::exchange(first, first + n);
       }
@@ -64,7 +57,6 @@ namespace kp11
     }
 
   private: // variables
-    size_type first;
-    size_type length;
+    size_type first = 0;
   };
 }
