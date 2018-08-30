@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstddef> // size_t
-#include <limits> // numeric_limits
 #include <utility> // exchange
 
 namespace kp11
@@ -17,7 +16,6 @@ namespace kp11
   public: // typedefs
     /**
      * @brief size type
-     *
      */
     using size_type = std::size_t;
 
