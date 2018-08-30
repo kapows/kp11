@@ -9,13 +9,13 @@ using namespace kp11;
 TEST_CASE("constructor", "[constructors]")
 {
   alignas(4) char buffer[128];
-  free_block<32, 4, stack<4>> m(buffer, 128, 4);
+  free_block<32, stack<4>> m(buffer, 128, 4);
   (void)m;
 }
 TEST_CASE("allocate/deallocate", "[modifiers]")
 {
   alignas(4) char buffer[128];
-  free_block<32, 4, stack<4>> m(buffer, 128, 4);
+  free_block<32, stack<4>> m(buffer, 128, 4);
 
   auto a = m.allocate(32, 4);
   REQUIRE(a != nullptr);

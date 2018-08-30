@@ -16,14 +16,9 @@ namespace kp11
    * @tparam Pointer pointer type
    * @tparam SizeType size type
    * @tparam BlockSize size of memory block in bytes
-   * @tparam Alignment alignment of memory blocks
    * @tparam Marker type that fulfils the `Marker` concept
    */
-  template<typename Pointer,
-    typename SizeType,
-    std::size_t BlockSize,
-    std::size_t Alignment,
-    typename Marker>
+  template<typename Pointer, typename SizeType, std::size_t BlockSize, typename Marker>
   class basic_free_block
   {
     static_assert(is_marker_v<Marker>, "Marker must be a Marker");
@@ -39,7 +34,7 @@ namespace kp11
     using size_type = SizeType;
 
   private: // typedefs
-    using block_type = std::aligned_storage_t<BlockSize, Alignment>;
+    using block_type = std::aligned_storage_t<BlockSize, 1>;
     using block_pointer = typename std::pointer_traits<pointer>::template rebind<block_type>;
 
   public: // constructor
@@ -99,9 +94,8 @@ namespace kp11
    * @brief basic_free_block with `Pointer` as `void *` and `SizeType` as `size_type`
    *
    * @tparam BlockSize size of memory block in bytes
-   * @tparam Alignment alignment of memory blocks
    * @tparam Marker type that fulfils the `Marker` concept
    */
-  template<std::size_t BlockSize, std::size_t Alignment, typename Marker>
-  using free_block = basic_free_block<void *, std::size_t, BlockSize, Alignment, Marker>;
+  template<std::size_t BlockSize, typename Marker>
+  using free_block = basic_free_block<void *, std::size_t, BlockSize, Marker>;
 }
