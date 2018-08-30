@@ -76,6 +76,18 @@ namespace kp11
   {
   };
   /**
+   * @private
+   */
+  template<typename T>
+  struct is_strategy<T,
+    std::void_t<std::enable_if_t<is_resource_v<T>>,
+      std::enable_if_t<std::is_constructible_v<T,
+        typename T::pointer,
+        typename T::size_type,
+        typename T::size_type>>>> : std::true_type
+  {
+  };
+  /**
    * @brief Helper variable template for `is_strategy`
    *
    * @tparam T type to check
