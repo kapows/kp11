@@ -16,7 +16,7 @@ TEST_CASE("size", "[capacity]")
   stack m(10);
   REQUIRE(m.size() == 10);
   stack n(101581);
-  REQUIRE(m.size() == 101581);
+  REQUIRE(n.size() == 101581);
 }
 TEST_CASE("max_size", "[capacity]")
 {
