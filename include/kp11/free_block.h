@@ -43,6 +43,8 @@ namespace kp11
      * @brief Construct a new basic free block object
      *
      * @copydoc Strategy::Strategy
+     *
+     * @pre `BlockSize` must be a divisor of `bytes`
      */
     basic_free_block(pointer ptr, size_type bytes, size_type alignment) noexcept :
         ptr(static_cast<block_pointer>(ptr))
@@ -51,6 +53,7 @@ namespace kp11
         alignment(alignment)
 #endif
     {
+      assert(bytes % BlockSize == 0);
     }
 
   public: // modifiers
