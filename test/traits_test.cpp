@@ -34,5 +34,5 @@ TEST_CASE("is_strategy", "[traits]")
   REQUIRE(is_strategy_v<std::string> == false);
   REQUIRE(is_strategy_v<heap> == false);
   REQUIRE(is_strategy_v<stack<10>> == false);
-  REQUIRE(is_strategy_v<free_block<32, 4, stack<10>>> == true);
+  REQUIRE(is_strategy_v<free_block<32, stack<10>>> == true);
 }
