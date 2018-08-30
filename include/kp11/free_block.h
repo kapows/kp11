@@ -42,7 +42,7 @@ namespace kp11
      *
      * @copydoc Strategy::Strategy
      */
-    free_block(pointer ptr, size_type bytes, size_type alignment) :
+    free_block(pointer ptr, size_type bytes, size_type alignment) noexcept :
         ptr(static_cast<block_pointer>(ptr))
     {
     }
