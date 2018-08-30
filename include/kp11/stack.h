@@ -36,13 +36,6 @@ namespace kp11
     {
       return length;
     }
-    /**
-     * @return maximum number of vacant spots
-     */
-    static constexpr size_type max_size() noexcept
-    {
-      return std::numeric_limits<size_type>::max();
-    }
 
   public: // modifiers
     /**
@@ -68,13 +61,6 @@ namespace kp11
       {
         first = index;
       }
-    }
-    /**
-     * @brief Clear all occupied spots (makes them all vacant).
-     */
-    void clear() noexcept
-    {
-      first = 0;
     }
 
   private: // variables
