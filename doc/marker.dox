@@ -1,0 +1,46 @@
+/**
+  * @class Marker
+  * @brief Describes types that can be used as markers.
+  */
+/**
+  * @class Marker::size_type
+  * @public
+  */
+/**
+  * @fn Marker(size_type n) noexcept
+  * @memberof Marker
+  * @public
+  *
+  * @brief `n` will become the `size()`.
+  */
+/**
+  * @fn size_type size() noexcept
+  * @memberof Marker
+  * @public
+  *
+  * @brief Total number of spots (vacant + occupied)
+  *
+  * @return (vacant + occupied)
+  */
+/**
+  * @fn size_type set(size_type n) noexcept
+  * @memberof Marker
+  * @public
+  *
+  * @brief Occupy `n` consecutive vacant spots
+  *
+  * @param n number of vacant spots to occupy
+  *
+  * @return index of the first vacant spot if successful
+  * @return `size()` if unsuccessful
+  */
+/**
+  * @fn reset(size_type index, size_type n) noexcept
+  * @memberof Marker
+  * @public
+  *
+  * @brief Make `n` occupied spots vacant starting from `index`
+  *
+  * @param index value returned by `set`
+  * @param n corresponding parameter that was used in the call to `set`
+  */
