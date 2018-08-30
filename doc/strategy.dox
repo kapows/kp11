@@ -1,0 +1,14 @@
+/**
+  * @class Strategy
+  * @extends Resource
+  * @brief Describes types that are `Resource`s that must be given memory to allocate.
+  */
+/**
+  * @fn Strategy(pointer ptr, size_type bytes, size_type alignment) noexcept
+  * @memberof Strategy
+  * @public
+  *
+  * @param ptr pointer to the beginning of the memory
+  * @param bytes size of memory in bytes
+  * @param alignment alignment of memory in bytes
+  */
