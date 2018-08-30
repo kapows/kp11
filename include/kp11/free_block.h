@@ -1,5 +1,7 @@
 #pragma once
 
+#include "traits.h" // is_marker_v
+
 #include <cstddef> // size_t
 #include <memory> // pointer_traits
 #include <type_traits> // aligned_storage_t
@@ -9,6 +11,8 @@ namespace kp11
   template<std::size_t BlockSize, std::size_t Alignment, typename Marker>
   class free_block
   {
+    static_assert(is_marker_v<Marker>, "Marker must be a Marker");
+
   public: // typedefs
     using pointer = void *;
     using size_type = std::size_t;
