@@ -7,13 +7,6 @@
   * @public
   */
 /**
-  * @fn Marker(size_type n) noexcept
-  * @memberof Marker
-  * @public
-  *
-  * @brief `n` will become the `size()`.
-  */
-/**
   * @fn size_type size() noexcept
   * @memberof Marker
   * @public
