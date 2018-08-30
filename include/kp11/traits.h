@@ -66,4 +66,21 @@ namespace kp11
   template<typename T>
   constexpr bool is_marker_v = is_marker<T>::value;
 
+  /**
+   * @brief Check if `T` meets the requiements of `Strategy`
+   *
+   * @tparam T type to check
+   */
+  template<typename T, typename Enable = void>
+  struct is_strategy : std::false_type
+  {
+  };
+  /**
+   * @brief Helper variable template for `is_strategy`
+   *
+   * @tparam T type to check
+   */
+  template<typename T>
+  constexpr bool is_strategy_v = is_strategy<T>::value;
+
 }
