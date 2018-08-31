@@ -70,7 +70,7 @@ namespace kp11
      */
     void reset(size_type index, size_type n) noexcept
     {
-      auto last = index + n;
+      auto const last = index + n;
       for (auto i = index; i < last; ++i)
       {
         bits.reset(i);
@@ -100,7 +100,7 @@ namespace kp11
      */
     void set(size_type index, size_type n) noexcept
     {
-      auto last = index + n;
+      auto const last = index + n;
       for (auto i = index; i < last; ++i)
       {
         bits.set(i);
