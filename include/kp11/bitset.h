@@ -22,6 +22,9 @@ namespace kp11
     using size_type = std::size_t;
 
   public: // constructors
+    /**
+     * @brief Construct a new bitset object
+     */
     bitset() noexcept
     {
       bits.reset();
