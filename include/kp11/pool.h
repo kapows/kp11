@@ -49,6 +49,9 @@ namespace kp11
      * @copydoc Marker::set
      *
      * @pre `n == 1`
+     *
+     * @par Complexity
+     * `O(1)`
      */
     size_type set(size_type n) noexcept
     {
@@ -63,6 +66,9 @@ namespace kp11
      * @copydoc Marker::reset
      *
      * @pre `n == 1`
+     *
+     * @par Complexity
+     * `O(1)`
      */
     void reset(size_type index, size_type n) noexcept
     {
