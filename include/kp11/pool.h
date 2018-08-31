@@ -66,7 +66,6 @@ namespace kp11
      */
     void reset(size_type index, size_type n) noexcept
     {
-      assert(index < size());
       assert(n == 1);
       next[index] = head;
       head = index;
