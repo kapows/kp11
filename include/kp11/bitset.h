@@ -42,6 +42,7 @@ namespace kp11
   public: // modifiers
     /**
      * @copydoc Marker::set
+     *
      * @par Complexity
      * `O(n)`
      */
@@ -69,6 +70,7 @@ namespace kp11
     }
     /**
      * @copydoc Marker::reset
+     *
      * @par Complexity
      * `O(n)`
      */

@@ -31,6 +31,9 @@ namespace kp11
   public: // modifiers
     /**
      * @copydoc Marker::set
+     *
+     * @par Complexity
+     * `O(1)`
      */
     size_type set(size_type n) noexcept
     {
@@ -45,6 +48,9 @@ namespace kp11
      *
      * @note Although any index returned by `set` can be used only the `index` and `n` of the most
      *    recent `set` call will vacate occupied spots.
+     *
+     * @par Complexity
+     * `O(1)`
      */
     void reset(size_type index, size_type n) noexcept
     {
