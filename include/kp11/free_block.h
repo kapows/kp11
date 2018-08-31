@@ -22,7 +22,7 @@ namespace kp11
   template<typename Pointer, typename SizeType, std::size_t BlockSize, typename Marker>
   class basic_free_block
   {
-    static_assert(is_marker_v<Marker>, "Marker must be a Marker");
+    static_assert(is_marker_v<Marker>, "basic_free_block requires Marker to be a Marker");
 
   public: // typedefs
     /**
