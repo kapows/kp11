@@ -23,6 +23,10 @@ TEST_CASE("set/reset", "[modifiers]")
   m.reset(5, 5);
   REQUIRE(m.set(2) == 5);
   REQUIRE(m.set(3) == 7);
+  m.reset(7, 3);
+  m.reset(5, 2);
+  m.reset(0, 5);
+  REQUIRE(m.set(10) == 0);
 }
 
 TEST_CASE("traits", "[traits]")
