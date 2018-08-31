@@ -2,7 +2,6 @@
 
 #include <bitset> // bitset
 #include <cstddef> // size_t
-#include <iostream>
 
 namespace kp11
 {
