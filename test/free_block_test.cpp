@@ -1,6 +1,7 @@
 #include "free_block.h"
 
 #include "stack.h"
+#include "traits.h" // is_resource_v
 
 #include <catch.hpp>
 
@@ -33,4 +34,9 @@ TEST_CASE("allocate/deallocate", "[modifiers]")
   d = m.allocate(128, 4);
   REQUIRE(d != nullptr);
   m.deallocate(d, 128, 4);
+}
+
+TEST_CASE("traits", "[traits]")
+{
+  REQUIRE(is_resource_v<free_block<32, stack<4>>> == true);
 }
