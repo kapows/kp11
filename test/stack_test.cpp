@@ -1,5 +1,7 @@
 #include "stack.h"
 
+#include "traits.h" // is_marker_v
+
 #include <catch.hpp>
 
 #include <limits>
@@ -31,4 +33,9 @@ TEST_CASE("set/reset", "[modifiers]")
     REQUIRE(m.set(2) == m.size());
     REQUIRE(m.set(3) == m.size());
   }
+}
+
+TEST_CASE("traits", "[traits]")
+{
+  REQUIRE(is_marker_v<stack<10>> == true);
 }
