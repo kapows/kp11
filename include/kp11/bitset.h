@@ -78,6 +78,14 @@ namespace kp11
     }
 
   private: // helper functions
+    /**
+     * @brief Count the number of consecutive vacant bits from `first` until an occupied bit is
+     * encountered or until `last` (not included in count).
+     *
+     * @param first beginning index
+     * @param last ending index (not counted)
+     * @return count of consecutive vacant bits starting from `first`
+     */
     size_type count_consecutive_vacant_bits(size_type first, size_type last) const noexcept
     {
       size_type count = 0;
