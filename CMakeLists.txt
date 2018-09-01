@@ -14,6 +14,9 @@ add_library(kp11 STATIC
     include/kp11/heap.h src/heap.cpp
     include/kp11/stack.h
     include/kp11/free_block.h
+    include/kp11/pool.h
+    include/kp11/list.h
+    include/kp11/bitset.h
     include/kp11/local.h
     )
 add_library(kp11::kp11 ALIAS kp11)
