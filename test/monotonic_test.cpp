@@ -22,5 +22,5 @@ TEST_CASE("allocate/deallocate", "[modifiers]")
 
 TEST_CASE("traits", "[traits]")
 {
-  REQUIRE(is_strategy_v<local<128, 4, monotonic<free_block<32, stack<4>>>>> == true);
+  REQUIRE(is_strategy_v<monotonic<free_block<32, stack<4>>>> == true);
 }
