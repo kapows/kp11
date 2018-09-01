@@ -27,13 +27,16 @@ namespace kp11
   private: // typedefs
     using buffer_type = std::aligned_storage_t<Bytes, Alignment>;
     using buffer_pointer = typename std::pointer_traits<pointer>::template rebind<buffer_type>;
-    using buffer_traits = std::pointer_traits<buffer_pointer>;
+    using buffer_pointer_traits = std::pointer_traits<buffer_pointer>;
 
   public: // constructors
     /**
      * @brief Construct a new local object
      */
-    local() : Strategy(static_cast<pointer>(buffer_traits::pointer_to(buffer)), Bytes, Alignment)
+    local() noexcept :
+        Strategy(static_cast<pointer>(buffer_pointer_traits::pointer_to(buffer)),
+          static_cast<size_type>(Bytes),
+          static_cast<size_type>(Alignment))
     {
     }
 
