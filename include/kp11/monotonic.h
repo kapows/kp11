@@ -27,6 +27,8 @@ namespace kp11
      *
      * @par Complexity
      * `O(0)`
+     *
+     * @note No-op
      */
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
