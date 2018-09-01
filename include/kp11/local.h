@@ -21,8 +21,8 @@ namespace kp11
     static_assert(is_strategy_v<Strategy>, "local requires Strategy to be a Strategy");
 
   public: // typedefs
-    using pointer = typename Strategy::pointer;
-    using size_type = typename Strategy::size_type;
+    using typename Strategy::pointer;
+    using typename Strategy::size_type;
 
   private: // typedefs
     using buffer_type = std::aligned_storage_t<Bytes, Alignment>;
