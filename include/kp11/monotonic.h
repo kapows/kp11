@@ -1,26 +1,33 @@
 #pragma once
 
-#include <cstddef> // size_t
+#include "traits.h" // is_strategy_v
 
 namespace kp11
 {
+  /**
+   * @brief Turn a Strategy's `deallocate` into a no-op
+   *
+   * @tparam Strategy type that meets the `Strategy` concept
+   */
   template<typename Strategy>
-  class monotonic
+  class monotonic : public Strategy
   {
+    static_assert(is_strategy_v<Strategy>, "monotonic requires Strategy to be a Strategy");
+
   public: // typedefs
-    using pointer = void *;
-    using size_type = std::size_t;
+    using typename Strategy::pointer;
+    using typename Strategy::size_type;
 
   public: // constructors
-    monotonic(pointer ptr, size_type bytes, size_type alignment)
-    {
-    }
+    using Strategy::Strategy;
 
   public: // modifiers
-    pointer allocate(size_type bytes, size_type alignment) noexcept
-    {
-      return nullptr;
-    }
+    /**
+     * @copydoc Strategy::deallocate
+     *
+     * @par Complexity
+     * `O(0)`
+     */
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
     }
