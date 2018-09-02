@@ -1,29 +1,29 @@
 #pragma once
 
-#include "traits.h" // is_strategy_v
+#include "traits.h" // is_resource_v
 
 namespace kp11
 {
   /**
-   * @brief Turn a Strategy's `deallocate` into a no-op
+   * @brief Turn a Resource's `deallocate` into a no-op
    *
-   * @tparam Strategy type that meets the `Strategy` concept
+   * @tparam Resource type that meets the `Resource` concept
    */
-  template<typename Strategy>
-  class monotonic : public Strategy
+  template<typename Resource>
+  class monotonic : public Resource
   {
-    static_assert(is_strategy_v<Strategy>, "monotonic requires Strategy to be a Strategy");
+    static_assert(is_resource_v<Resource>, "monotonic requires Resource to be a Resource");
 
   public: // typedefs
-    using typename Strategy::pointer;
-    using typename Strategy::size_type;
+    using typename Resource::pointer;
+    using typename Resource::size_type;
 
   public: // constructors
-    using Strategy::Strategy;
+    using Resource::Resource;
 
   public: // modifiers
     /**
-     * @copydoc Strategy::deallocate
+     * @copydoc Resource::deallocate
      *
      * @par Complexity
      * `O(0)`
