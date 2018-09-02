@@ -19,6 +19,7 @@ add_library(kp11 STATIC
     include/kp11/bitset.h
     include/kp11/local.h
     include/kp11/monotonic.h
+    include/kp11/fence.h
     )
 add_library(kp11::kp11 ALIAS kp11)
 target_compile_features(kp11 PUBLIC cxx_std_17)
