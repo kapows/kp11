@@ -73,8 +73,6 @@ namespace kp11
     using pointer = typename Resource::pointer;
     using size_type = typename Resource::size_type;
     using mem_block = cascade_detail::mem_block<pointer, size_type>;
-    using strategies_type = std::vector<Strategy>;
-    using mem_blocks_type = std::vector<mem_block>;
 
   public: // constructors
     cascade()
