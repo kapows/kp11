@@ -2,6 +2,7 @@
 
 #include "traits.h" // is_strategy_v, is_resource_v
 
+#include <cassert> // assert
 #include <cstddef> // size_t
 #include <functional> // less
 #include <map> // map
@@ -98,7 +99,8 @@ namespace kp11
     }
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
-      strategies.at(ptr).deallocate(ptr, bytes, alignment);
+      assert(strategies.find(ptr) != strategies.end());
+      strategies[ptr].deallocate(ptr, bytes, alignment);
     }
 
   public: // iterators
