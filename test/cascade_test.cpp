@@ -44,6 +44,6 @@ TEST_CASE("iterators", "[iterators]")
   auto a = m.allocate(128, 4);
   REQUIRE(m.begin() != m.end());
   REQUIRE(m.cbegin() != m.cend());
-  REQUIRE(cm.begin() == cm.end());
+  REQUIRE(cm.begin() != cm.end());
   m.deallocate(a, 128, 4);
 }
