@@ -5,9 +5,9 @@
 #include <cassert> // assert
 #include <cstddef> // size_t
 #include <functional> // less
-#include <map> // map
 #include <memory> // pointer_traits
 #include <utility> // forward_as_tuple
+#include <vector> // vector
 
 namespace kp11
 {
@@ -44,9 +44,17 @@ namespace kp11
       {
         return std::less<pointer>()(first, rhs.first) && std::less<pointer>()(last, rhs.last);
       }
+      friend bool operator<(pointer lhs, mem_block const & rhs) noexcept
+      {
+        return std::less<pointer>()(lhs, rhs.first) && std::less<pointer>()(lhs, rhs.last);
+      }
+      friend bool operator<(mem_block const & lhs, pointer rhs) noexcept
+      {
+        return std::less<pointer>()(lhs.first, rhs) && std::less<pointer>()(lhs.last, rhs);
+      }
     };
-
   }
+
   template<std::size_t Bytes,
     std::size_t Alignment,
     typename Strategy,
@@ -61,86 +69,335 @@ namespace kp11
     using pointer = typename Resource::pointer;
     using size_type = typename Resource::size_type;
     using mem_block = cascade_detail::mem_block<pointer, size_type>;
+    using strategies_type = std::vector<Strategy>;
+    using mem_blocks_type = std::vector<mem_block>;
+    class const_iterator;
+    class iterator
+    {
+      friend class cascade;
+      friend class const_iterator;
 
-  private: // typedefs
-    using strategies_type = std::map<mem_block, Strategy>;
+    private: // typedefs
+      using mem_blocks_const_iterator = typename mem_blocks_type::const_iterator;
+      using strategies_iterator = typename strategies_type::iterator;
 
-  public: // typedefs
-    using iterator = typename strategies_type::iterator;
-    using const_iterator = typename strategies_type::const_iterator;
+    public: // typedefs
+      using iterator_category = std::random_access_iterator_tag;
+      using reference = std::pair<mem_block const &, Strategy &>;
+      using value_type = reference;
+      using pointer = value_type *;
+      using difference_type = typename mem_blocks_const_iterator::difference_type;
+
+    public: // constructors
+      iterator() = default;
+
+    private: // constructors
+      iterator(mem_blocks_const_iterator mi, strategies_iterator si) : mi(mi), si(si)
+      {
+      }
+
+    public: // accessors
+      reference operator*() noexcept
+      {
+        return std::forward_as_tuple(*mi, *si);
+      }
+      reference operator[](difference_type i) noexcept
+      {
+        return std::forward_as_tuple(mi[i], si[i]);
+      }
+
+    public: // modifiers
+      iterator & operator++() noexcept
+      {
+        ++mi;
+        ++si;
+        return *this;
+      }
+      iterator operator++(int) noexcept
+      {
+        auto c = *this;
+        ++this;
+        return c;
+      }
+      iterator & operator--() noexcept
+      {
+        --mi;
+        --si;
+        return *this;
+      }
+      iterator operator--(int) noexcept
+      {
+        auto c = *this;
+        --this;
+        return c;
+      }
+      iterator & operator+=(difference_type rhs) noexcept
+      {
+        mi += rhs;
+        si += rhs;
+        return *this;
+      }
+      iterator & operator-=(difference_type rhs) noexcept
+      {
+        mi -= rhs;
+        si -= rhs;
+        return *this;
+      }
+      friend iterator operator+(iterator const & lhs, difference_type rhs) noexcept
+      {
+        iterator c = lhs;
+        c += rhs;
+        return c;
+      }
+      friend iterator operator+(difference_type lhs, iterator const & rhs) noexcept
+      {
+        iterator c = rhs;
+        c += lhs;
+        return c;
+      }
+
+      friend iterator operator-(iterator const & lhs, difference_type rhs) noexcept
+      {
+        iterator c = lhs;
+        c -= rhs;
+        return c;
+      }
+
+    public: // comparison
+      friend bool operator<(iterator const & lhs, iterator const & rhs) noexcept
+      {
+        return lhs.mi < rhs.mi;
+      }
+      friend bool operator<=(iterator const & lhs, iterator const & rhs) noexcept
+      {
+        return lhs.mi <= rhs.mi;
+      }
+      friend bool operator>(iterator const & lhs, iterator const & rhs) noexcept
+      {
+        return lhs.mi > rhs.mi;
+      }
+      friend bool operator>=(iterator const & lhs, iterator const & rhs) noexcept
+      {
+        return lhs.mi >= rhs.mi;
+      }
+      friend bool operator==(iterator const & lhs, iterator const & rhs) noexcept
+      {
+        return lhs.mi == rhs.mi;
+      }
+      friend bool operator!=(iterator const & lhs, iterator const & rhs) noexcept
+      {
+        return lhs.mi != rhs.mi;
+      }
+
+    private: // variables
+      mem_blocks_const_iterator mi;
+      strategies_iterator si;
+    };
+    class const_iterator
+    {
+      friend class cascade;
+
+    private: // typedefs
+      using mem_blocks_const_iterator = typename mem_blocks_type::const_iterator;
+      using strategies_const_iterator = typename strategies_type::const_iterator;
+
+    public: // typedefs
+      using iterator_category = std::random_access_iterator_tag;
+      using reference = std::pair<mem_block const &, Strategy const &>;
+      using value_type = reference;
+      using pointer = value_type *;
+      using difference_type = typename mem_blocks_const_iterator::difference_type;
+
+    public: // constructors
+      const_iterator() = default;
+      const_iterator(iterator const & rhs) : mi(rhs.mi), si(rhs.si)
+      {
+      }
+
+    private: // constructors
+      const_iterator(mem_blocks_const_iterator mi, strategies_const_iterator si) : mi(mi), si(si)
+      {
+      }
+
+    public: // accessors
+      reference operator*() const noexcept
+      {
+        return std::forward_as_tuple(*mi, *si);
+      }
+      reference operator[](difference_type i) const noexcept
+      {
+        return std::forward_as_tuple(mi[i], si[i]);
+      }
+
+    public: // modifiers
+      const_iterator & operator++() noexcept
+      {
+        ++mi;
+        ++si;
+        return *this;
+      }
+      const_iterator operator++(int) noexcept
+      {
+        auto c = *this;
+        ++this;
+        return c;
+      }
+      const_iterator & operator--() noexcept
+      {
+        --mi;
+        --si;
+        return *this;
+      }
+      const_iterator operator--(int) noexcept
+      {
+        auto c = *this;
+        --this;
+        return c;
+      }
+      const_iterator & operator+=(difference_type rhs) noexcept
+      {
+        mi += rhs;
+        si += rhs;
+        return *this;
+      }
+      const_iterator & operator-=(difference_type rhs) noexcept
+      {
+        mi -= rhs;
+        si -= rhs;
+        return *this;
+      }
+      friend const_iterator operator+(const_iterator const & lhs, difference_type rhs) noexcept
+      {
+        const_iterator c = lhs;
+        c += rhs;
+        return c;
+      }
+      friend const_iterator operator+(difference_type lhs, const_iterator const & rhs) noexcept
+      {
+        const_iterator c = rhs;
+        c += lhs;
+        return c;
+      }
+
+      friend const_iterator operator-(const_iterator const & lhs, difference_type rhs) noexcept
+      {
+        const_iterator c = lhs;
+        c -= rhs;
+        return c;
+      }
+
+    public: // comparison
+      friend bool operator<(const_iterator const & lhs, const_iterator const & rhs) noexcept
+      {
+        return lhs.mi < rhs.mi;
+      }
+      friend bool operator<=(const_iterator const & lhs, const_iterator const & rhs) noexcept
+      {
+        return lhs.mi <= rhs.mi;
+      }
+      friend bool operator>(const_iterator const & lhs, const_iterator const & rhs) noexcept
+      {
+        return lhs.mi > rhs.mi;
+      }
+      friend bool operator>=(const_iterator const & lhs, const_iterator const & rhs) noexcept
+      {
+        return lhs.mi >= rhs.mi;
+      }
+      friend bool operator==(const_iterator const & lhs, const_iterator const & rhs) noexcept
+      {
+        return lhs.mi == rhs.mi;
+      }
+      friend bool operator!=(const_iterator const & lhs, const_iterator const & rhs) noexcept
+      {
+        return lhs.mi != rhs.mi;
+      }
+
+    private: // variables
+      mem_blocks_const_iterator mi;
+      strategies_const_iterator si;
+    };
+
+  public: // constructors
+    cascade()
+    {
+      mem_blocks.reserve(20);
+      strategies.reserve(20);
+    }
 
   public: // modifiers
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
       for (auto && s : strategies)
       {
-        if (auto ptr = s.second.allocate(bytes, alignment); ptr != nullptr)
+        if (auto ptr = s.allocate(bytes, alignment); ptr != nullptr)
         {
           return ptr;
         }
       }
       // can't allocate from current strategies, probably out of space, try to allocate a new one
-      if (auto ptr = resource.allocate(Bytes, Alignment); ptr != nullptr)
+      if (mem_blocks.size() != mem_blocks.capacity())
       {
-        try
+        if (auto ptr = resource.allocate(Bytes, Alignment); ptr != nullptr)
         {
-          auto [it, b] = strategies.emplace(std::piecewise_construct,
-            std::forward_as_tuple(ptr, Bytes),
-            std::forward_as_tuple(ptr, Bytes, Alignment));
-          return it->second.allocate(bytes, alignment);
-        }
-        catch (...)
-        {
-          resource.deallocate(ptr, Bytes, Alignment);
-          throw;
+          mem_blocks.emplace_back(ptr, Bytes);
+          strategies.emplace_back(ptr, Bytes, Alignment);
+          return strategies.back().allocate(bytes, alignment);
         }
       }
       return nullptr;
     }
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
-      assert(strategies.find(ptr) != strategies.end());
-      strategies.at(ptr).deallocate(ptr, bytes, alignment);
+      auto it = std::find_if(mem_blocks.begin(), mem_blocks.end(), [ptr](auto const & mem_block) {
+        return !(ptr < mem_block) && !(mem_block < ptr);
+      });
+      assert(it != mem_blocks.end());
+      auto i = it - mem_blocks.begin();
+      strategies[i].deallocate(ptr, bytes, alignment);
     }
 
   public: // iterators
     iterator begin() noexcept
     {
-      return strategies.begin();
+      return {mem_blocks.begin(), strategies.begin()};
     }
     iterator end() noexcept
     {
-      return strategies.end();
+      return {mem_blocks.end(), strategies.end()};
     }
     const_iterator begin() const noexcept
     {
-      return strategies.begin();
+      return {mem_blocks.begin(), strategies.begin()};
     }
     const_iterator end() const noexcept
     {
-      return strategies.end();
+      return {mem_blocks.end(), strategies.end()};
     }
     const_iterator cbegin() const noexcept
     {
-      return strategies.cbegin();
+      return {mem_blocks.cbegin(), strategies.cbegin()};
     }
     const_iterator cend() const noexcept
     {
-      return strategies.cend();
+      return {mem_blocks.cend(), strategies.cend()};
     }
 
   public: // observers
     iterator find(pointer ptr) noexcept
     {
-      return strategies.find(ptr);
+      auto it = std::find_if(mem_blocks.begin(), mem_blocks.end(), [ptr](auto const & mem_block) {
+        return !(ptr < mem_block) && !(mem_block < ptr);
+      });
+      return {it, strategies.begin() + (it - mem_blocks.begin())};
     }
     const_iterator find(pointer ptr) const noexcept
     {
-      return strategies.find(ptr);
+      return {const_cast<cascade *>(this)->find(ptr)};
     }
 
   private: // variables
-    strategies_type strategies;
+    std::vector<mem_block> mem_blocks;
+    std::vector<Strategy> strategies;
     Resource resource;
   };
 }
