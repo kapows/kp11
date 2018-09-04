@@ -116,14 +116,14 @@ namespace kp11
     }
 
   public: // observers
-    std::pair<mem_block const &, Strategy &> find(pointer ptr) noexcept
+    std::pair<mem_block const &, Strategy &> operator[](pointer ptr) noexcept
     {
       auto it = std::find_if(mem_blocks.begin(), mem_blocks.end(), [ptr](auto const & mem_block) {
         return !(ptr < mem_block) && !(mem_block < ptr);
       });
       return {*it, strategies[it - mem_blocks.begin()]};
     }
-    std::pair<mem_block const &, Strategy const &> find(pointer ptr) const noexcept
+    std::pair<mem_block const &, Strategy const &> operator[](pointer ptr) const noexcept
     {
       auto it = std::find_if(mem_blocks.begin(), mem_blocks.end(), [ptr](auto const & mem_block) {
         return !(ptr < mem_block) && !(mem_block < ptr);

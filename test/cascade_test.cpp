@@ -25,14 +25,14 @@ TEST_CASE("find", "[element_access]")
   cascade<128, 4, free_block<32, stack<4>>, heap> m;
   auto const & cm = m;
   auto a = m.allocate(128, 4);
-  auto it = m.find(a);
+  auto it = m[a];
   REQUIRE(a == it.first.first);
   auto b = m.allocate(64, 4);
-  auto it2 = m.find(b);
+  auto it2 = m[b];
   REQUIRE(b == it2.first.first);
-  REQUIRE(b == cm.find(b).first.first);
+  REQUIRE(b == cm[b].first.first);
   auto c = it2.second.allocate(64, 4);
-  REQUIRE(m.find(c).first == m.find(b).first);
+  REQUIRE(m[c].first == m[b].first);
 
   m.deallocate(b, 128, 4);
   m.deallocate(a, 128, 4);
