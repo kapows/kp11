@@ -42,7 +42,7 @@ namespace kp11
       }
       bool operator==(mem_block const & rhs) const noexcept
       {
-        return false;
+        return first == rhs.first && last == rhs.last;
       }
       bool operator<(mem_block const & rhs) const noexcept
       {
