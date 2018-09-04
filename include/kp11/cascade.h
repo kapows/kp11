@@ -107,12 +107,7 @@ namespace kp11
     }
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
-      auto it = std::find_if(mem_blocks.begin(), mem_blocks.end(), [ptr](auto const & mem_block) {
-        return !(ptr < mem_block) && !(mem_block < ptr);
-      });
-      assert(it != mem_blocks.end());
-      auto i = it - mem_blocks.begin();
-      strategies[i].deallocate(ptr, bytes, alignment);
+      (*this)[ptr].second.deallocate(ptr, bytes, alignment);
     }
 
   public: // observers
