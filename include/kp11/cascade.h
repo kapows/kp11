@@ -100,7 +100,7 @@ namespace kp11
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
       assert(strategies.find(ptr) != strategies.end());
-      strategies[ptr].deallocate(ptr, bytes, alignment);
+      strategies.at(ptr).deallocate(ptr, bytes, alignment);
     }
 
   public: // iterators
