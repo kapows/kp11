@@ -31,6 +31,8 @@ TEST_CASE("find", "[element_access]")
   auto it2 = m.find(b);
   REQUIRE(b == it2.first.first);
   REQUIRE(b == cm.find(b).first.first);
+  auto c = it2.second.allocate(64, 4);
+  REQUIRE(m.find(c).first == m.find(b).first);
 
   m.deallocate(b, 128, 4);
   m.deallocate(a, 128, 4);

@@ -40,6 +40,10 @@ namespace kp11
       mem_block(pointer ptr, size_type bytes) noexcept : mem_block(ptr, advance(ptr, bytes))
       {
       }
+      bool operator==(mem_block const & rhs) const noexcept
+      {
+        return false;
+      }
       bool operator<(mem_block const & rhs) const noexcept
       {
         return std::less<pointer>()(first, rhs.first) && std::less<pointer>()(last, rhs.last);
