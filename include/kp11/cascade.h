@@ -80,6 +80,15 @@ namespace kp11
       mem_blocks.reserve(20);
       strategies.reserve(20);
     }
+    cascade(cascade const &) = delete;
+    cascade & operator=(cascade const &) = delete;
+    ~cascade() noexcept
+    {
+      for (auto && m : mem_blocks)
+      {
+        resource.deallocate(m.first, Bytes, Alignment);
+      }
+    }
 
   public: // modifiers
     pointer allocate(size_type bytes, size_type alignment) noexcept
