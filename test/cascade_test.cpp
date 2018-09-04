@@ -23,14 +23,17 @@ TEST_CASE("allocate/deallocate", "[modifiers]")
 TEST_CASE("find", "[element_access]")
 {
   cascade<128, 4, free_block<32, stack<4>>, heap> m;
+  auto const & cm = m;
   auto a = m.allocate(128, 4);
   auto it = m.find(a);
   REQUIRE(it != m.end());
   auto b = m.allocate(128, 4);
   auto it2 = m.find(b);
   REQUIRE(it2 != m.end());
+  REQUIRE(cm.find(b) != cm.end());
   alignas(4) char not_my_buffer[128];
   REQUIRE(m.find(not_my_buffer) == m.end());
+  REQUIRE(cm.find(not_my_buffer) == cm.end());
 
   m.deallocate(b, 128, 4);
   m.deallocate(a, 128, 4);
