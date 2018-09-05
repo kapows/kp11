@@ -10,16 +10,11 @@ TEST_CASE("methods", "[methods]")
 {
   stack<10> m;
   REQUIRE(m.size() == 10);
+  stack<101581> n;
+  REQUIRE(n.size() == 101581);
   REQUIRE(m.set(1) == 0);
   REQUIRE(m.set(11) == m.size());
   m.reset(0, 1);
-}
-TEST_CASE("size", "[capacity]")
-{
-  stack<10> m;
-  REQUIRE(m.size() == 10);
-  stack<101581> n;
-  REQUIRE(n.size() == 101581);
 }
 TEST_CASE("traits", "[traits]")
 {
