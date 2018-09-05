@@ -10,7 +10,7 @@ using namespace kp11;
 
 TEST_CASE("allocate/deallocate", "[modifiers]")
 {
-  cascade<128, 4, free_block<32, stack<4>>, heap> m;
+  cascade<128, 4, 2, free_block<32, stack<4>>, heap> m;
 
   auto a = m.allocate(128, 4);
   REQUIRE(a != nullptr);
@@ -22,7 +22,7 @@ TEST_CASE("allocate/deallocate", "[modifiers]")
 }
 TEST_CASE("find", "[element_access]")
 {
-  cascade<128, 4, free_block<32, stack<4>>, heap> m;
+  cascade<128, 4, 2, free_block<32, stack<4>>, heap> m;
   auto const & cm = m;
   auto a = m.allocate(128, 4);
   auto it = m[a];

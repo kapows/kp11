@@ -4,10 +4,8 @@
 
 #include <cassert> // assert
 #include <cstddef> // size_t
-#include <functional> // less
-#include <memory> // pointer_traits
-#include <utility> // forward_as_tuple
-#include <vector> // vector
+#include <functional> // less, less_equal
+#include <memory> // pointer_traits, aligned_storage_t
 
 namespace kp11
 {
@@ -48,22 +46,18 @@ namespace kp11
       {
         return std::less<pointer>()(first, rhs.first) && std::less<pointer>()(last, rhs.last);
       }
-      friend bool operator<(pointer lhs, mem_block const & rhs) noexcept
+      bool contains(pointer ptr) const noexcept
       {
-        return std::less<pointer>()(lhs, rhs.first) && std::less<pointer>()(lhs, rhs.last);
-      }
-      friend bool operator<(mem_block const & lhs, pointer rhs) noexcept
-      {
-        return std::less<pointer>()(lhs.first, rhs) && std::less<pointer>()(lhs.last, rhs);
+        return std::less_equal<pointer>()(first, ptr) && std::less<pointer>()(ptr, last);
       }
     };
   }
 
   template<std::size_t Bytes,
     std::size_t Alignment,
+    std::size_t Size,
     typename Strategy,
-    typename Resource,
-    std::size_t Size = 0>
+    typename Resource>
   class cascade
   {
     static_assert(is_strategy_v<Strategy>, "cascade requires Strategy to be a Strategy");
@@ -75,40 +69,28 @@ namespace kp11
     using mem_block = cascade_detail::mem_block<pointer, size_type>;
 
   public: // constructors
-    cascade()
-    {
-      mem_blocks.reserve(20);
-      strategies.reserve(20);
-    }
+    cascade() = default;
     cascade(cascade const &) = delete;
     cascade & operator=(cascade const &) = delete;
     ~cascade() noexcept
     {
-      for (auto && m : mem_blocks)
-      {
-        resource.deallocate(m.first, Bytes, Alignment);
-      }
+      clear();
     }
 
   public: // modifiers
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
-      for (auto && s : strategies)
+      for (std::size_t i = 0; i < length; ++i)
       {
-        if (auto ptr = s.allocate(bytes, alignment); ptr != nullptr)
+        if (auto ptr = strategies()[i].allocate(bytes, alignment))
         {
           return ptr;
         }
       }
       // can't allocate from current strategies, probably out of space, try to allocate a new one
-      if (mem_blocks.size() != mem_blocks.capacity())
+      if (auto strategy = emplace_back())
       {
-        if (auto ptr = resource.allocate(Bytes, Alignment); ptr != nullptr)
-        {
-          mem_blocks.emplace_back(ptr, Bytes);
-          strategies.emplace_back(ptr, Bytes, Alignment);
-          return strategies.back().allocate(bytes, alignment);
-        }
+        return strategy->allocate(bytes, alignment);
       }
       return nullptr;
     }
@@ -120,22 +102,79 @@ namespace kp11
   public: // observers
     std::pair<mem_block const &, Strategy &> operator[](pointer ptr) noexcept
     {
-      auto it = std::find_if(mem_blocks.begin(), mem_blocks.end(), [ptr](auto const & mem_block) {
-        return !(ptr < mem_block) && !(mem_block < ptr);
-      });
-      return {*it, strategies[it - mem_blocks.begin()]};
+      auto i = find(ptr);
+      assert(i != length);
+      return {mem_blocks()[i], strategies()[i]};
     }
     std::pair<mem_block const &, Strategy const &> operator[](pointer ptr) const noexcept
     {
-      auto it = std::find_if(mem_blocks.begin(), mem_blocks.end(), [ptr](auto const & mem_block) {
-        return !(ptr < mem_block) && !(mem_block < ptr);
-      });
-      return {*it, strategies[it - mem_blocks.begin()]};
+      auto i = find(ptr);
+      assert(i != length);
+      return {mem_blocks()[i], strategies()[i]};
+    }
+
+  private: // operator[] helper
+    std::size_t find(pointer ptr) const noexcept
+    {
+      std::size_t i = 0;
+      for (; i < length; ++i)
+      {
+        if (mem_blocks()[i].contains(ptr))
+        {
+          break;
+        }
+      }
+      return i;
+    }
+
+  private: // modifiers
+    Strategy * emplace_back() noexcept
+    {
+      if (length != Size)
+      {
+        if (auto ptr = resource.allocate(Bytes, Alignment); ptr != nullptr)
+        {
+          new (&mem_blocks()[length]) mem_block(ptr, Bytes);
+          new (&strategies()[length]) Strategy(ptr, Bytes, Alignment);
+          ++length;
+          return &strategies()[length - 1];
+        }
+      }
+      return nullptr;
+    }
+    void clear() noexcept
+    {
+      while (length)
+      {
+        resource.deallocate(mem_blocks()[length - 1].first, Bytes, Alignment);
+        mem_blocks()[length - 1].~mem_block();
+        strategies()[length - 1].~Strategy();
+        --length;
+      }
+    }
+
+  private: // accessors
+    mem_block * mem_blocks() noexcept
+    {
+      return reinterpret_cast<mem_block *>(&mem_block_storage);
+    }
+    mem_block const * mem_blocks() const noexcept
+    {
+      return reinterpret_cast<mem_block const *>(&mem_block_storage);
+    }
+    Strategy * strategies() noexcept
+    {
+      return reinterpret_cast<Strategy *>(&strategy_storage);
+    }
+    Strategy const * strategies() const noexcept
+    {
+      return reinterpret_cast<Strategy const *>(&strategy_storage);
     }
 
   private: // variables
-    std::vector<mem_block> mem_blocks;
-    std::vector<Strategy> strategies;
+    std::size_t length = 0;
+    std::aligned_storage_t<sizeof(Strategy) * Size, alignof(Strategy)> strategy_storage;
+    std::aligned_storage_t<sizeof(mem_block) * Size, alignof(mem_block)> mem_block_storage;
     Resource resource;
   };
 }
