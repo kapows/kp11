@@ -48,6 +48,24 @@ SCENARIO("stack sets spots in increasing order")
       }
     }
   }
+  GIVEN("some spots have been recovered")
+  {
+    for (auto i = 0; i < 9; ++i)
+    {
+      REQUIRE(m.set(1) != m.size());
+    }
+    m.reset(7, 1);
+    m.reset(8, 1);
+    m.reset(6, 1);
+    WHEN("setting spots")
+    {
+      THEN("spots are set in ascending order")
+      {
+        REQUIRE(m.set(1) == 8);
+        REQUIRE(m.set(1) == 9);
+      }
+    }
+  }
 }
 SCENARIO("stack recovers spots")
 {
