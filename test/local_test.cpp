@@ -9,7 +9,7 @@
 
 using namespace kp11;
 
-TEST_CASE("allocate/deallocate", "[modifiers]")
+TEST_CASE("unit test", "[unit-test]")
 {
   local<128, 4, free_block<32, stack<4>>> m;
   auto a = m.allocate(32, 4);
@@ -23,6 +23,9 @@ TEST_CASE("allocate/deallocate", "[modifiers]")
   m.deallocate(a, 32, 4);
   m.deallocate(b, 32, 4);
   m.deallocate(c, 64, 4);
+  auto e = m.allocate(64, 4);
+  REQUIRE(e != nullptr);
+  REQUIRE(e == c);
 }
 
 TEST_CASE("traits", "[traits]")
