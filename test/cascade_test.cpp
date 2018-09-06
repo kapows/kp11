@@ -44,4 +44,8 @@ TEST_CASE("unit test", "[unit-test]")
   }
   m.deallocate(b, 128, 4);
   m.deallocate(a, 96, 4);
+  SECTION("memory recovered")
+  {
+    REQUIRE(m.allocate(96, 4) == a);
+  }
 }
