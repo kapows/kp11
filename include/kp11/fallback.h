@@ -21,13 +21,21 @@ namespace kp11
      */
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
-      return nullptr;
+      if (auto ptr = primary.allocate(bytes, alignment))
+      {
+        return ptr;
+      }
+      return fallback.allocate(bytes, alignment);
     }
     /**
      * @copydoc Resource::deallocate
      */
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
+      if (!primary.deallocate(ptr, bytes, alignment))
+      {
+        fallback.deallocate(ptr, bytes, alignment);
+      }
     }
 
   public: // accessors
