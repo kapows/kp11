@@ -21,6 +21,11 @@ namespace kp11
   public: // modifiers
     bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
+      if (blk.contains(ptr))
+      {
+        Strategy::deallocate(ptr, bytes, alignment);
+        return true;
+      }
       return false;
     }
 
