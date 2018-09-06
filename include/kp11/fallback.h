@@ -1,10 +1,21 @@
 #pragma once
 
+#include "traits.h" // is_resource_v
+
 namespace kp11
 {
+  /**
+   * @brief If allocation from `Primary` is unsuccessful then allocates from `Fallback`
+   *
+   * @tparam Primary type that meets the `Resource` concept
+   * @tparam Fallback type that meets the `Resource` concept
+   */
   template<typename Primary, typename Fallback>
   class fallback
   {
+    static_assert(is_resource_v<Primary>, "fallback requires Primary to be a Resource");
+    static_assert(is_resource_v<Fallback>, "fallback requires Fallback to be a Resource");
+
   public: // typedefs
     /**
      * @brief pointer type
