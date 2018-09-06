@@ -7,17 +7,10 @@
 
 using namespace kp11;
 
-TEST_CASE("constructor", "[constructors]")
+TEST_CASE("unit test", "[unit-test]")
 {
   alignas(4) char buffer[128];
   free_block<32, stack<4>> m(buffer, 128, 4);
-  (void)m;
-}
-TEST_CASE("allocate/deallocate", "[modifiers]")
-{
-  alignas(4) char buffer[128];
-  free_block<32, stack<4>> m(buffer, 128, 4);
-
   auto a = m.allocate(32, 4);
   REQUIRE(a != nullptr);
   auto b = m.allocate(64, 4);
@@ -27,13 +20,19 @@ TEST_CASE("allocate/deallocate", "[modifiers]")
   auto d = m.allocate(32, 4);
   REQUIRE(d == nullptr);
 
-  m.deallocate(c, 32, 4);
-  m.deallocate(b, 64, 4);
-  m.deallocate(a, 32, 4);
+  SECTION("deallocate recovers with stack functionality")
+  {
+    m.deallocate(c, 32, 4);
+    m.deallocate(b, 64, 4);
+    m.deallocate(a, 32, 4);
 
-  d = m.allocate(128, 4);
-  REQUIRE(d != nullptr);
-  m.deallocate(d, 128, 4);
+    auto e = m.allocate(32, 4);
+    REQUIRE(e != nullptr);
+    REQUIRE(e == a);
+    auto f = m.allocate(96, 4);
+    REQUIRE(f != nullptr);
+    REQUIRE(f == b);
+  }
 }
 
 TEST_CASE("traits", "[traits]")

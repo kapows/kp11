@@ -6,16 +6,15 @@
 
 using namespace kp11;
 
-TEST_CASE("size", "[capacity]")
+TEST_CASE("unit test", "[unit-test]")
 {
   bitset<10> m;
   REQUIRE(m.size() == 10);
-  bitset<101581> n;
-  REQUIRE(n.size() == 101581);
-}
-TEST_CASE("set/reset", "[modifiers]")
-{
-  bitset<10> m;
+  SECTION("make sure size isnt fixed")
+  {
+    bitset<101581> n;
+    REQUIRE(n.size() == 101581);
+  }
   REQUIRE(m.set(16) == m.size());
   REQUIRE(m.set(5) == 0);
   REQUIRE(m.set(5) == 5);

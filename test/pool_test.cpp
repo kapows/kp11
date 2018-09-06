@@ -4,46 +4,31 @@
 
 #include <catch.hpp>
 
-#include <limits>
-
 using namespace kp11;
 
-TEST_CASE("size", "[capacity]")
+TEST_CASE("unit test", "[unit-test]")
 {
   pool<10> m;
   REQUIRE(m.size() == 10);
-  pool<101581> n;
-  REQUIRE(n.size() == 101581);
-}
-TEST_CASE("set/reset", "[modifiers]")
-{
-  pool<10> m;
-  REQUIRE(m.set(1) == 0);
-  REQUIRE(m.set(1) == 1);
-  SECTION("reverse order reset")
+  SECTION("make sure size is not fixed")
   {
-    m.reset(1, 1);
-    m.reset(0, 1);
-    REQUIRE(m.set(1) == 0);
-    REQUIRE(m.set(1) == 1);
+    pool<101581> n;
   }
-  SECTION("out of order reset")
+  for (auto i = 0; i < 10; ++i)
   {
-    m.reset(0, 1);
-    m.reset(1, 1);
-    REQUIRE(m.set(1) == 1);
-    REQUIRE(m.set(1) == 0);
+    REQUIRE(m.set(1) == i);
   }
-  SECTION("out of space")
+  REQUIRE(m.set(1) == m.size());
+  SECTION("reset allows setting in LIFO order")
   {
-    for (auto i = 2; i < 10; ++i)
-    {
-      REQUIRE(m.set(1) == i);
-    }
-    REQUIRE(m.set(1) == m.size());
+    m.reset(8, 1);
+    m.reset(2, 1);
+    m.reset(4, 1);
+    REQUIRE(m.set(1) == 4);
+    REQUIRE(m.set(1) == 2);
+    REQUIRE(m.set(1) == 8);
   }
 }
-
 TEST_CASE("traits", "[traits]")
 {
   REQUIRE(is_marker_v<pool<10>> == true);

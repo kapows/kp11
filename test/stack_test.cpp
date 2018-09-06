@@ -4,37 +4,39 @@
 
 #include <catch.hpp>
 
-#include <limits>
-
 using namespace kp11;
 
-TEST_CASE("size", "[capacity]")
+TEST_CASE("unit test", "[unit-test]")
 {
   stack<10> m;
   REQUIRE(m.size() == 10);
-  stack<101581> n;
-  REQUIRE(n.size() == 101581);
-}
-TEST_CASE("set/reset", "[modifiers]")
-{
-  stack<10> m;
-  REQUIRE(m.set(16) == m.size());
-  REQUIRE(m.set(5) == 0);
-  REQUIRE(m.set(5) == 5);
-  SECTION("proper order reset")
+  SECTION("make sure that size isn't fixed")
   {
-    m.reset(5, 5);
-    REQUIRE(m.set(2) == 5);
-    REQUIRE(m.set(3) == 7);
+    stack<101581> n;
+    REQUIRE(n.size() == 101581);
   }
-  SECTION("out of order reset")
-  {
-    m.reset(0, 5);
-    REQUIRE(m.set(2) == m.size());
-    REQUIRE(m.set(3) == m.size());
-  }
-}
 
+  REQUIRE(m.set(1) == 0);
+  REQUIRE(m.set(2) == 1);
+  REQUIRE(m.set(3) == 3);
+  REQUIRE(m.set(4) == 6);
+  REQUIRE(m.set(1) == m.size());
+
+  SECTION("out of order reset does not recover spots")
+  {
+    m.reset(0, 1);
+    m.reset(1, 2);
+    REQUIRE(m.set(1) == m.size());
+  }
+  SECTION("reverse order reset recovers spots")
+  {
+    m.reset(6, 4);
+    m.reset(3, 3);
+    REQUIRE(m.set(1) == 3);
+    REQUIRE(m.set(1) == 4);
+    REQUIRE(m.set(5) == 5);
+  }
+}
 TEST_CASE("traits", "[traits]")
 {
   REQUIRE(is_marker_v<stack<10>> == true);
