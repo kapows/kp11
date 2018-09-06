@@ -52,8 +52,6 @@ namespace kp11
   public: // accessors
     /**
      * @brief Get the primary object
-     *
-     * @return Primary&
      */
     Primary & get_primary() noexcept
     {
@@ -61,8 +59,6 @@ namespace kp11
     }
     /**
      * @brief Get the primary object
-     *
-     * @return Primary const&
      */
     Primary const & get_primary() const noexcept
     {
@@ -70,8 +66,6 @@ namespace kp11
     }
     /**
      * @brief Get the fallback object
-     *
-     * @return Fallback&
      */
     Fallback & get_fallback() noexcept
     {
@@ -79,8 +73,6 @@ namespace kp11
     }
     /**
      * @brief Get the fallback object
-     *
-     * @return Fallback const&
      */
     Fallback const & get_fallback() const noexcept
     {
