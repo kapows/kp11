@@ -1,5 +1,6 @@
 #pragma once
 
+#include "traits.h" // is_strategy_v
 #include "utility.h" // mem_block
 
 namespace kp11
@@ -13,6 +14,8 @@ namespace kp11
   template<typename Strategy>
   class fence : public Strategy
   {
+    static_assert(is_strategy_v<Strategy>);
+
   public: // typedefs
     using typename Strategy::pointer;
     using typename Strategy::size_type;
