@@ -21,6 +21,7 @@ TEST_CASE("unit test", "[unit-test]")
   REQUIRE(v[1] == 10);
   REQUIRE(v[2] == 15);
 
+  // Tests rebinding as list nodes need to be allocated
   std::list<int, allocator<int, decltype(m)>> l(&m);
   l.push_back(5);
   l.push_back(10);
@@ -28,4 +29,7 @@ TEST_CASE("unit test", "[unit-test]")
   REQUIRE(l.size() == 3);
   REQUIRE(l.front() == 5);
   REQUIRE(l.back() == 15);
+
+  REQUIRE(l.get_allocator() == v.get_allocator());
+  REQUIRE((l.get_allocator() != v.get_allocator()) == false);
 }
