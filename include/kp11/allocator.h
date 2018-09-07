@@ -35,7 +35,7 @@ namespace kp11
     }
 
   public: // modifiers
-    pointer allocate(std::size_t n)
+    pointer allocate(size_type n)
     {
       auto ptr = resource->allocate(static_cast<size_type>(sizeof(T) * n), alignof(T));
       if (!ptr)
@@ -44,7 +44,7 @@ namespace kp11
       }
       return static_cast<pointer>(ptr);
     }
-    void deallocate(pointer ptr, std::size_t n) noexcept
+    void deallocate(pointer ptr, size_type n) noexcept
     {
       resource->deallocate(
         static_cast<void_pointer>(ptr), static_cast<size_type>(sizeof(T) * n), alignof(T));
