@@ -6,6 +6,11 @@
 
 namespace kp11
 {
+  /**
+   * @brief Adaptor that allows a `Resource` to be used as a std::pmr::memory_resource
+   *
+   * @tparam Resource type that meets the `Resource` concept
+   */
   template<typename Resource>
   class memory_resource : public Resource, public std::pmr::memory_resource
   {
