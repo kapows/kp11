@@ -5,23 +5,31 @@
 namespace kp11
 {
   /**
-   * @brief Turn a Resource's `deallocate` into a no-op
+   * @brief Allocates memory by incrementing a pointer.
    *
-   * @tparam Resource type that meets the `Resource` concept
+   * @tparam Bytes size of memory in bytes
+   * @tparam Alignment alignment of memory in bytes
+   * @tparam Replicas number of times to replicate
+   * @tparam Upstream type that meets the `Resource` concept. This is where memory will be allocated
+   * from.
    */
-  template<typename Resource>
-  class monotonic : public Resource
+  template<std::size_t Bytes, std::size_t Alignment, std::size_t Replicas, typename Upstream>
+  class monotonic : public Upstream
   {
-    static_assert(is_resource_v<Resource>, "monotonic requires Resource to be a Resource");
+    static_assert(is_resource_v<Upstream>);
 
   public: // typedefs
-    using typename Resource::pointer;
-    using typename Resource::size_type;
+    using typename Upstream::pointer;
+    using typename Upstream::size_type;
 
   public: // constructors
-    using Resource::Resource;
+    using Upstream::Upstream;
 
   public: // modifiers
+    pointer allocate(size_type bytes, size_type alignment) noexcept
+    {
+      return nullptr;
+    }
     /**
      * @copydoc Resource::deallocate
      *
@@ -32,6 +40,12 @@ namespace kp11
      */
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
+    }
+
+  public: // observers
+    pointer operator[](pointer ptr) const noexcept
+    {
+      return nullptr;
     }
   };
 }
