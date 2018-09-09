@@ -42,7 +42,6 @@ namespace kp11
 
   public: // constructors
     using Upstream::Upstream;
-
     /**
      * @brief Destroy the free block object. Deallocate all memory back to `Upstream`.
      */
