@@ -84,7 +84,7 @@ namespace kp11
      */
     bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
-      if (auto i = find(ptr); i != length)
+      if (auto i = find(ptr); i != Replicas)
       {
         markers[i].reset(index_from(ptrs[i], static_cast<block_pointer>(ptr)), size_from(bytes));
         return true;
@@ -101,7 +101,7 @@ namespace kp11
      */
     pointer operator[](pointer ptr) const noexcept
     {
-      if (auto i = find(ptr); i != length)
+      if (auto i = find(ptr); i != Replicas)
       {
         return ptrs[i];
       }
@@ -109,6 +109,13 @@ namespace kp11
     }
 
   private: // operator[] helper
+    /**
+     * @brief Return the index of the memory block that contains ptr
+     *
+     * @param ptr
+     * @return the index of the memory block
+     * @return `Replicas` otherwise
+     */
     std::size_t find(pointer ptr) const noexcept
     {
       std::size_t i = 0;
@@ -118,10 +125,10 @@ namespace kp11
         if (std::less_equal<pointer>()(first, ptr) &&
             std::less<pointer>()(ptr, kp11::advance(first, BlockSize * Marker::size())))
         {
-          break;
+          return i;
         }
       }
-      return i;
+      return Replicas;
     }
 
   private: // modifiers
