@@ -9,34 +9,35 @@
 namespace kp11
 {
   /**
-   * @brief Local keeps a buffer inside of itself that it passes to `Strategy`.
+   * @brief Allocates from a buffer inside itself. Can only allocate once.
    *
    * @tparam Bytes size of buffer
    * @tparam Alignment alignment of buffer
-   * @tparam Strategy type that meets the `Strategy` concept
    */
-  template<std::size_t Bytes, std::size_t Alignment, typename Strategy>
-  class local : public Strategy
+  template<std::size_t Bytes, std::size_t Alignment>
+  class local
   {
-    static_assert(is_strategy_v<Strategy>, "local requires Strategy to be a Strategy");
-
   public: // typedefs
-    using typename Strategy::pointer;
-    using typename Strategy::size_type;
+    using pointer = void *;
+    using size_type = std::size_t;
 
   private: // typedefs
     using buffer_type = std::aligned_storage_t<Bytes, Alignment>;
     using buffer_pointer = typename std::pointer_traits<pointer>::template rebind<buffer_type>;
     using buffer_pointer_traits = std::pointer_traits<buffer_pointer>;
 
-  public: // constructors
+  public: // modifiers
     /**
-     * @brief Construct a new local object
+     * @copydoc Resource::allocate
      */
-    local() noexcept :
-        Strategy(static_cast<pointer>(buffer_pointer_traits::pointer_to(buffer)),
-          static_cast<size_type>(Bytes),
-          static_cast<size_type>(Alignment))
+    pointer allocate(size_type bytes, size_type alignment) noexcept
+    {
+      return nullptr;
+    }
+    /**
+     * @copydoc Resource::deallocate
+     */
+    void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
     }
 
