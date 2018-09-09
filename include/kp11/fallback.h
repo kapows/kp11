@@ -96,7 +96,5 @@ namespace kp11
     {
       return *this;
     }
-
-  private: // variables
   };
 }
