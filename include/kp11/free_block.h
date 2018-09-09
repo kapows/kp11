@@ -79,7 +79,7 @@ namespace kp11
     /**
      * @copydoc Resource::deallocate
      *
-     * @return true if `ptr` can be deallocated
+     * @return true if `ptr` was deallocated
      * @return false otherwise
      */
     bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
@@ -94,10 +94,10 @@ namespace kp11
 
   public: // observers
     /**
-     * @brief Returns a references to the beginning of the original memory block given by
-     * Upstream::allocate
+     * @brief Return a pointer to the beginning of the original memory block obtained from Upstream
      *
-     * @param ptr pointer that points to within an allocated block
+     * @returns pointer to the beginning of the original memory block
+     * @returns nullptr otherwise
      */
     pointer operator[](pointer ptr) const noexcept
     {
