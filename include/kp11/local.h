@@ -51,5 +51,4 @@ namespace kp11
     bool allocated = false;
     buffer_type buffer;
   };
-
 }
