@@ -167,7 +167,7 @@ namespace kp11
   private: // Marker helper functions
     constexpr typename Marker::size_type size_from(size_type bytes) const noexcept
     {
-      return static_cast<typename Marker::size_type>(bytes / BlockSize);
+      return static_cast<typename Marker::size_type>(bytes / BlockSize + (bytes % BlockSize != 0));
     }
     static typename Marker::size_type index_from(block_pointer first, block_pointer ptr) noexcept
     {
