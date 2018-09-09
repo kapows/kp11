@@ -65,34 +65,4 @@ namespace kp11
    */
   template<typename T>
   constexpr bool is_marker_v = is_marker<T>::value;
-
-  /**
-   * @brief Check if `T` meets the requiements of `Strategy`
-   *
-   * @tparam T type to check
-   */
-  template<typename T, typename Enable = void>
-  struct is_strategy : std::false_type
-  {
-  };
-  /**
-   * @private
-   */
-  template<typename T>
-  struct is_strategy<T,
-    std::void_t<std::enable_if_t<is_resource_v<T>>,
-      std::enable_if_t<std::is_constructible_v<T,
-        typename T::pointer,
-        typename T::size_type,
-        typename T::size_type>>>> : std::true_type
-  {
-  };
-  /**
-   * @brief Helper variable template for `is_strategy`
-   *
-   * @tparam T type to check
-   */
-  template<typename T>
-  constexpr bool is_strategy_v = is_strategy<T>::value;
-
 }

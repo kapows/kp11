@@ -1,7 +1,9 @@
 #pragma once
 
 #include "traits.h" // is_marker_v
+#include "utility.h" // advance
 
+#include <array> // array
 #include <cassert> // assert
 #include <cstddef> // size_t
 #include <memory> // pointer_traits
@@ -14,101 +16,166 @@ namespace kp11
    * always be some multiple of `BlockSize` that is greater than the request. Allocations and
    * deallocations will defer to `Marker` to determine functionality.
    *
-   * @tparam Pointer pointer type
-   * @tparam SizeType size type
    * @tparam BlockSize size of memory block in bytes
-   * @tparam Marker type that fulfils the `Marker` concept
+   * @tparam BlockAlignment alignment of memory block in bytes
+   * @tparam Replicas number of times to replicate
+   * @tparam Marker type that meets the `Marker` concept
+   * @tparam Upstream type that meets the `Resource` concept. This is where memory will be allocated
+   * from.
    */
-  template<typename Pointer, typename SizeType, std::size_t BlockSize, typename Marker>
-  class basic_free_block
+  template<std::size_t BlockSize,
+    std::size_t BlockAlignment,
+    std::size_t Replicas,
+    typename Marker,
+    typename Upstream>
+  class free_block : public Upstream
   {
     static_assert(is_marker_v<Marker>, "basic_free_block requires Marker to be a Marker");
 
   public: // typedefs
-    /**
-     * @brief pointer
-     */
-    using pointer = Pointer;
-    /**
-     * @brief size type
-     */
-    using size_type = SizeType;
+    using typename Upstream::pointer;
+    using typename Upstream::size_type;
 
   private: // typedefs
-    using block_type = std::aligned_storage_t<BlockSize, 1>;
+    using block_type = std::aligned_storage_t<BlockSize, BlockAlignment>;
     using block_pointer = typename std::pointer_traits<pointer>::template rebind<block_type>;
 
-  public: // constructor
+  public: // constructors
+    using Upstream::Upstream;
     /**
-     * @brief Construct a new basic free block object
-     *
-     * @copydoc Strategy::Strategy
-     *
-     * @pre `BlockSize` must be a divisor of `bytes`
+     * @brief Destroy the free block object. Deallocate all memory back to `Upstream`.
      */
-    basic_free_block(pointer ptr, size_type bytes, size_type alignment) noexcept :
-        ptr(static_cast<block_pointer>(ptr))
-#ifndef NDEBUG
-        ,
-        alignment(alignment)
-#endif
+    ~free_block() noexcept
     {
-      assert(bytes % BlockSize == 0);
+      clear();
     }
 
   public: // modifiers
     /**
-     * @copydoc Strategy::allocate
-     *
-     * @note Functionality determined by `Marker`.
+     * @copydoc Resource::allocate
      */
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
-      assert(this->alignment % alignment == 0);
-      if (auto i = marker.set(size_from(bytes)); i != marker.size())
+      auto const num = size_from(bytes);
+      // search current markers
+      for (std::size_t marker_index = 0; marker_index < length; ++marker_index)
       {
-        return static_cast<pointer>(&ptr[i]);
+        if (auto i = markers[marker_index].set(num); i != Marker::size())
+        {
+          return static_cast<pointer>(static_cast<block_pointer>(ptrs[marker_index]) + i);
+        }
+      }
+      // not enough room in current markers
+      if (auto marker_index = push_back(); marker_index != Replicas)
+      {
+        if (auto i = markers[marker_index].set(num); i != Marker::size())
+        {
+          return static_cast<pointer>(static_cast<block_pointer>(ptrs[marker_index]) + i);
+        }
       }
       return nullptr;
     }
     /**
-     * @copydoc Strategy::deallocate
-     *
-     * @note Functionality determined by `Marker`.
+     * @copydoc Resource::deallocate
      */
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
-      assert(this->alignment % alignment == 0);
-      if (ptr != nullptr)
+      auto i = find(ptr);
+      assert(i != Replicas);
+      markers[i].reset(index_from(ptrs[i], ptr), size_from(bytes));
+    }
+
+  public: // observers
+    /**
+     * @brief Check if `ptr` points to memory that was obtained from Upstream.
+     *
+     * @param ptr pointer to check
+     * @returns pointer to the beginning of the memory that was obtained from Upstream
+     * @returns nullptr otherwise
+     */
+    pointer operator[](pointer ptr) const noexcept
+    {
+      if (auto i = find(ptr); i != Replicas)
       {
-        marker.reset(index_from(ptr), size_from(bytes));
+        return ptrs[i];
+      }
+      return nullptr;
+    }
+
+  private: // operator[] helper
+    /**
+     * @brief Return the index of the memory that was obtained from Upstream.
+     *
+     * @param ptr pointer to find
+     * @return the index of the memory that was obtained from Upstream
+     * @return `Replicas` otherwise
+     */
+    std::size_t find(pointer ptr) const noexcept
+    {
+      std::size_t i = 0;
+      for (; i < length; ++i)
+      {
+        if (std::less_equal<pointer>()(ptrs[i], ptr) &&
+            std::less<pointer>()(ptr, kp11::advance(ptrs[i], BlockSize * Marker::size())))
+        {
+          return i;
+        }
+      }
+      return Replicas;
+    }
+
+  private: // modifiers
+    /**
+     * @brief Add a `pointer` and `Marker` to the end of our containers. Calls Upstream::allocate.
+     *
+     * @return index of the added `pointer` and `Marker`
+     * @return `Replicas` if unsuccessful
+     */
+    std::size_t push_back() noexcept
+    {
+      if (length != Replicas)
+      {
+        if (auto ptr = Upstream::allocate(BlockSize * Marker::size(), BlockAlignment);
+            ptr != nullptr)
+        {
+          ptrs[length] = ptr;
+          return length++;
+        }
+      }
+      return Replicas;
+    }
+    /**
+     * @brief Deallocate all memory back to `Upstream`.
+     */
+    void clear() noexcept
+    {
+      while (length)
+      {
+        Upstream::deallocate(ptrs[length - 1], BlockSize, BlockAlignment);
+        --length;
       }
     }
 
   private: // Marker helper functions
-    constexpr typename Marker::size_type size_from(size_type bytes) noexcept
+    constexpr typename Marker::size_type size_from(size_type bytes) const noexcept
     {
-      return static_cast<typename Marker::size_type>(bytes / BlockSize);
+      // zero bytes is required as well
+      if (bytes == 0)
+      {
+        return static_cast<typename Marker::size_type>(1);
+      }
+      // mod is required to deal with non BlockSize sizes
+      return static_cast<typename Marker::size_type>(bytes / BlockSize + (bytes % BlockSize != 0));
     }
-    typename Marker::size_type index_from(pointer ptr) noexcept
+    static typename Marker::size_type index_from(pointer first, pointer ptr) noexcept
     {
-      return static_cast<typename Marker::size_type>(static_cast<block_pointer>(ptr) - this->ptr);
+      return static_cast<typename Marker::size_type>(
+        static_cast<block_pointer>(ptr) - static_cast<block_pointer>(first));
     }
 
   private: // variables
-    Marker marker;
-    block_pointer ptr;
-#ifndef NDEBUG
-    size_type alignment;
-#endif
+    std::size_t length = 0;
+    std::array<pointer, Replicas> ptrs;
+    std::array<Marker, Replicas> markers;
   };
-
-  /**
-   * @brief basic_free_block with `Pointer` as `void *` and `SizeType` as `size_type`
-   *
-   * @tparam BlockSize size of memory block in bytes
-   * @tparam Marker type that fulfils the `Marker` concept
-   */
-  template<std::size_t BlockSize, typename Marker>
-  using free_block = basic_free_block<void *, std::size_t, BlockSize, Marker>;
 }

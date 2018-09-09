@@ -26,13 +26,3 @@ TEST_CASE("is_marker", "[traits]")
   REQUIRE(is_marker_v<heap> == false);
   REQUIRE(is_marker_v<stack<10>> == true);
 }
-
-TEST_CASE("is_strategy", "[traits]")
-{
-  REQUIRE(is_strategy_v<int> == false);
-  REQUIRE(is_strategy_v<float> == false);
-  REQUIRE(is_strategy_v<std::string> == false);
-  REQUIRE(is_strategy_v<heap> == false);
-  REQUIRE(is_strategy_v<stack<10>> == false);
-  REQUIRE(is_strategy_v<free_block<32, stack<10>>> == true);
-}

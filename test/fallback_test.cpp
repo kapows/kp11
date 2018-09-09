@@ -1,6 +1,5 @@
 #include "fallback.h"
 
-#include "fence.h" // fence
 #include "free_block.h" // free_block
 #include "heap.h" // heap
 #include "local.h" // local
@@ -12,18 +11,18 @@ using namespace kp11;
 
 TEST_CASE("unit test", "[unit-test]")
 {
-  fallback<local<128, 4, fence<free_block<32, stack<4>>>>, heap> m;
+  fallback<free_block<32, 4, 1, stack<4>, local<128, 4>>, heap> m;
   auto a = m.allocate(64, 4);
   REQUIRE(a != nullptr);
-  REQUIRE(m.get_primary().get_mem_block().contains(a) == true);
+  REQUIRE(m.get_primary()[a] != nullptr);
   auto b = m.allocate(64, 4);
   REQUIRE(b != nullptr);
-  REQUIRE(m.get_primary().get_mem_block().contains(b) == true);
+  REQUIRE(m.get_primary()[b] != nullptr);
 
   // exhausted primary memeory
   auto c = m.allocate(64, 4);
   REQUIRE(c != nullptr);
-  REQUIRE(m.get_primary().get_mem_block().contains(c) == false);
+  REQUIRE(m.get_primary()[c] == nullptr);
   m.get_fallback().deallocate(c, 64, 4);
 
   auto const & n = m;

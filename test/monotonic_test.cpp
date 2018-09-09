@@ -1,8 +1,9 @@
 #include "monotonic.h"
 
 #include "free_block.h" // free_block
+#include "local.h" // local
 #include "stack.h" // stack
-#include "traits.h" // is_resource_v, is_strategy_v
+#include "traits.h" // is_resource_v
 
 #include <catch.hpp>
 
@@ -10,11 +11,8 @@ using namespace kp11;
 
 TEST_CASE("unit test", "[unit-test]")
 {
-  alignas(4) char buffer[128];
-  monotonic<free_block<32, stack<4>>> m(buffer, 128, 4);
-  m.deallocate(buffer, 128, 4);
+  monotonic<free_block<32, 4, 1, stack<4>, local<128, 4>>> m;
   m.deallocate(nullptr, 128, 4);
-  m.deallocate(buffer + 10, 128, 4);
   auto a = m.allocate(128, 4);
   REQUIRE(a != nullptr);
   SECTION("deallocate is a no-op")
@@ -26,5 +24,5 @@ TEST_CASE("unit test", "[unit-test]")
 
 TEST_CASE("traits", "[traits]")
 {
-  REQUIRE(is_strategy_v<monotonic<free_block<32, stack<4>>>> == true);
+  REQUIRE(is_resource_v<monotonic<free_block<32, 4, 1, stack<4>, local<128, 4>>>> == true);
 }
