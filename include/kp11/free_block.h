@@ -78,18 +78,12 @@ namespace kp11
     }
     /**
      * @copydoc Resource::deallocate
-     *
-     * @return true if `ptr` was deallocated
-     * @return false otherwise
      */
-    bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+    void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
-      if (auto i = find(ptr); i != Replicas)
-      {
-        markers[i].reset(index_from(ptrs[i], static_cast<block_pointer>(ptr)), size_from(bytes));
-        return true;
-      }
-      return false;
+      auto i = find(ptr);
+      assert(i != Replicas);
+      markers[i].reset(index_from(ptrs[i], static_cast<block_pointer>(ptr)), size_from(bytes));
     }
 
   public: // observers
