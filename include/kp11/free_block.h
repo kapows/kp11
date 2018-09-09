@@ -16,8 +16,6 @@ namespace kp11
    * always be some multiple of `BlockSize` that is greater than the request. Allocations and
    * deallocations will defer to `Marker` to determine functionality.
    *
-   * @tparam Pointer pointer type
-   * @tparam SizeType size type
    * @tparam BlockSize size of memory block in bytes
    * @tparam BlockAlignment alignment of memory block in bytes
    * @tparam Replicas number of times to replicate
@@ -25,26 +23,18 @@ namespace kp11
    * @tparam Upstream type that meets the `Resource` concept. This is where memory will be allocated
    * from.
    */
-  template<typename Pointer,
-    typename SizeType,
-    std::size_t BlockSize,
+  template<std::size_t BlockSize,
     std::size_t BlockAlignment,
     std::size_t Replicas,
     typename Marker,
     typename Upstream>
-  class basic_free_block : public Upstream
+  class free_block : public Upstream
   {
     static_assert(is_marker_v<Marker>, "basic_free_block requires Marker to be a Marker");
 
   public: // typedefs
-    /**
-     * @brief pointer type
-     */
-    using pointer = Pointer;
-    /**
-     * @brief size type
-     */
-    using size_type = SizeType;
+    using typename Upstream::pointer;
+    using typename Upstream::size_type;
 
   private: // typedefs
     using block_type = std::aligned_storage_t<BlockSize, BlockAlignment>;
@@ -173,16 +163,4 @@ namespace kp11
     std::array<block_pointer, Replicas> ptrs;
     std::array<Marker, Replicas> markers;
   };
-
-  /**
-   * @brief basic_free_block with `Pointer` as `void *` and `SizeType` as `size_type`
-   * @copydoc basic_free_block
-   */
-  template<std::size_t BlockSize,
-    std::size_t BlockAlignment,
-    std::size_t Replicas,
-    typename Marker,
-    typename Upstream>
-  using free_block =
-    basic_free_block<void *, std::size_t, BlockSize, BlockAlignment, Replicas, Marker, Upstream>;
 }
