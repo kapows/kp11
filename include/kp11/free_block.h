@@ -153,7 +153,7 @@ namespace kp11
       return Replicas;
     }
     /**
-     * @brief Removes all elements from our containers. Calls Resource::deallocate.
+     * @brief Deallocate all memory back to `Upstream`.
      */
     void clear() noexcept
     {
