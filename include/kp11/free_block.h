@@ -87,7 +87,7 @@ namespace kp11
   public: // observers
     /**
      * @brief Returns a references to the beginning of the original memory block given by
-     * Resource::allocate
+     * Upstream::allocate
      *
      * @param ptr pointer that points to within an allocated block
      */
