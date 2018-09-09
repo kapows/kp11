@@ -62,7 +62,7 @@ namespace kp11
       {
         if (auto i = markers[marker_index].set(num); i != Marker::size())
         {
-          return ptrs[marker_index] + i;
+          return static_cast<pointer>(static_cast<block_pointer>(ptrs[marker_index]) + i);
         }
       }
       // not enough room in current markers
@@ -70,7 +70,7 @@ namespace kp11
       {
         if (auto i = markers[marker_index].set(num); i != Marker::size())
         {
-          return ptrs[marker_index] + i;
+          return static_cast<pointer>(static_cast<block_pointer>(ptrs[marker_index]) + i);
         }
       }
       return nullptr;
@@ -82,7 +82,7 @@ namespace kp11
     {
       auto i = find(ptr);
       assert(i != Replicas);
-      markers[i].reset(index_from(ptrs[i], static_cast<block_pointer>(ptr)), size_from(bytes));
+      markers[i].reset(index_from(ptrs[i], ptr), size_from(bytes));
     }
 
   public: // observers
@@ -115,9 +115,8 @@ namespace kp11
       std::size_t i = 0;
       for (; i < length; ++i)
       {
-        auto first = static_cast<pointer>(ptrs[i]);
-        if (std::less_equal<pointer>()(first, ptr) &&
-            std::less<pointer>()(ptr, kp11::advance(first, BlockSize * Marker::size())))
+        if (std::less_equal<pointer>()(ptrs[i], ptr) &&
+            std::less<pointer>()(ptr, kp11::advance(ptrs[i], BlockSize * Marker::size())))
         {
           return i;
         }
@@ -139,7 +138,7 @@ namespace kp11
         if (auto ptr = Upstream::allocate(BlockSize * Marker::size(), BlockAlignment);
             ptr != nullptr)
         {
-          ptrs[length] = static_cast<block_pointer>(ptr);
+          ptrs[length] = ptr;
           return length++;
         }
       }
@@ -152,7 +151,7 @@ namespace kp11
     {
       while (length)
       {
-        Upstream::deallocate(static_cast<pointer>(ptrs[length - 1]), BlockSize, BlockAlignment);
+        Upstream::deallocate(ptrs[length - 1], BlockSize, BlockAlignment);
         --length;
       }
     }
@@ -168,14 +167,15 @@ namespace kp11
       // mod is required to deal with non BlockSize sizes
       return static_cast<typename Marker::size_type>(bytes / BlockSize + (bytes % BlockSize != 0));
     }
-    static typename Marker::size_type index_from(block_pointer first, block_pointer ptr) noexcept
+    static typename Marker::size_type index_from(pointer first, pointer ptr) noexcept
     {
-      return static_cast<typename Marker::size_type>((ptr - first));
+      return static_cast<typename Marker::size_type>(
+        static_cast<block_pointer>(ptr) - static_cast<block_pointer>(first));
     }
 
   private: // variables
     std::size_t length = 0;
-    std::array<block_pointer, Replicas> ptrs;
+    std::array<pointer, Replicas> ptrs;
     std::array<Marker, Replicas> markers;
   };
 }
