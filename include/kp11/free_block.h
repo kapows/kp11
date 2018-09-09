@@ -17,16 +17,26 @@ namespace kp11
    * @tparam Pointer pointer type
    * @tparam SizeType size type
    * @tparam BlockSize size of memory block in bytes
-   * @tparam Marker type that fulfils the `Marker` concept
+   * @tparam BlockAlignment alignment of memory block in bytes
+   * @tparam CascadeSize number of times to replicate
+   * @tparam Marker type that meets the `Marker` concept
+   * @tparam Upstream type that meets the `Resource` concept. This is where memory will be allocated
+   * from.
    */
-  template<typename Pointer, typename SizeType, std::size_t BlockSize, typename Marker>
+  template<typename Pointer,
+    typename SizeType,
+    std::size_t BlockSize,
+    std::size_t BlockAlignment,
+    std::size_t CascadeSize,
+    typename Marker,
+    typename Upstream>
   class basic_free_block
   {
     static_assert(is_marker_v<Marker>, "basic_free_block requires Marker to be a Marker");
 
   public: // typedefs
     /**
-     * @brief pointer
+     * @brief pointer type
      */
     using pointer = Pointer;
     /**
@@ -38,23 +48,8 @@ namespace kp11
     using block_type = std::aligned_storage_t<BlockSize, 1>;
     using block_pointer = typename std::pointer_traits<pointer>::template rebind<block_type>;
 
-  public: // constructor
-    /**
-     * @brief Construct a new basic free block object
-     *
-     * @copydoc Strategy::Strategy
-     *
-     * @pre `BlockSize` must be a divisor of `bytes`
-     */
-    basic_free_block(pointer ptr, size_type bytes, size_type alignment) noexcept :
-        ptr(static_cast<block_pointer>(ptr))
-#ifndef NDEBUG
-        ,
-        alignment(alignment)
-#endif
-    {
-      assert(bytes % BlockSize == 0);
-    }
+  public: // constructors
+    basic_free_block() = default;
 
   public: // modifiers
     /**
@@ -64,11 +59,13 @@ namespace kp11
      */
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
+      /*
       assert(this->alignment % alignment == 0);
       if (auto i = marker.set(size_from(bytes)); i != marker.size())
       {
         return static_cast<pointer>(&ptr[i]);
       }
+      */
       return nullptr;
     }
     /**
@@ -78,11 +75,42 @@ namespace kp11
      */
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
+      /*
       assert(this->alignment % alignment == 0);
       if (ptr != nullptr)
       {
         marker.reset(index_from(ptr), size_from(bytes));
       }
+      */
+    }
+
+  public: // observers
+    /**
+     * @brief Returns a references to the beginning of the original memory block given by
+     * Resource::allocate
+     *
+     * @param ptr pointer that points to within an allocated block
+     */
+    pointer operator[](pointer ptr) noexcept
+    {
+      /*
+      auto i = find(ptr);
+      assert(i != length);
+      return {mem_blocks()[i], strategies()[i]};
+      */
+      return nullptr;
+    }
+    /**
+     * @copydoc cascade::operator[]
+     */
+    pointer operator[](pointer ptr) const noexcept
+    {
+      /*
+      auto i = find(ptr);
+      assert(i != length);
+      return {mem_blocks()[i], strategies()[i]};
+      */
+      return nullptr;
     }
 
   private: // Marker helper functions
@@ -109,6 +137,11 @@ namespace kp11
    * @tparam BlockSize size of memory block in bytes
    * @tparam Marker type that fulfils the `Marker` concept
    */
-  template<std::size_t BlockSize, typename Marker>
-  using free_block = basic_free_block<void *, std::size_t, BlockSize, Marker>;
+  template<std::size_t BlockSize,
+    std::size_t BlockAlignment,
+    std::size_t CascadeSize,
+    typename Marker,
+    typename Upstream>
+  using free_block =
+    basic_free_block<void *, std::size_t, BlockSize, BlockAlignment, CascadeSize, Marker, Upstream>;
 }
