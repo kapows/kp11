@@ -32,6 +32,11 @@ namespace kp11
      */
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
+      if (!allocated && bytes <= Bytes)
+      {
+        allocated = true;
+        return static_cast<pointer>(&buffer);
+      }
       return nullptr;
     }
     /**
@@ -39,9 +44,11 @@ namespace kp11
      */
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
+      allocated = false;
     }
 
   private: // variables
+    bool allocated = false;
     buffer_type buffer;
   };
 
