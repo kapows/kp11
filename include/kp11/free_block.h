@@ -151,7 +151,7 @@ namespace kp11
     {
       while (length)
       {
-        Upstream::deallocate(static_cast<pointer>(ptrs[length - 1]), Bytes, Alignment);
+        Upstream::deallocate(static_cast<pointer>(ptrs[length - 1]), BlockSize, BlockAlignment);
         --length;
       }
     }
