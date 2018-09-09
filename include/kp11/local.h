@@ -11,15 +11,23 @@ namespace kp11
   /**
    * @brief Allocates from a buffer inside itself. Can only allocate once.
    *
+   * @tparam Pointer pointer type
+   * @tparam Size size type
    * @tparam Bytes size of buffer
    * @tparam Alignment alignment of buffer
    */
-  template<std::size_t Bytes, std::size_t Alignment>
-  class local
+  template<typename Pointer, typename SizeType, std::size_t Bytes, std::size_t Alignment>
+  class basic_local
   {
   public: // typedefs
-    using pointer = void *;
-    using size_type = std::size_t;
+    /**
+     * @brief pointer type
+     */
+    using pointer = Pointer;
+    /**
+     * @brief size type
+     */
+    using size_type = SizeType;
 
   private: // typedefs
     using buffer_type = std::aligned_storage_t<Bytes, Alignment>;
@@ -51,4 +59,7 @@ namespace kp11
     bool allocated = false;
     buffer_type buffer;
   };
+
+  template<std::size_t Bytes, std::size_t Alignment>
+  using local = basic_local<void *, std::size_t, Bytes, Alignment>;
 }
