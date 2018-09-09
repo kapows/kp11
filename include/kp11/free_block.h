@@ -160,6 +160,12 @@ namespace kp11
   private: // Marker helper functions
     constexpr typename Marker::size_type size_from(size_type bytes) const noexcept
     {
+      // zero bytes is required as well
+      if (bytes == 0)
+      {
+        return static_cast<typename Marker::size_type>(1);
+      }
+      // mod is required to deal with non BlockSize sizes
       return static_cast<typename Marker::size_type>(bytes / BlockSize + (bytes % BlockSize != 0));
     }
     static typename Marker::size_type index_from(block_pointer first, block_pointer ptr) noexcept
