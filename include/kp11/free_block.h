@@ -67,7 +67,7 @@ namespace kp11
         }
       }
       // not enough room in current markers
-      if (auto marker_index = emplace_back(); marker_index != Replicas)
+      if (auto marker_index = push_back(); marker_index != Replicas)
       {
         if (auto i = markers[marker_index].set(num); i != Marker::size())
         {
@@ -94,9 +94,10 @@ namespace kp11
 
   public: // observers
     /**
-     * @brief Return a pointer to the beginning of the original memory block obtained from Upstream
+     * @brief Check if `ptr` points to memory that was obtained from Upstream.
      *
-     * @returns pointer to the beginning of the original memory block
+     * @param ptr pointer to check
+     * @returns pointer to the beginning of the memory that was obtained from Upstream
      * @returns nullptr otherwise
      */
     pointer operator[](pointer ptr) const noexcept
@@ -110,10 +111,10 @@ namespace kp11
 
   private: // operator[] helper
     /**
-     * @brief Return the index of the memory block that contains ptr
+     * @brief Return the index of the memory that was obtained from Upstream.
      *
-     * @param ptr
-     * @return the index of the memory block
+     * @param ptr pointer to find
+     * @return the index of the memory that was obtained from Upstream
      * @return `Replicas` otherwise
      */
     std::size_t find(pointer ptr) const noexcept
@@ -138,7 +139,7 @@ namespace kp11
      * @return index of the added `pointer` and `Marker`
      * @return `Replicas` if unsuccessful
      */
-    std::size_t emplace_back() noexcept
+    std::size_t push_back() noexcept
     {
       if (length != Replicas)
       {
