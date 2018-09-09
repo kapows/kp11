@@ -25,6 +25,7 @@ TEST_CASE("unit test", "[unit-test]")
   REQUIRE(m.get_primary()[c] == nullptr);
   m.get_fallback().deallocate(c, 64, 4);
 
+  m.deallocate(a, 64, 4);
   auto const & n = m;
   n.get_primary();
   n.get_fallback();
