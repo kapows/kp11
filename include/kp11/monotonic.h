@@ -151,6 +151,7 @@ namespace kp11
      * @brief pointers to the end of memory (beginning is lasts[i] - Bytes).
      * lasts[0] is a bootstrap pointer so it must exist.
      * bootstrap exists so that we don't have to check to see if we've been initialized.
+     * bootstrap is always nullptr
      */
     std::array<unsigned_char_pointer, Replicas + 1> lasts{nullptr};
   };
