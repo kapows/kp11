@@ -22,6 +22,7 @@ TEST_CASE("unit test", "[unit-test]")
   m.deallocate(b, 128, 4);
   auto c = m.allocate(128, 4);
   REQUIRE(c == nullptr);
+  REQUIRE(m[c] == nullptr);
 }
 
 TEST_CASE("traits", "[traits]")
