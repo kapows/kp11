@@ -109,15 +109,16 @@ namespace kp11
       {
         return false;
       }
-      // allocate new memory from upstream
-      if (auto p = Upstream::allocate(Bytes, Alignment))
+      else if (auto p = Upstream::allocate(Bytes, Alignment)) // allocate new memory from upstream
       {
         ptr = static_cast<unsigned_char_pointer>(p);
         lasts[length++] = ptr + Bytes;
         return true;
       }
-      // failed to allocate memory from upstream
-      return false;
+      else // failed to allocate memory from upstream
+      {
+        return false;
+      }
     }
     void clear() noexcept
     {
