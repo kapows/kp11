@@ -43,6 +43,14 @@ namespace kp11
   public: // constructors
     using Upstream::Upstream;
     /**
+     * @brief Delete copy constructor since a resource is being held and managed.
+     */
+    free_block(free_block const &) = delete;
+    /**
+     * @brief Delete copy assignment since a resource is being held and managed.
+     */
+    free_block & operator=(free_block const &) = delete;
+    /**
      * @brief Destroy the free block object. Deallocate all memory back to `Upstream`.
      */
     ~free_block() noexcept
