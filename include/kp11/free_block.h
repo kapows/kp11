@@ -1,7 +1,6 @@
 #pragma once
 
 #include "traits.h" // is_marker_v
-#include "utility.h" // advance
 
 #include <array> // array
 #include <cassert> // assert
@@ -39,6 +38,8 @@ namespace kp11
   private: // typedefs
     using block_type = std::aligned_storage_t<BlockSize, BlockAlignment>;
     using block_pointer = typename std::pointer_traits<pointer>::template rebind<block_type>;
+    using unsigned_char_pointer =
+      typename std::pointer_traits<pointer>::template rebind<unsigned char>;
 
   public: // constructors
     using Upstream::Upstream;
@@ -116,7 +117,9 @@ namespace kp11
       for (; i < length; ++i)
       {
         if (std::less_equal<pointer>()(ptrs[i], ptr) &&
-            std::less<pointer>()(ptr, kp11::advance(ptrs[i], BlockSize * Marker::size())))
+            std::less<pointer>()(ptr,
+              static_cast<pointer>(
+                static_cast<unsigned_char_pointer>(ptrs[i]) + BlockSize * Marker::size())))
         {
           return i;
         }
