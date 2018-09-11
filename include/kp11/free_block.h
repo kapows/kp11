@@ -2,7 +2,6 @@
 
 #include "traits.h" // is_marker_v
 
-#include <array> // array
 #include <cassert> // assert
 #include <cstddef> // size_t
 #include <memory> // pointer_traits
@@ -178,7 +177,7 @@ namespace kp11
 
   private: // variables
     std::size_t length = 0;
-    std::array<pointer, Replicas> ptrs;
-    std::array<Marker, Replicas> markers;
+    pointer ptrs[Replicas];
+    Marker markers[Replicas];
   };
 }
