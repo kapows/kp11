@@ -30,6 +30,13 @@ namespace kp11
       typename std::pointer_traits<pointer>::template rebind<unsigned char>;
 
   public: // constructors
+    /**
+     * @brief Construct a new monotonic object
+     *
+     * @param bytes Size in bytes of memory to alloate from `Upstream` per replica
+     * @param alignment Size in bytes of memory to alloate from `Upstream` per replica
+     * @param args `Upstream` constructor arguments
+     */
     template<typename... Args>
     monotonic(size_type bytes, size_type alignment, Args &&... args) noexcept :
         Upstream(std::forward<Args>(args)...), bytes(bytes), alignment(alignment)

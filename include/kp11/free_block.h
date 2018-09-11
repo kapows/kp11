@@ -33,6 +33,13 @@ namespace kp11
 
   public: // constructors
     using Upstream::Upstream;
+    /**
+     * @brief Construct a new free_block object
+     *
+     * @param bytes Size in bytes of memory to alloate from `Upstream` per replica
+     * @param alignment Size in bytes of memory to alloate from `Upstream` per replica
+     * @param args `Upstream` constructor arguments
+     */
     template<typename... Args>
     free_block(size_type bytes, size_type alignment, Args &&... args) :
         Upstream(std::forward<Args>(args)...), bytes(bytes), alignment(alignment)
