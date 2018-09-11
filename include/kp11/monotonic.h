@@ -2,7 +2,6 @@
 
 #include "traits.h" // is_resource_v
 
-#include <array> // array
 #include <cassert> // assert
 #include <cstddef> // size_t
 #include <memory> // pointer_traits, align
@@ -160,6 +159,6 @@ namespace kp11
      * bootstrap exists so that we don't have to check to see if we've been initialized.
      * bootstrap is always nullptr
      */
-    std::array<unsigned_char_pointer, Replicas + 1> lasts{nullptr};
+    unsigned_char_pointer lasts[Replicas + 1]{nullptr};
   };
 }
