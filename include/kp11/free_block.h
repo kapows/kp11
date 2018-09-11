@@ -61,24 +61,34 @@ namespace kp11
      */
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
-      auto const num = size_from(bytes);
+      auto const num_blocks = size_from(bytes);
       // search current markers
-      for (std::size_t marker_index = 0; marker_index < length; ++marker_index)
-      {
-        if (auto i = markers[marker_index].set(num); i != Marker::size())
+      auto allocate_from_current_markers = [&]() -> pointer {
+        for (std::size_t marker_index = 0; marker_index < length; ++marker_index)
         {
-          return static_cast<pointer>(ptrs[marker_index] + i * BlockSize);
+          if (auto i = markers[marker_index].set(num_blocks); i != Marker::size())
+          {
+            return static_cast<pointer>(ptrs[marker_index] + i * BlockSize);
+          }
         }
-      }
-      // not enough room in current markers
-      if (auto marker_index = push_back(); marker_index != Replicas)
+        return nullptr;
+      };
+
+      if (auto ptr = allocate_from_current_markers())
       {
-        if (auto i = markers[marker_index].set(num); i != Marker::size())
-        {
-          return static_cast<pointer>(ptrs[marker_index] + i * BlockSize);
-        }
+        return ptr;
       }
-      return nullptr;
+      else if (auto marker_index = push_back(); marker_index != Replicas) // not enough room
+      {
+        // this call should not fail as a full buffer should be able to fulfil any request made
+        auto i = markers[marker_index].set(num_blocks);
+        assert(i != Marker::size());
+        return static_cast<pointer>(ptrs[marker_index] + i * BlockSize);
+      }
+      else // cant push back
+      {
+        return nullptr;
+      }
     }
     /**
      * @copydoc Resource::deallocate
