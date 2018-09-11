@@ -78,8 +78,9 @@ namespace kp11
       {
         return ptr;
       }
-      else if (auto marker_index = push_back(); marker_index != Replicas) // not enough room
+      else if (push_back()) // not enough room
       {
+        auto const marker_index = length - 1;
         // this call should not fail as a full buffer should be able to fulfil any request made
         auto i = markers[marker_index].set(num_blocks);
         assert(i != Marker::size());
@@ -144,21 +145,20 @@ namespace kp11
     /**
      * @brief Add a `pointer` and `Marker` to the end of our containers. Calls Upstream::allocate.
      *
-     * @return index of the added `pointer` and `Marker`
-     * @return `Replicas` if unsuccessful
+     * @return true if successful
+     * @return false otherwise
      */
-    std::size_t push_back() noexcept
+    bool push_back() noexcept
     {
       if (length != Replicas)
       {
-        if (auto ptr = Upstream::allocate(BlockSize * Marker::size(), BlockAlignment);
-            ptr != nullptr)
+        if (auto ptr = Upstream::allocate(BlockSize * Marker::size(), BlockAlignment))
         {
-          ptrs[length] = static_cast<unsigned_char_pointer>(ptr);
-          return length++;
+          ptrs[length++] = static_cast<unsigned_char_pointer>(ptr);
+          return true;
         }
       }
-      return Replicas;
+      return false;
     }
     /**
      * @brief Deallocate all memory back to `Upstream`.
