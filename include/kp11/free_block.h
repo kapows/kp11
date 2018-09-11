@@ -5,7 +5,6 @@
 #include <cassert> // assert
 #include <cstddef> // size_t
 #include <memory> // pointer_traits
-#include <type_traits> // aligned_storage_t
 
 namespace kp11
 {
@@ -35,8 +34,6 @@ namespace kp11
     using typename Upstream::size_type;
 
   private: // typedefs
-    using block_type = std::aligned_storage_t<BlockSize, BlockAlignment>;
-    using block_pointer = typename std::pointer_traits<pointer>::template rebind<block_type>;
     using unsigned_char_pointer =
       typename std::pointer_traits<pointer>::template rebind<unsigned char>;
 
@@ -70,7 +67,7 @@ namespace kp11
       {
         if (auto i = markers[marker_index].set(num); i != Marker::size())
         {
-          return static_cast<pointer>(static_cast<block_pointer>(ptrs[marker_index]) + i);
+          return static_cast<pointer>(ptrs[marker_index] + i * BlockSize);
         }
       }
       // not enough room in current markers
@@ -78,7 +75,7 @@ namespace kp11
       {
         if (auto i = markers[marker_index].set(num); i != Marker::size())
         {
-          return static_cast<pointer>(static_cast<block_pointer>(ptrs[marker_index]) + i);
+          return static_cast<pointer>(ptrs[marker_index] + i * BlockSize);
         }
       }
       return nullptr;
@@ -88,9 +85,10 @@ namespace kp11
      */
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
-      auto i = find(ptr);
+      auto i = find(static_cast<unsigned_char_pointer>(ptr));
       assert(i != Replicas);
-      markers[i].reset(index_from(ptrs[i], ptr), size_from(bytes));
+      markers[i].reset(
+        index_from(ptrs[i], static_cast<unsigned_char_pointer>(ptr)), size_from(bytes));
     }
 
   public: // observers
@@ -103,9 +101,9 @@ namespace kp11
      */
     pointer operator[](pointer ptr) const noexcept
     {
-      if (auto i = find(ptr); i != Replicas)
+      if (auto i = find(static_cast<unsigned_char_pointer>(ptr)); i != Replicas)
       {
-        return ptrs[i];
+        return static_cast<pointer>(ptrs[i]);
       }
       return nullptr;
     }
@@ -118,15 +116,13 @@ namespace kp11
      * @return the index of the memory that was obtained from Upstream
      * @return `Replicas` otherwise
      */
-    std::size_t find(pointer ptr) const noexcept
+    std::size_t find(unsigned_char_pointer ptr) const noexcept
     {
       std::size_t i = 0;
       for (; i < length; ++i)
       {
         if (std::less_equal<pointer>()(ptrs[i], ptr) &&
-            std::less<pointer>()(ptr,
-              static_cast<pointer>(
-                static_cast<unsigned_char_pointer>(ptrs[i]) + BlockSize * Marker::size())))
+            std::less<pointer>()(ptr, ptrs[i] + BlockSize * Marker::size()))
         {
           return i;
         }
@@ -148,7 +144,7 @@ namespace kp11
         if (auto ptr = Upstream::allocate(BlockSize * Marker::size(), BlockAlignment);
             ptr != nullptr)
         {
-          ptrs[length] = ptr;
+          ptrs[length] = static_cast<unsigned_char_pointer>(ptr);
           return length++;
         }
       }
@@ -161,7 +157,7 @@ namespace kp11
     {
       while (length)
       {
-        Upstream::deallocate(ptrs[length - 1], BlockSize, BlockAlignment);
+        Upstream::deallocate(static_cast<pointer>(ptrs[length - 1]), BlockSize, BlockAlignment);
         --length;
       }
     }
@@ -177,15 +173,15 @@ namespace kp11
       // mod is required to deal with non BlockSize sizes
       return static_cast<typename Marker::size_type>(bytes / BlockSize + (bytes % BlockSize != 0));
     }
-    static typename Marker::size_type index_from(pointer first, pointer ptr) noexcept
+    static typename Marker::size_type index_from(
+      unsigned_char_pointer first, unsigned_char_pointer ptr) noexcept
     {
-      return static_cast<typename Marker::size_type>(
-        static_cast<block_pointer>(ptr) - static_cast<block_pointer>(first));
+      return static_cast<typename Marker::size_type>((ptr - first) / BlockSize);
     }
 
   private: // variables
     std::size_t length = 0;
-    pointer ptrs[Replicas];
+    unsigned_char_pointer ptrs[Replicas];
     Marker markers[Replicas];
   };
 }
