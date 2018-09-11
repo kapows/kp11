@@ -15,6 +15,10 @@ TEST_CASE("unit test", "[unit-test]")
 {
   fallback<free_block<1, stack<4>, local<128, 4>>, heap> m(
     std::piecewise_construct, std::forward_as_tuple(32, 4), std::forward_as_tuple());
+  SECTION("default constructor")
+  {
+    fallback<local<128, 4>, heap> n;
+  }
   auto a = m.allocate(64, 4);
   REQUIRE(a != nullptr);
   REQUIRE(m.get_primary()[a] != nullptr);
