@@ -26,7 +26,16 @@ namespace kp11
     using typename Primary::size_type;
 
   public: // constructors
+    /**
+     * @brief Construct a new fallback object
+     */
     fallback() = default;
+    /**
+     * @brief Construct a new fallback object
+     *
+     * @param first_args `Primary` constructor arguments
+     * @param second_args `Fallback` constructor arguments
+     */
     template<typename... Args1, typename... Args2>
     fallback(std::piecewise_construct_t,
       std::tuple<Args1...> first_args,
