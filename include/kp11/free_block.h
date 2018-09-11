@@ -62,7 +62,6 @@ namespace kp11
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
       auto const num_blocks = size_from(bytes);
-      // search current markers
       auto allocate_from_current_markers = [&]() -> pointer {
         for (std::size_t marker_index = 0; marker_index < length; ++marker_index)
         {
