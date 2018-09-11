@@ -27,9 +27,9 @@ TEST_CASE("unit test", "[unit-test]")
   REQUIRE(m[a] != m[d]);
   SECTION("deallocate recovers with stack functionality")
   {
-    m.deallocate(c, 32, 4);
-    m.deallocate(b, 64, 4);
-    m.deallocate(a, 32, 4);
+    REQUIRE(m.deallocate(c, 32, 4) == true);
+    REQUIRE(m.deallocate(b, 64, 4) == true);
+    REQUIRE(m.deallocate(a, 32, 4) == true);
 
     auto e = m.allocate(32, 4);
     REQUIRE(e != nullptr);
@@ -42,12 +42,13 @@ TEST_CASE("unit test", "[unit-test]")
   {
     auto e = m.allocate(128, 4);
     REQUIRE(e == nullptr);
+    REQUIRE(m.deallocate(e, 128, 4) == false);
   }
 
-  m.deallocate(d, 32, 4);
-  m.deallocate(c, 32, 4);
-  m.deallocate(b, 64, 4);
-  m.deallocate(a, 32, 4);
+  REQUIRE(m.deallocate(d, 32, 4) == true);
+  REQUIRE(m.deallocate(c, 32, 4) == true);
+  REQUIRE(m.deallocate(b, 64, 4) == true);
+  REQUIRE(m.deallocate(a, 32, 4) == true);
 }
 
 TEST_CASE("traits", "[traits]")
