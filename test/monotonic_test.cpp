@@ -9,7 +9,7 @@ using namespace kp11;
 
 TEST_CASE("unit test", "[unit-test]")
 {
-  monotonic<128, 4, 2, heap> m;
+  monotonic<2, heap> m(128, 4);
   auto a = m.allocate(128, 4);
   REQUIRE(a != nullptr);
   REQUIRE(m[a] != nullptr);
@@ -27,5 +27,5 @@ TEST_CASE("unit test", "[unit-test]")
 
 TEST_CASE("traits", "[traits]")
 {
-  REQUIRE(is_resource_v<monotonic<128, 4, 2, heap>> == true);
+  REQUIRE(is_resource_v<monotonic<2, heap>> == true);
 }
