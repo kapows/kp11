@@ -32,7 +32,6 @@ namespace kp11
       typename std::pointer_traits<pointer>::template rebind<unsigned char>;
 
   public: // constructors
-    using Upstream::Upstream;
     /**
      * @brief Construct a new free_block object
      *
