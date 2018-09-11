@@ -93,13 +93,19 @@ namespace kp11
     }
     /**
      * @copydoc Resource::deallocate
+     *
+     * @returns true if `ptr` pointers into memory allocated from this resource
+     * @returns false otherwise
      */
-    void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+    bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
-      auto i = find(static_cast<unsigned_char_pointer>(ptr));
-      assert(i != Replicas);
-      markers[i].reset(
-        index_from(ptrs[i], static_cast<unsigned_char_pointer>(ptr)), size_from(bytes));
+      if (auto i = find(static_cast<unsigned_char_pointer>(ptr)); i != Replicas)
+      {
+        markers[i].reset(
+          index_from(ptrs[i], static_cast<unsigned_char_pointer>(ptr)), size_from(bytes));
+        return true;
+      }
+      return false;
     }
 
   public: // observers
