@@ -12,13 +12,11 @@ namespace kp11
   /**
    * @brief Allocates memory by incrementing a pointer.
    *
-   * @tparam Bytes size of memory in bytes
-   * @tparam Alignment alignment of memory in bytes
    * @tparam Replicas number of times to replicate
    * @tparam Upstream type that meets the `Resource` concept. This is where memory will be allocated
    * from.
    */
-  template<std::size_t Bytes, std::size_t Alignment, std::size_t Replicas, typename Upstream>
+  template<std::size_t Replicas, typename Upstream>
   class monotonic : public Upstream
   {
     static_assert(is_resource_v<Upstream>);
@@ -32,7 +30,11 @@ namespace kp11
       typename std::pointer_traits<pointer>::template rebind<unsigned char>;
 
   public: // constructors
-    using Upstream::Upstream;
+    template<typename... Args>
+    monotonic(size_type bytes, size_type alignment, Args &&... args) noexcept :
+        Upstream(std::forward<Args>(args)...), bytes(bytes), alignment(alignment)
+    {
+    }
     /**
      * @brief Delete copy constructor since a resource is being held and managed.
      */
@@ -108,10 +110,10 @@ namespace kp11
       {
         return false;
       }
-      else if (auto p = Upstream::allocate(Bytes, Alignment)) // allocate new memory from upstream
+      else if (auto p = Upstream::allocate(bytes, alignment)) // allocate new memory from upstream
       {
         ptr = static_cast<unsigned_char_pointer>(p);
-        lasts[length++] = ptr + Bytes;
+        lasts[length++] = ptr + bytes;
         return true;
       }
       else // failed to allocate memory from upstream
@@ -123,7 +125,7 @@ namespace kp11
     {
       while (length > 1)
       {
-        Upstream::deallocate(static_cast<pointer>(lasts[length - 1] - Bytes), Bytes, Alignment);
+        Upstream::deallocate(static_cast<pointer>(lasts[length - 1] - bytes), bytes, alignment);
         --length;
       }
     }
@@ -140,7 +142,7 @@ namespace kp11
     {
       for (std::size_t i = 1; i < length; ++i)
       {
-        auto const first = lasts[i] - Bytes;
+        auto const first = lasts[i] - bytes;
         if (std::less_equal<pointer>()(static_cast<pointer>(first), ptr) &&
             std::less<pointer>()(ptr, static_cast<pointer>(lasts[i])))
         {
@@ -160,5 +162,7 @@ namespace kp11
      * bootstrap is always nullptr
      */
     unsigned_char_pointer lasts[Replicas + 1]{nullptr};
+    size_type const bytes;
+    size_type const alignment;
   };
 }
