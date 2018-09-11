@@ -130,6 +130,13 @@ namespace kp11
     }
 
   public: // observers
+    /**
+     * @brief Check if `ptr` points to memory that was obtained from Upstream.
+     *
+     * @param ptr pointer to check
+     * @returns pointer to the beginning of the memory that was obtained from Upstream
+     * @returns nullptr otherwise
+     */
     pointer operator[](pointer ptr) const noexcept
     {
       for (std::size_t i = 1; i < length; ++i)
