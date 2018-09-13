@@ -1,0 +1,25 @@
+cmake_minimum_required(VERSION 3.8)
+
+find_package(Catch2 CONFIG REQUIRED)
+
+add_library(test_main main.cpp)
+target_link_libraries(test_main PUBLIC Catch2::Catch2)
+
+function(make_test name file)
+    set(exec_name ${name}_test)
+	add_executable(${exec_name} ${file})
+	target_link_libraries(${exec_name} PRIVATE test_main kp11::kp11)
+	add_test(${name} ${exec_name})
+endfunction()
+
+make_test(heap heap.t.cpp)
+make_test(traits traits.t.cpp)
+make_test(stack stack.t.cpp)
+make_test(free_block free_block.t.cpp)
+make_test(pool pool.t.cpp)
+make_test(list list.t.cpp)
+make_test(bitset bitset.t.cpp)
+make_test(local local.t.cpp)
+make_test(monotonic monotonic.t.cpp)
+make_test(fallback fallback.t.cpp)
+make_test(allocator allocator.t.cpp)

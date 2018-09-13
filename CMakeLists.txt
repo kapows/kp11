@@ -31,7 +31,7 @@ target_include_directories(kp11 PUBLIC
 
 if(BUILD_TESTING)
     enable_testing()
-    add_subdirectory("test")
+    add_subdirectory("include/kp11")
 endif()
 
 install(DIRECTORY include/ 
