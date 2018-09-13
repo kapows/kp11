@@ -10,7 +10,7 @@ using namespace kp11;
 
 TEST_CASE("unit test", "[unit-test]")
 {
-  free_block<32, 4, 2, stack<4>, heap> m;
+  free_block<2, stack<4>, heap> m(32, 4);
   auto a = m.allocate(32, 4);
   REQUIRE(a != nullptr);
   auto b = m.allocate(64, 4);
@@ -53,5 +53,5 @@ TEST_CASE("unit test", "[unit-test]")
 
 TEST_CASE("traits", "[traits]")
 {
-  REQUIRE(is_resource_v<free_block<32, 4, 1, stack<4>, heap>> == true);
+  REQUIRE(is_resource_v<free_block<1, stack<4>, heap>> == true);
 }

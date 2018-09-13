@@ -2,6 +2,9 @@
 
 #include "traits.h" // is_resource_v
 
+#include <tuple> // tuple
+#include <utility> // piecewise_construct, index_sequence, index_sequence_for
+
 namespace kp11
 {
   /**
@@ -21,6 +24,39 @@ namespace kp11
   public: // typedefs
     using typename Primary::pointer;
     using typename Primary::size_type;
+
+  public: // constructors
+    /**
+     * @brief Construct a new fallback object
+     */
+    fallback() = default;
+    /**
+     * @brief Construct a new fallback object
+     *
+     * @param first_args `Primary` constructor arguments
+     * @param second_args `Fallback` constructor arguments
+     */
+    template<typename... Args1, typename... Args2>
+    fallback(std::piecewise_construct_t,
+      std::tuple<Args1...> first_args,
+      std::tuple<Args2...> second_args) noexcept :
+        fallback(first_args,
+          second_args,
+          std::index_sequence_for<Args1...>(),
+          std::index_sequence_for<Args2...>())
+    {
+    }
+
+  private: // constructors
+    template<std::size_t... Is1, typename... Args1, std::size_t... Is2, typename... Args2>
+    fallback(std::tuple<Args1...> & first_args,
+      std::tuple<Args2...> & second_args,
+      std::index_sequence<Is1...>,
+      std::index_sequence<Is2...>) noexcept :
+        Primary(std::forward<Args1>(std::get<Is1>(first_args))...),
+        Fallback(std::forward<Args2>(std::get<Is2>(second_args))...)
+    {
+    }
 
   public: // modifiers
     /**
