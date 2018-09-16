@@ -4,37 +4,37 @@ project ("kp11"
     LANGUAGES CXX
     VERSION 0.0.0)
 
-set(INSTALL_INCLUDE_DIR include)
+set(INSTALL_INCLUDE_DIR include/kp11)
 set(INSTALL_ARCHIVE_DIR lib/kp11)
 set(INSTALL_CONFIG_DIR lib/cmake/kp11)
 set(EXPORT_TARGET kp11-targets)
 set(CONFIG_NAME kp11-config)
 
 add_library(kp11 STATIC
-    include/kp11/heap.h src/heap.cpp
-    include/kp11/stack.h
-    include/kp11/free_block.h
-    include/kp11/pool.h
-    include/kp11/list.h
-    include/kp11/bitset.h
-    include/kp11/local.h
-    include/kp11/monotonic.h
-    include/kp11/fallback.h
-    include/kp11/allocator.h
+    public/heap.h src/heap.cpp
+    public/stack.h
+    public/free_block.h
+    public/pool.h
+    public/list.h
+    public/bitset.h
+    public/local.h
+    public/monotonic.h
+    public/fallback.h
+    public/allocator.h
     )
 add_library(kp11::kp11 ALIAS kp11)
 target_compile_features(kp11 PUBLIC cxx_std_17)
 target_include_directories(kp11 PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/kp11>
-    $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/public>
+    $<INSTALL_INTERFACE:include>
     )
 
 if(BUILD_TESTING)
     enable_testing()
-    add_subdirectory("include/kp11")
+    add_subdirectory("public")
 endif()
 
-install(DIRECTORY include/ 
+install(DIRECTORY public/ 
 	DESTINATION ${INSTALL_INCLUDE_DIR}
 	FILES_MATCHING PATTERN "*.h"
 	)
