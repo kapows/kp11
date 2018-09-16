@@ -88,11 +88,11 @@ namespace kp11
       }
       else if (push_back()) // not enough room
       {
-        auto const marker_index = length - 1;
+        auto const last = length - 1;
         // this call should not fail as a full buffer should be able to fulfil any request made
-        auto i = markers[marker_index].set(num_blocks);
+        auto i = markers[last].set(num_blocks);
         assert(i != Marker::size());
-        return static_cast<pointer>(ptrs[marker_index] + i * this->bytes);
+        return static_cast<pointer>(ptrs[last] + i * this->bytes);
       }
       else // cant push back
       {
