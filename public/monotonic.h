@@ -4,8 +4,9 @@
 
 #include <cassert> // assert
 #include <cstddef> // size_t
-#include <memory> // pointer_traits, align
-#include <utility> // exchange
+#include <functional> // less, less_equal
+#include <memory> // pointer_traits
+#include <utility> // forward, exchange
 
 namespace kp11
 {
@@ -64,17 +65,20 @@ namespace kp11
      *
      * @par Complexity
      * `O(1)`
+     * @pre `alignment` must be at most the one passed into the constructor
      */
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
-      if (auto ptr = allocate_from_current_replica(bytes, alignment))
+      assert(this->alignment % alignment == 0);
+      bytes = round_up_to_our_alignment(bytes);
+      if (auto ptr = allocate_from_current_replica(bytes))
       {
         return ptr;
       }
       else if (push_back()) // replica added
       {
         // this call should not fail as a full buffer should be able to fulfil any request made
-        auto ptr = allocate_from_current_replica(bytes, alignment);
+        auto ptr = allocate_from_current_replica(bytes);
         assert(ptr != nullptr);
         return ptr;
       }
@@ -95,16 +99,17 @@ namespace kp11
     {
     }
 
-  private: // allocate helper
-    pointer allocate_from_current_replica(size_type bytes, size_type alignment) noexcept
+  private: // allocate helpers
+    size_type round_up_to_our_alignment(size_type bytes) const noexcept
     {
-      using std::align;
-      auto space = static_cast<size_type>(lasts[length - 1] - ptr);
-      auto p = static_cast<pointer>(ptr);
-      if (align(alignment, bytes, p, space))
+      return (bytes / alignment + (bytes % alignment != 0)) * alignment;
+    }
+    pointer allocate_from_current_replica(size_type bytes) noexcept
+    {
+      assert(bytes % alignment == 0);
+      if (auto space = static_cast<size_type>(lasts[length - 1] - ptr); bytes <= space)
       {
-        ptr = static_cast<unsigned_char_pointer>(p) + bytes;
-        return p;
+        return static_cast<pointer>(std::exchange(ptr, ptr + bytes));
       }
       return nullptr;
     }
