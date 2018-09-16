@@ -71,7 +71,7 @@ namespace kp11
     {
       assert(this->alignment % alignment == 0);
       auto const num_blocks = size_from(bytes);
-      auto allocate_from_current_markers = [&]() -> pointer {
+      auto allocate_from_current_replicas = [&]() -> pointer {
         for (std::size_t marker_index = 0; marker_index < length; ++marker_index)
         {
           if (auto i = markers[marker_index].set(num_blocks); i != Marker::size())
@@ -82,7 +82,7 @@ namespace kp11
         return nullptr;
       };
 
-      if (auto ptr = allocate_from_current_markers())
+      if (auto ptr = allocate_from_current_replicas())
       {
         return ptr;
       }
