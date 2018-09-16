@@ -4,8 +4,7 @@
 
 #include <cassert> // assert
 #include <cstddef> // size_t
-#include <memory> // pointer_traits, align
-#include <utility> // exchange
+#include <memory> // pointer_traits
 
 namespace kp11
 {
@@ -64,9 +63,12 @@ namespace kp11
      *
      * @par Complexity
      * `O(1)`
+     * @pre `alignment` must be at most the one passed into the constructor
      */
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
+      assert(this->alignment % alignment == 0);
+      bytes = round_up_to_our_alignment(bytes);
       if (auto ptr = allocate_from_current_replica(bytes, alignment))
       {
         return ptr;
@@ -95,15 +97,18 @@ namespace kp11
     {
     }
 
-  private: // allocate helper
+  private: // allocate helpers
+    size_type round_up_to_our_alignment(size_type bytes) const noexcept
+    {
+      return (bytes / this->alignment + (bytes % this->alignment != 0)) * this->alignment;
+    }
     pointer allocate_from_current_replica(size_type bytes, size_type alignment) noexcept
     {
-      using std::align;
-      auto space = static_cast<size_type>(lasts[length - 1] - ptr);
-      auto p = static_cast<pointer>(ptr);
-      if (align(alignment, bytes, p, space))
+      assert(bytes % this->alignment == 0);
+      if (auto space = static_cast<size_type>(lasts[length - 1] - ptr); bytes <= space)
       {
-        ptr = static_cast<unsigned_char_pointer>(p) + bytes;
+        auto p = static_cast<pointer>(ptr);
+        ptr += bytes;
         return p;
       }
       return nullptr;
