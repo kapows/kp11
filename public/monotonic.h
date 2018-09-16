@@ -102,7 +102,7 @@ namespace kp11
   private: // allocate helpers
     size_type round_up_to_our_alignment(size_type bytes) const noexcept
     {
-      return (bytes / this->alignment + (bytes % this->alignment != 0)) * this->alignment;
+      return (bytes / alignment + (bytes % alignment != 0)) * alignment;
     }
     pointer allocate_from_current_replica(size_type bytes) noexcept
     {
