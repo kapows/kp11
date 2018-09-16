@@ -69,14 +69,14 @@ namespace kp11
     {
       assert(this->alignment % alignment == 0);
       bytes = round_up_to_our_alignment(bytes);
-      if (auto ptr = allocate_from_current_replica(bytes, alignment))
+      if (auto ptr = allocate_from_current_replica(bytes))
       {
         return ptr;
       }
       else if (push_back()) // replica added
       {
         // this call should not fail as a full buffer should be able to fulfil any request made
-        auto ptr = allocate_from_current_replica(bytes, alignment);
+        auto ptr = allocate_from_current_replica(bytes);
         assert(ptr != nullptr);
         return ptr;
       }
@@ -102,9 +102,9 @@ namespace kp11
     {
       return (bytes / this->alignment + (bytes % this->alignment != 0)) * this->alignment;
     }
-    pointer allocate_from_current_replica(size_type bytes, size_type alignment) noexcept
+    pointer allocate_from_current_replica(size_type bytes) noexcept
     {
-      assert(bytes % this->alignment == 0);
+      assert(bytes % alignment == 0);
       if (auto space = static_cast<size_type>(lasts[length - 1] - ptr); bytes <= space)
       {
         auto p = static_cast<pointer>(ptr);
