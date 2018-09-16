@@ -4,6 +4,7 @@
 
 #include <cassert> // assert
 #include <cstddef> // size_t
+#include <functional> // less, less_equal
 #include <memory> // pointer_traits
 #include <utility> // forward
 
