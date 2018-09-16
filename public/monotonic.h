@@ -6,7 +6,7 @@
 #include <cstddef> // size_t
 #include <functional> // less, less_equal
 #include <memory> // pointer_traits
-#include <utility> // forward
+#include <utility> // forward, exchange
 
 namespace kp11
 {
@@ -109,9 +109,7 @@ namespace kp11
       assert(bytes % alignment == 0);
       if (auto space = static_cast<size_type>(lasts[length - 1] - ptr); bytes <= space)
       {
-        auto p = static_cast<pointer>(ptr);
-        ptr += bytes;
-        return p;
+        return static_cast<pointer>(std::exchange(ptr, ptr + bytes));
       }
       return nullptr;
     }
