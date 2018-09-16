@@ -64,9 +64,12 @@ namespace kp11
   public: // modifiers
     /**
      * @copydoc Resource::allocate
+     *
+     * @pre `alignment` must be at most the one passed into the constructor
      */
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
+      assert(this->alignment % alignment == 0);
       auto const num_blocks = size_from(bytes);
       auto allocate_from_current_markers = [&]() -> pointer {
         for (std::size_t marker_index = 0; marker_index < length; ++marker_index)
