@@ -4,6 +4,7 @@
 
 #include <cassert> // assert
 #include <cstddef> // size_t
+#include <functional> // less, less_equal
 #include <memory> // pointer_traits
 #include <utility> // forward
 
@@ -63,32 +64,24 @@ namespace kp11
   public: // modifiers
     /**
      * @copydoc Resource::allocate
+     *
+     * @pre `alignment` must be at most the one passed into the constructor
      */
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
+      assert(this->alignment % alignment == 0);
       auto const num_blocks = size_from(bytes);
-      auto allocate_from_current_markers = [&]() -> pointer {
-        for (std::size_t marker_index = 0; marker_index < length; ++marker_index)
-        {
-          if (auto i = markers[marker_index].set(num_blocks); i != Marker::size())
-          {
-            return static_cast<pointer>(ptrs[marker_index] + i * this->bytes);
-          }
-        }
-        return nullptr;
-      };
-
-      if (auto ptr = allocate_from_current_markers())
+      if (auto ptr = allocate_from_current_replicas(num_blocks))
       {
         return ptr;
       }
       else if (push_back()) // not enough room
       {
-        auto const marker_index = length - 1;
+        auto const last = length - 1;
         // this call should not fail as a full buffer should be able to fulfil any request made
-        auto i = markers[marker_index].set(num_blocks);
+        auto i = markers[last].set(num_blocks);
         assert(i != Marker::size());
-        return static_cast<pointer>(ptrs[marker_index] + i * this->bytes);
+        return static_cast<pointer>(ptrs[last] + i * this->bytes);
       }
       else // cant push back
       {
@@ -110,6 +103,19 @@ namespace kp11
         return true;
       }
       return false;
+    }
+
+  public: // allocate helper
+    pointer allocate_from_current_replicas(std::size_t num_blocks) noexcept
+    {
+      for (std::size_t i = 0; i < length; ++i)
+      {
+        if (auto index = markers[i].set(num_blocks); index != Marker::size())
+        {
+          return static_cast<pointer>(ptrs[i] + index * this->bytes);
+        }
+      }
+      return nullptr;
     }
 
   public: // observers
