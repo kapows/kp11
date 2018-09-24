@@ -113,7 +113,7 @@ namespace kp11
       return false;
     }
 
-  public: // allocate helper
+  private: // allocate helper
     unsigned_char_pointer allocate_from_replica(std::size_t index, std::size_t num_blocks) noexcept
     {
       if (auto i = markers[index].set(num_blocks); i != Marker::size())
