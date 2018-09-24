@@ -49,6 +49,16 @@ TEST_CASE("unit test", "[unit-test]")
   REQUIRE(m.deallocate(c, 32, 4) == true);
   REQUIRE(m.deallocate(b, 64, 4) == true);
   REQUIRE(m.deallocate(a, 32, 4) == true);
+
+  SECTION("upstream accessors")
+  {
+    auto const & n = m;
+    auto & u = m.get_upstream();
+    auto & v = n.get_upstream();
+    auto p = u.allocate(32, 4);
+    u.deallocate(p, 32, 4);
+    REQUIRE(&v == &u);
+  }
 }
 
 TEST_CASE("traits", "[traits]")
