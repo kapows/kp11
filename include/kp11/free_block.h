@@ -25,7 +25,13 @@ namespace kp11
     static_assert(is_marker_v<Marker>);
 
   public: // typedefs
+    /**
+     * @brief pointer type
+     */
     using pointer = typename Upstream::pointer;
+    /**
+     * @brief size type
+     */
     using size_type = typename Upstream::size_type;
 
   private: // typedefs
