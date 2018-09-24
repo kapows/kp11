@@ -2,6 +2,7 @@
 
 #include "traits.h" // is_resource_v
 
+#include <tuple> // tuple, get
 #include <utility> // piecewise_construct, index_sequence, index_sequence_for
 
 namespace kp11
