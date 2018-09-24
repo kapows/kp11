@@ -22,7 +22,13 @@ namespace kp11
     static_assert(is_resource_v<Secondary>);
 
   public: // typedefs
+    /**
+     * @brief pointer type
+     */
     using pointer = typename Primary::pointer;
+    /**
+     * @brief size type
+     */
     using size_type = typename Primary::size_type;
 
   public: // constructors
