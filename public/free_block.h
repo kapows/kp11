@@ -20,13 +20,13 @@ namespace kp11
    * from.
    */
   template<std::size_t Replicas, typename Marker, typename Upstream>
-  class free_block : public Upstream
+  class free_block
   {
-    static_assert(is_marker_v<Marker>, "basic_free_block requires Marker to be a Marker");
+    static_assert(is_marker_v<Marker>);
 
   public: // typedefs
-    using typename Upstream::pointer;
-    using typename Upstream::size_type;
+    using pointer = typename Upstream::pointer;
+    using size_type = typename Upstream::size_type;
 
   private: // typedefs
     using unsigned_char_pointer =
@@ -42,7 +42,7 @@ namespace kp11
      */
     template<typename... Args>
     free_block(size_type bytes, size_type alignment, Args &&... args) :
-        Upstream(std::forward<Args>(args)...), bytes(bytes), alignment(alignment)
+        bytes(bytes), alignment(alignment), upstream(std::forward<Args>(args)...)
     {
     }
     /**
@@ -58,7 +58,10 @@ namespace kp11
      */
     ~free_block() noexcept
     {
-      clear();
+      while (length)
+      {
+        pop_back();
+      }
     }
 
   public: // modifiers
@@ -73,17 +76,16 @@ namespace kp11
       auto const num_blocks = size_from(bytes);
       if (auto ptr = allocate_from_current_replicas(num_blocks))
       {
-        return ptr;
+        return static_cast<pointer>(ptr);
       }
-      else if (push_back()) // not enough room
+      else if (push_back())
       {
-        auto const last = length - 1;
-        // this call should not fail as a full buffer should be able to fulfil any request made
-        auto i = markers[last].set(num_blocks);
-        assert(i != Marker::size());
-        return static_cast<pointer>(ptrs[last] + i * this->bytes);
+        // allocation here should not fail as a full buffer should be able to fulfil any request
+        auto ptr = allocate_from_replica(length - 1, num_blocks);
+        assert(ptr != nullptr);
+        return static_cast<pointer>(ptr);
       }
-      else // cant push back
+      else
       {
         return nullptr;
       }
@@ -96,23 +98,31 @@ namespace kp11
      */
     bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
-      if (auto i = find(static_cast<unsigned_char_pointer>(ptr)); i != Replicas)
+      auto p = static_cast<unsigned_char_pointer>(ptr);
+      if (auto i = find(p); i != Replicas)
       {
-        markers[i].reset(
-          index_from(ptrs[i], static_cast<unsigned_char_pointer>(ptr)), size_from(bytes));
+        markers[i].reset(index_from(ptrs[i], p), size_from(bytes));
         return true;
       }
       return false;
     }
 
   public: // allocate helper
-    pointer allocate_from_current_replicas(std::size_t num_blocks) noexcept
+    unsigned_char_pointer allocate_from_replica(std::size_t index, std::size_t num_blocks) noexcept
+    {
+      if (auto i = markers[index].set(num_blocks); i != Marker::size())
+      {
+        return ptrs[index] + i * this->bytes;
+      }
+      return nullptr;
+    }
+    unsigned_char_pointer allocate_from_current_replicas(std::size_t num_blocks) noexcept
     {
       for (std::size_t i = 0; i < length; ++i)
       {
-        if (auto index = markers[i].set(num_blocks); index != Marker::size())
+        if (auto ptr = allocate_from_replica(i, num_blocks))
         {
-          return static_cast<pointer>(ptrs[i] + index * this->bytes);
+          return ptr;
         }
       }
       return nullptr;
@@ -135,6 +145,26 @@ namespace kp11
       return nullptr;
     }
 
+  public: // accessors
+    /**
+     * @brief Get the upstream object
+     *
+     * @return Upstream&
+     */
+    Upstream & get_upstream() noexcept
+    {
+      return upstream;
+    }
+    /**
+     * @brief Get the upstream object
+     *
+     * @return Upstream const&
+     */
+    Upstream const & get_upstream() const noexcept
+    {
+      return upstream;
+    }
+
   private: // operator[] helper
     /**
      * @brief Return the index of the memory that was obtained from Upstream.
@@ -145,8 +175,7 @@ namespace kp11
      */
     std::size_t find(unsigned_char_pointer ptr) const noexcept
     {
-      std::size_t i = 0;
-      for (; i < length; ++i)
+      for (std::size_t i = 0; i < length; ++i)
       {
         if (std::less_equal<pointer>()(ptrs[i], ptr) &&
             std::less<pointer>()(ptr, ptrs[i] + bytes * Marker::size()))
@@ -160,6 +189,7 @@ namespace kp11
   private: // modifiers
     /**
      * @brief Add a `pointer` and `Marker` to the end of our containers. Calls Upstream::allocate.
+     * Increases length by 1.
      *
      * @return true if successful
      * @return false otherwise
@@ -168,49 +198,50 @@ namespace kp11
     {
       if (length != Replicas)
       {
-        if (auto ptr = Upstream::allocate(bytes * Marker::size(), alignment))
+        if (auto ptr = upstream.allocate(bytes * Marker::size(), alignment))
         {
-          ptrs[length++] = static_cast<unsigned_char_pointer>(ptr);
+          ptrs[length] = static_cast<unsigned_char_pointer>(ptr);
+          new (&markers[length]) Marker();
+          ++length;
           return true;
         }
       }
       return false;
     }
     /**
-     * @brief Deallocate all memory back to `Upstream`.
+     * @brief Deallocate memory from the back, back to `Upstream`. Decreases length by 1.
      */
-    void clear() noexcept
+    void pop_back() noexcept
     {
-      while (length)
-      {
-        Upstream::deallocate(static_cast<pointer>(ptrs[length - 1]), bytes, alignment);
-        --length;
-      }
+      assert(length > 0);
+      upstream.deallocate(static_cast<pointer>(ptrs[length - 1]), bytes, alignment);
+      markers[length - 1].~Marker();
+      --length;
     }
 
   private: // Marker helper functions
     typename Marker::size_type size_from(size_type bytes) const noexcept
     {
-      // zero bytes is required as well
-      if (bytes == 0)
-      {
-        return static_cast<typename Marker::size_type>(1);
-      }
+      // 1 block minimum
       // mod is required to deal with non BlockSize sizes
-      return static_cast<typename Marker::size_type>(
-        bytes / this->bytes + (bytes % this->bytes != 0));
+      size_type s = bytes == 0 ? 1 : bytes / this->bytes + (bytes % this->bytes != 0);
+      return static_cast<typename Marker::size_type>(s);
     }
     typename Marker::size_type index_from(
       unsigned_char_pointer first, unsigned_char_pointer ptr) const noexcept
     {
-      return static_cast<typename Marker::size_type>((ptr - first) / bytes);
+      auto p = (ptr - first) / bytes;
+      return static_cast<typename Marker::size_type>(p);
     }
 
   private: // variables
     std::size_t length = 0;
     unsigned_char_pointer ptrs[Replicas];
-    Marker markers[Replicas];
+    union {
+      Marker markers[Replicas];
+    };
     size_type const bytes;
     size_type const alignment;
+    Upstream upstream;
   };
 }
