@@ -2,28 +2,28 @@
 
 #include "traits.h" // is_resource_v
 
-#include <tuple> // tuple
+#include <tuple> // tuple, get
 #include <utility> // piecewise_construct, index_sequence, index_sequence_for
 
 namespace kp11
 {
   /**
-   * @brief If allocation from `Primary` is unsuccessful then allocates from `Fallback`
+   * @brief If allocation from `Primary` is unsuccessful then allocates from `Secondary`
    *
    * @tparam Primary type that meets the `Resource` concept
-   * @tparam Fallback type that meets the `Resource` concept
+   * @tparam Secondary type that meets the `Resource` concept
    * @pre Primary must either return a convertible bool value on dellocate or return a convertible
    * bool value from operator[](pointer ptr) in order to determine ownership.
    */
-  template<typename Primary, typename Fallback>
-  class fallback : private Primary, private Fallback
+  template<typename Primary, typename Secondary>
+  class fallback
   {
     static_assert(is_resource_v<Primary>);
-    static_assert(is_resource_v<Fallback>);
+    static_assert(is_resource_v<Secondary>);
 
   public: // typedefs
-    using typename Primary::pointer;
-    using typename Primary::size_type;
+    using pointer = typename Primary::pointer;
+    using size_type = typename Primary::size_type;
 
   public: // constructors
     /**
@@ -34,7 +34,7 @@ namespace kp11
      * @brief Construct a new fallback object
      *
      * @param first_args `Primary` constructor arguments
-     * @param second_args `Fallback` constructor arguments
+     * @param second_args `Secondary` constructor arguments
      */
     template<typename... Args1, typename... Args2>
     fallback(std::piecewise_construct_t,
@@ -47,14 +47,14 @@ namespace kp11
     {
     }
 
-  private: // constructors
+  private: // constructor helper
     template<std::size_t... Is1, typename... Args1, std::size_t... Is2, typename... Args2>
     fallback(std::tuple<Args1...> & first_args,
       std::tuple<Args2...> & second_args,
       std::index_sequence<Is1...>,
       std::index_sequence<Is2...>) noexcept :
-        Primary(std::forward<Args1>(std::get<Is1>(first_args))...),
-        Fallback(std::forward<Args2>(std::get<Is2>(second_args))...)
+        primary(std::forward<Args1>(std::get<Is1>(first_args))...),
+        secondary(std::forward<Args2>(std::get<Is2>(second_args))...)
     {
     }
 
@@ -64,11 +64,11 @@ namespace kp11
      */
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
-      if (auto ptr = Primary::allocate(bytes, alignment))
+      if (auto ptr = primary.allocate(bytes, alignment))
       {
         return ptr;
       }
-      return Fallback::allocate(bytes, alignment);
+      return secondary.allocate(bytes, alignment);
     }
     /**
      * @copydoc Resource::deallocate
@@ -82,9 +82,9 @@ namespace kp11
                         std::declval<size_type>(),
                         std::declval<size_type>()))>)
       {
-        if (!Primary::deallocate(ptr, bytes, alignment))
+        if (!primary.deallocate(ptr, bytes, alignment))
         {
-          Fallback::deallocate(ptr, bytes, alignment);
+          secondary.deallocate(ptr, bytes, alignment);
         }
       }
       // if it is not trivial then perhaps we can still determine ownership through operator[]
@@ -92,13 +92,13 @@ namespace kp11
       // deallocate as Primary
       else
       {
-        if (Primary::operator[](ptr))
+        if (primary[ptr])
         {
-          Primary::deallocate(ptr, bytes, alignment);
+          primary.deallocate(ptr, bytes, alignment);
         }
         else
         {
-          Fallback::deallocate(ptr, bytes, alignment);
+          secondary.deallocate(ptr, bytes, alignment);
         }
       }
     }
@@ -109,28 +109,32 @@ namespace kp11
      */
     Primary & get_primary() noexcept
     {
-      return *this;
+      return primary;
     }
     /**
      * @brief Get the primary object
      */
     Primary const & get_primary() const noexcept
     {
-      return *this;
+      return primary;
     }
     /**
-     * @brief Get the fallback object
+     * @brief Get the secondary object
      */
-    Fallback & get_fallback() noexcept
+    Secondary & get_secondary() noexcept
     {
-      return *this;
+      return secondary;
     }
     /**
-     * @brief Get the fallback object
+     * @brief Get the secondary object
      */
-    Fallback const & get_fallback() const noexcept
+    Secondary const & get_secondary() const noexcept
     {
-      return *this;
+      return secondary;
     }
+
+  private: // variables
+    Primary primary;
+    Secondary secondary;
   };
 }
