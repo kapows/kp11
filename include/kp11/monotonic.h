@@ -62,7 +62,7 @@ namespace kp11
      */
     ~monotonic() noexcept
     {
-      while (length > 1)
+      while (length)
       {
         pop_back();
       }
@@ -116,9 +116,9 @@ namespace kp11
     unsigned_char_pointer allocate_from_current_replica(size_type bytes) noexcept
     {
       assert(bytes % alignment == 0);
-      if (auto space = static_cast<size_type>(lasts[length - 1] - ptr); bytes <= space)
+      if (auto space = static_cast<size_type>(last - first); bytes <= space)
       {
-        return std::exchange(ptr, ptr + bytes);
+        return std::exchange(first, first + bytes);
       }
       return nullptr;
     }
@@ -133,12 +133,13 @@ namespace kp11
      */
     bool push_back() noexcept
     {
-      if (length != Replicas + 1)
+      if (length != Replicas)
       {
-        if (auto ptr = static_cast<unsigned_char_pointer>(upstream.allocate(bytes, alignment)))
+        if (auto ptr = upstream.allocate(bytes, alignment))
         {
-          this->ptr = ptr;
-          lasts[length++] = ptr + bytes;
+          ptrs[length++] = static_cast<unsigned_char_pointer>(ptr);
+          first = ptrs[length - 1];
+          last = first + bytes;
           return true;
         }
       }
@@ -149,10 +150,10 @@ namespace kp11
      */
     void pop_back() noexcept
     {
-      assert(length > 1);
-      upstream.deallocate(static_cast<pointer>(lasts[length - 1] - bytes), bytes, alignment);
-      --length;
-      ptr = length ? lasts[length - 1] : nullptr;
+      assert(length);
+      upstream.deallocate(static_cast<pointer>(ptrs[--length]), bytes, alignment);
+      first = ptrs[length - 1];
+      last = first;
     }
 
   public: // observers
@@ -165,30 +166,30 @@ namespace kp11
      */
     pointer operator[](pointer ptr) const noexcept
     {
-      for (std::size_t i = 1; i < length; ++i)
+      for (std::size_t i = 0; i < length; ++i)
       {
-        auto const first = lasts[i] - bytes;
-        if (std::less_equal<pointer>()(static_cast<pointer>(first), ptr) &&
-            std::less<pointer>()(ptr, static_cast<pointer>(lasts[i])))
+        if (std::less_equal<pointer>()(static_cast<pointer>(ptrs[i]), ptr) &&
+            std::less<pointer>()(ptr, static_cast<pointer>(ptrs[i] + bytes)))
         {
-          return static_cast<pointer>(first);
+          return static_cast<pointer>(ptrs[i]);
         }
       }
       return nullptr;
     }
 
   private: // variables
-    std::size_t length = 1; // length starts at 1 with lasts[0] being the bootstrap pointer
-    unsigned_char_pointer ptr = nullptr; // pointer used for allocation
-    /**
-     * @brief pointers to the end of memory (beginning is lasts[i] - Bytes).
-     * lasts[0] is a bootstrap pointer so it must exist.
-     * bootstrap exists so that we don't have to check to see if we've been initialized.
-     * bootstrap is always nullptr
-     */
-    unsigned_char_pointer lasts[Replicas + 1]{nullptr};
+    // size to allocate from Upstream
     size_type const bytes;
+    // alignment to allocate from Upstream
     size_type const alignment;
+    // current position of beginning of allocatable memory
+    unsigned_char_pointer first = nullptr;
+    // end of allocatable memory
+    unsigned_char_pointer last = nullptr;
+    // length of ptrs
+    std::size_t length = 0;
+    // pointers to the beginning of allocated memory from Upstream
+    unsigned_char_pointer ptrs[Replicas];
     Upstream upstream;
   };
 }
