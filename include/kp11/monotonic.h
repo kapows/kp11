@@ -18,13 +18,19 @@ namespace kp11
    * from.
    */
   template<std::size_t Replicas, typename Upstream>
-  class monotonic : public Upstream
+  class monotonic
   {
     static_assert(is_resource_v<Upstream>);
 
   public: // typedefs
-    using typename Upstream::pointer;
-    using typename Upstream::size_type;
+    /**
+     * @brief pointer type
+     */
+    using pointer = typename Upstream::pointer;
+    /**
+     * @brief size type
+     */
+    using size_type = typename Upstream::size_type;
 
   private: // typedefs
     using unsigned_char_pointer =
@@ -40,7 +46,7 @@ namespace kp11
      */
     template<typename... Args>
     monotonic(size_type bytes, size_type alignment, Args &&... args) noexcept :
-        Upstream(std::forward<Args>(args)...), bytes(bytes), alignment(alignment)
+        bytes(bytes), alignment(alignment), upstream(std::forward<Args>(args)...)
     {
     }
     /**
@@ -56,7 +62,10 @@ namespace kp11
      */
     ~monotonic() noexcept
     {
-      clear();
+      while (length)
+      {
+        pop_back();
+      }
     }
 
   public: // modifiers
@@ -73,16 +82,16 @@ namespace kp11
       bytes = round_up_to_our_alignment(bytes);
       if (auto ptr = allocate_from_current_replica(bytes))
       {
-        return ptr;
+        return static_cast<pointer>(ptr);
       }
-      else if (push_back()) // replica added
+      else if (push_back())
       {
         // this call should not fail as a full buffer should be able to fulfil any request made
         auto ptr = allocate_from_current_replica(bytes);
         assert(ptr != nullptr);
-        return ptr;
+        return static_cast<pointer>(ptr);
       }
-      else // not enough space in current replica and adding replica failed
+      else
       {
         return nullptr;
       }
@@ -102,44 +111,49 @@ namespace kp11
   private: // allocate helpers
     size_type round_up_to_our_alignment(size_type bytes) const noexcept
     {
-      return (bytes / alignment + (bytes % alignment != 0)) * alignment;
+      return bytes == 0 ? alignment : (bytes / alignment + (bytes % alignment != 0)) * alignment;
     }
-    pointer allocate_from_current_replica(size_type bytes) noexcept
+    unsigned_char_pointer allocate_from_current_replica(size_type bytes) noexcept
     {
       assert(bytes % alignment == 0);
-      if (auto space = static_cast<size_type>(lasts[length - 1] - ptr); bytes <= space)
+      if (auto space = static_cast<size_type>(last - first); bytes <= space)
       {
-        return static_cast<pointer>(std::exchange(ptr, ptr + bytes));
+        return std::exchange(first, first + bytes);
       }
       return nullptr;
     }
 
   private: // modifiers
+    /**
+     * @brief Add a replica to the end of our container. Calls Upstream::allocate.
+     * Increases length by 1.
+     *
+     * @return true if successful
+     * @return false otherwise
+     */
     bool push_back() noexcept
     {
-      // too many replicas
-      if (length == Replicas + 1)
+      if (length != Replicas)
       {
-        return false;
+        if (auto ptr = upstream.allocate(bytes, alignment))
+        {
+          ptrs[length++] = static_cast<unsigned_char_pointer>(ptr);
+          first = ptrs[length - 1];
+          last = first + bytes;
+          return true;
+        }
       }
-      else if (auto p = Upstream::allocate(bytes, alignment)) // allocate new memory from upstream
-      {
-        ptr = static_cast<unsigned_char_pointer>(p);
-        lasts[length++] = ptr + bytes;
-        return true;
-      }
-      else // failed to allocate memory from upstream
-      {
-        return false;
-      }
+      return false;
     }
-    void clear() noexcept
+    /**
+     * @brief Deallocate memory from the back, back to `Upstream`. Decreases length by 1.
+     */
+    void pop_back() noexcept
     {
-      while (length > 1)
-      {
-        Upstream::deallocate(static_cast<pointer>(lasts[length - 1] - bytes), bytes, alignment);
-        --length;
-      }
+      assert(length);
+      upstream.deallocate(static_cast<pointer>(ptrs[--length]), bytes, alignment);
+      first = ptrs[length - 1];
+      last = first;
     }
 
   public: // observers
@@ -152,29 +166,30 @@ namespace kp11
      */
     pointer operator[](pointer ptr) const noexcept
     {
-      for (std::size_t i = 1; i < length; ++i)
+      for (std::size_t i = 0; i < length; ++i)
       {
-        auto const first = lasts[i] - bytes;
-        if (std::less_equal<pointer>()(static_cast<pointer>(first), ptr) &&
-            std::less<pointer>()(ptr, static_cast<pointer>(lasts[i])))
+        if (std::less_equal<pointer>()(static_cast<pointer>(ptrs[i]), ptr) &&
+            std::less<pointer>()(ptr, static_cast<pointer>(ptrs[i] + bytes)))
         {
-          return static_cast<pointer>(first);
+          return static_cast<pointer>(ptrs[i]);
         }
       }
       return nullptr;
     }
 
   private: // variables
-    std::size_t length = 1; // length starts at 1 with lasts[0] being the bootstrap pointer
-    unsigned_char_pointer ptr = nullptr; // pointer used for allocation
-    /**
-     * @brief pointers to the end of memory (beginning is lasts[i] - Bytes).
-     * lasts[0] is a bootstrap pointer so it must exist.
-     * bootstrap exists so that we don't have to check to see if we've been initialized.
-     * bootstrap is always nullptr
-     */
-    unsigned_char_pointer lasts[Replicas + 1]{nullptr};
+    // size to allocate from Upstream
     size_type const bytes;
+    // alignment to allocate from Upstream
     size_type const alignment;
+    // current position of beginning of allocatable memory
+    unsigned_char_pointer first = nullptr;
+    // end of allocatable memory
+    unsigned_char_pointer last = nullptr;
+    // length of ptrs
+    std::size_t length = 0;
+    // pointers to the beginning of allocated memory from Upstream
+    unsigned_char_pointer ptrs[Replicas];
+    Upstream upstream;
   };
 }
