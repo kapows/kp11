@@ -10,15 +10,10 @@
 
 namespace kp11
 {
-  /**
-   * @brief Allocate memory in chunks instead of per byte. Allocations and deallocations will defer
-   * to `Marker` to determine functionality.
-   *
-   * @tparam Replicas number of times to replicate
-   * @tparam Marker type that meets the `Marker` concept
-   * @tparam Upstream type that meets the `Resource` concept. This is where memory will be allocated
-   * from.
-   */
+  /// * `Replicas` is the maximum of successful allocation requests to `Upstream` and the number of
+  /// `Markers` to hold
+  /// * `Marker` meets the `Marker` concept
+  /// * `Upstream` meets the `Resource` concept
   template<std::size_t Replicas, typename Marker, typename Upstream>
   class free_block
   {
@@ -26,13 +21,7 @@ namespace kp11
     static_assert(is_resource_v<Upstream>);
 
   public: // typedefs
-    /**
-     * @brief pointer type
-     */
     using pointer = typename Upstream::pointer;
-    /**
-     * @brief size type
-     */
     using size_type = typename Upstream::size_type;
 
   private: // typedefs
@@ -40,29 +29,19 @@ namespace kp11
       typename std::pointer_traits<pointer>::template rebind<unsigned char>;
 
   public: // constructors
-    /**
-     * @brief Construct a new free_block object
-     *
-     * @param bytes Size in bytes of memory to alloate from `Upstream` per replica
-     * @param alignment Size in bytes of memory to alloate from `Upstream` per replica
-     * @param args `Upstream` constructor arguments
-     */
+    /// * `bytes` is the size in bytes of memory to request from `Upstream`
+    /// * `alignment` is the alignment in bytes of memory to request from `Upstream`
+    /// * `args` are the constructor arguments to `Upstream`
     template<typename... Args>
     free_block(size_type bytes, size_type alignment, Args &&... args) :
         bytes(bytes), alignment(alignment), upstream(std::forward<Args>(args)...)
     {
     }
-    /**
-     * @brief Delete copy constructor since a resource is being held and managed.
-     */
+    /// Deleted because a resource is being held and managed
     free_block(free_block const &) = delete;
-    /**
-     * @brief Delete copy assignment since a resource is being held and managed.
-     */
+    /// Deleted because a resource is being held and managed
     free_block & operator=(free_block const &) = delete;
-    /**
-     * @brief Destroy the free block object. Deallocate all memory back to `Upstream`.
-     */
+    /// Defined because we need to release all allocated memory back to `Upstream`
     ~free_block() noexcept
     {
       while (length)
@@ -72,11 +51,7 @@ namespace kp11
     }
 
   public: // modifiers
-    /**
-     * @copydoc Resource::allocate
-     *
-     * @pre `alignment` must be at most the one passed into the constructor
-     */
+    /// * `alignment` must be a divisor of the `alignment` passed into the constructor
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
       assert(this->alignment % alignment == 0);
@@ -97,12 +72,6 @@ namespace kp11
         return nullptr;
       }
     }
-    /**
-     * @copydoc Resource::deallocate
-     *
-     * @returns true if `ptr` pointers into memory allocated from this resource
-     * @returns false otherwise
-     */
     bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
       auto p = static_cast<unsigned_char_pointer>(ptr);
@@ -136,13 +105,6 @@ namespace kp11
     }
 
   public: // observers
-    /**
-     * @brief Check if `ptr` points to memory that was obtained from Upstream.
-     *
-     * @param ptr pointer to check
-     * @returns pointer to the beginning of the memory that was obtained from Upstream
-     * @returns nullptr otherwise
-     */
     pointer operator[](pointer ptr) const noexcept
     {
       if (auto i = find(static_cast<unsigned_char_pointer>(ptr)); i != Replicas)
@@ -153,33 +115,18 @@ namespace kp11
     }
 
   public: // accessors
-    /**
-     * @brief Get the upstream object
-     *
-     * @return Upstream&
-     */
     Upstream & get_upstream() noexcept
     {
       return upstream;
     }
-    /**
-     * @brief Get the upstream object
-     *
-     * @return Upstream const&
-     */
     Upstream const & get_upstream() const noexcept
     {
       return upstream;
     }
 
   private: // operator[] helper
-    /**
-     * @brief Return the index of the memory that was obtained from Upstream.
-     *
-     * @param ptr pointer to find
-     * @return the index of the memory that was obtained from Upstream
-     * @return `Replicas` otherwise
-     */
+    /// Finds the index of the memory block to which `ptr` is pointing
+    /// * Returns `Replicas` on failure
     std::size_t find(unsigned_char_pointer ptr) const noexcept
     {
       for (std::size_t i = 0; i < length; ++i)
@@ -194,13 +141,7 @@ namespace kp11
     }
 
   private: // modifiers
-    /**
-     * @brief Add a `pointer` and `Marker` to the end of our containers. Calls Upstream::allocate.
-     * Increases length by 1.
-     *
-     * @return true if successful
-     * @return false otherwise
-     */
+    /// Allocates a new block of memory from `Upstream` and adds another `Marker` for it.
     bool push_back() noexcept
     {
       if (length != Replicas)
@@ -215,9 +156,7 @@ namespace kp11
       }
       return false;
     }
-    /**
-     * @brief Deallocate memory from the back, back to `Upstream`. Decreases length by 1.
-     */
+    /// Deallocates allocated memory back to `Upstream` and destroys it's associated `Marker`.
     void pop_back() noexcept
     {
       assert(length > 0);
@@ -227,13 +166,15 @@ namespace kp11
     }
 
   private: // Marker helper functions
+    /// Convert from `bytes` to number of blocks to use with `Marker`.
     typename Marker::size_type size_from(size_type bytes) const noexcept
     {
       // 1 block minimum
-      // mod is required to deal with non BlockSize sizes
+      // moduloc is required to deal with non BlockSize sizes
       size_type s = bytes == 0 ? 1 : bytes / this->bytes + (bytes % this->bytes != 0);
       return static_cast<typename Marker::size_type>(s);
     }
+    /// Convert from `unsigned_char_pointer` to an index to use with `Marker`
     typename Marker::size_type index_from(
       unsigned_char_pointer first, unsigned_char_pointer ptr) const noexcept
     {
@@ -242,12 +183,18 @@ namespace kp11
     }
 
   private: // variables
+    /// Only modified by `push_back` and `pop_back`.
     std::size_t length = 0;
+    /// Holds pointers to memory allocated by `Upstream`
     unsigned_char_pointer ptrs[Replicas];
+    /// Is in a union to avoid construction of all `Marker`s at object construction time
     union {
+      /// Holds `Markers` associated with each corresponding replica of `ptrs`
       Marker markers[Replicas];
     };
+    /// size in bytes of memory to allocate from `Upstream`
     size_type const bytes;
+    /// size in bytes of alignment of memory to allocate from `Upstream`
     size_type const alignment;
     Upstream upstream;
   };
