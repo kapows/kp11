@@ -1,6 +1,6 @@
 #pragma once
 
-#include "traits.h" // is_marker_v
+#include "traits.h" // is_marker_v, is_resource_v
 
 #include <cassert> // assert
 #include <cstddef> // size_t
@@ -23,6 +23,7 @@ namespace kp11
   class free_block
   {
     static_assert(is_marker_v<Marker>);
+    static_assert(is_resource_v<Upstream>);
 
   public: // typedefs
     /**
