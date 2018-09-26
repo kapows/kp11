@@ -5,47 +5,30 @@
 
 namespace kp11
 {
-  /**
-   * @brief Forward iteration based marking using a bitset with random order resets.
-   * Vacancies will be summed until the correct number of vacancies is found.
-   * Meets the requirements of `Marker`.
-   *
-   * @tparam N number of spots
-   */
+  /// Forward iteration based marking using a bitset with random order resets.
+  /// Vacancies will be summed until the correct number of vacancies is found.
+  /// Meets the `Marker` concept.
+  /// * `N` number of spots
   template<std::size_t N>
   class bitset
   {
   public: // typedefs
-    /**
-     * @brief size type
-     */
     using size_type = std::size_t;
 
   public: // constructors
-    /**
-     * @brief Construct a new bitset object
-     */
     bitset() noexcept
     {
       bits.reset();
     }
 
   public: // capacity
-    /**
-     * @copydoc Marker::size
-     */
     static constexpr size_type size() noexcept
     {
       return N;
     }
 
   public: // modifiers
-    /**
-     * @copydoc Marker::set
-     *
-     * @par Complexity
-     * `O(n)`
-     */
+    /// * Complexity `O(n)`
     size_type set(size_type n) noexcept
     {
       if (n > size())
@@ -68,12 +51,7 @@ namespace kp11
       }
       return size();
     }
-    /**
-     * @copydoc Marker::reset
-     *
-     * @par Complexity
-     * `O(n)`
-     */
+    /// * Complexity `O(n)`
     void reset(size_type index, size_type n) noexcept
     {
       auto const last = index + n;
@@ -84,14 +62,6 @@ namespace kp11
     }
 
   private: // helper functions
-    /**
-     * @brief Count the number of consecutive vacant bits from `first` until an occupied bit is
-     * encountered or until `last` (not included in count).
-     *
-     * @param first beginning index
-     * @param last ending index (not counted)
-     * @return count of consecutive vacant bits starting from `first`
-     */
     size_type count_consecutive_vacant_bits(size_type first, size_type last) const noexcept
     {
       size_type count = 0;
@@ -106,12 +76,7 @@ namespace kp11
       }
       return count;
     }
-    /**
-     * @brief private helper function as the opposite of `reset`
-     *
-     * @param index index of first bit to set
-     * @param n number of bits to set
-     */
+    /// Private helper function as the opposite of `reset`.
     void set(size_type index, size_type n) noexcept
     {
       auto const last = index + n;
@@ -122,10 +87,7 @@ namespace kp11
     }
 
   private: // variables
-    /**
-     * @brief bitset true if occupied, false if vacant, this is to be consistent with bitset `set`
-     * and `reset`.
-     */
+    /// true if occupied, false if vacant, this is to be consistent with bitset `set`
     std::bitset<N> bits;
   };
 }
