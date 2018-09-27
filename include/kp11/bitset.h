@@ -87,7 +87,7 @@ namespace kp11
     }
 
   private: // variables
-    /// true if occupied, false if vacant, this is to be consistent with bitset `set`
+    /// `true` if occupied, `false` if vacant, this is to be consistent with `bitset::set`.
     std::bitset<N> bits;
   };
 }
