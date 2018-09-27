@@ -10,7 +10,6 @@ namespace kp11
 {
   /// Allocates from a buffer inside itself.
   /// Can only allocate one memory block at a time.
-  /// Meets the `Resource` concept.
   /// * `Pointer` pointer type
   /// * `Size` size type
   /// * `Bytes` is the size of the buffer
@@ -49,7 +48,6 @@ namespace kp11
 
   /// Allocates from a buffer inside itself.
   /// Can only allocate one memory block at a time.
-  /// Meets the `Resource` concept.
   /// * `Bytes` is the size of the buffer
   /// * `Alignment` is the alignment of the buffer
   template<std::size_t Bytes, std::size_t Alignment>
