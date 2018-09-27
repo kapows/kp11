@@ -42,10 +42,7 @@ namespace kp11
     /// Defined because we need to release all allocated memory back to `Upstream`.
     ~monotonic() noexcept
     {
-      while (length)
-      {
-        pop_back();
-      }
+      release();
     }
 
   public: // modifiers
@@ -75,6 +72,14 @@ namespace kp11
     /// * Complexity `O(0)`
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
+    }
+
+    void release() noexcept
+    {
+      while (length)
+      {
+        pop_back();
+      }
     }
 
   private: // allocate helpers

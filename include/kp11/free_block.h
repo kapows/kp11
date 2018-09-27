@@ -46,10 +46,7 @@ namespace kp11
     /// Defined because we need to release all allocated memory back to `Upstream`.
     ~free_block() noexcept
     {
-      while (length)
-      {
-        pop_back();
-      }
+      release();
     }
 
   public: // modifiers
@@ -83,6 +80,14 @@ namespace kp11
         return true;
       }
       return false;
+    }
+
+    void release() noexcept
+    {
+      while (length)
+      {
+        pop_back();
+      }
     }
 
   private: // allocate helper
