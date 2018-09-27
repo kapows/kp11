@@ -40,11 +40,11 @@ namespace kp11
         bytes(bytes), alignment(alignment), upstream(std::forward<Args>(args)...)
     {
     }
-    /// Deleted because a resource is being held and managed
+    /// Deleted because a resource is being held and managed.
     free_block(free_block const &) = delete;
-    /// Deleted because a resource is being held and managed
+    /// Deleted because a resource is being held and managed.
     free_block & operator=(free_block const &) = delete;
-    /// Defined because we need to release all allocated memory back to `Upstream`
+    /// Defined because we need to release all allocated memory back to `Upstream`.
     ~free_block() noexcept
     {
       while (length)
