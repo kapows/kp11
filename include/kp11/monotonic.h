@@ -49,7 +49,7 @@ namespace kp11
     }
 
   public: // modifiers
-    /// * Precondition `alignment` must be at most the one passed into the constructor
+    /// * Precondition `alignment (from ctor) % alignment == 0`
     /// * Complexity `O(1)`
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
@@ -82,7 +82,7 @@ namespace kp11
     {
       return bytes == 0 ? alignment : (bytes / alignment + (bytes % alignment != 0)) * alignment;
     }
-    /// * Precondition `bytes` must be some multiple of `alignment` passed into the constructor.
+    /// * Precondition `bytes % alignment == 0`
     unsigned_char_pointer allocate_from_current_replica(size_type bytes) noexcept
     {
       assert(bytes % alignment == 0);
