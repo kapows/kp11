@@ -11,7 +11,7 @@ namespace kp11
   /// Forward iteration based marking using an implicit linked list with random order resets.
   /// Vacancies from resets will be merged during a `set` call if they are adjacent to each other
   /// and are currently being searched.
-  /// Meets the requirements of `Marker`.
+  /// Meets the `Marker` concept.
   /// * `N` number of spots
   template<std::size_t N>
   class list
@@ -45,7 +45,7 @@ namespace kp11
     }
 
   public: // modifiers
-    /// Complexity `O(n)`
+    /// * Complexity `O(n)`
     size_type set(size_type n) noexcept
     {
       size_type i = 0;
@@ -79,7 +79,7 @@ namespace kp11
       }
       return size();
     }
-    /// Complexity `O(1)`
+    /// * Complexity `O(1)`
     void reset(size_type index, size_type n) noexcept
     {
       assert(next[index] == -static_cast<difference_type>(n));
