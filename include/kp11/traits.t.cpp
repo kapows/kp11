@@ -6,9 +6,6 @@
 
 using namespace kp11;
 
-/**
- * @private
- */
 class test_resource
 {
 public:
@@ -18,9 +15,6 @@ public:
   void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
 };
 
-/**
- * @private
- */
 class test_not_a_resource
 {
 public:
@@ -37,9 +31,6 @@ TEST_CASE("is_resource", "[modifiers]")
   REQUIRE(is_resource_v<test_resource> == true);
 }
 
-/**
- * @private
- */
 template<std::size_t N>
 class test_marker
 {
@@ -53,9 +44,6 @@ public:
   void reset(size_type index, size_type n) noexcept;
 };
 
-/**
- * @private
- */
 template<std::size_t N>
 class test_not_a_marker
 {
