@@ -10,10 +10,11 @@ namespace kp11
 {
   /// Allocates from a buffer inside itself.
   /// Can only allocate one memory block at a time.
-  /// `Pointer` pointer type
-  /// `Size` size type
-  /// `Bytes` is the size of the buffer
-  /// `Alignment` is the alignment of the buffer
+  /// Meets the `Resource` concept.
+  /// * `Pointer` pointer type
+  /// * `Size` size type
+  /// * `Bytes` is the size of the buffer
+  /// * `Alignment` is the alignment of the buffer
   template<typename Pointer, typename SizeType, std::size_t Bytes, std::size_t Alignment>
   class basic_local
   {
@@ -46,6 +47,11 @@ namespace kp11
     buffer_type buffer;
   };
 
+  /// Allocates from a buffer inside itself.
+  /// Can only allocate one memory block at a time.
+  /// Meets the `Resource` concept.
+  /// * `Bytes` is the size of the buffer
+  /// * `Alignment` is the alignment of the buffer
   template<std::size_t Bytes, std::size_t Alignment>
   using local = basic_local<void *, std::size_t, Bytes, Alignment>;
 }
