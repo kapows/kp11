@@ -5,7 +5,7 @@
 namespace kp11
 {
   /// Calls `new` on `allocate` and `delete` on `deallocate`.
-  /// Meets the requirements of `Resource`.
+  /// Meets the `Resource` concept.
   class heap
   {
   public: // typedefs
