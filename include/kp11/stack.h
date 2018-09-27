@@ -40,7 +40,7 @@ namespace kp11
     }
 
   private: // variables
-    /// Current index
+    /// Current index.
     size_type first = 0;
   };
 }
