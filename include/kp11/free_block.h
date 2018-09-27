@@ -53,7 +53,7 @@ namespace kp11
     }
 
   public: // modifiers
-    /// * `alignment` must be a divisor of the `alignment` passed into the constructor
+    /// * Precondition `alignment (from ctor) % alignment == 0`
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
       assert(this->alignment % alignment == 0);
