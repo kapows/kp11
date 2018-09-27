@@ -7,14 +7,11 @@
 
 namespace kp11
 {
-  /**
-   * @brief If allocation from `Primary` is unsuccessful then allocates from `Secondary`
-   *
-   * @tparam Primary type that meets the `Resource` concept
-   * @tparam Secondary type that meets the `Resource` concept
-   * @pre Primary must either return a convertible bool value on dellocate or return a convertible
-   * bool value from operator[](pointer ptr) in order to determine ownership.
-   */
+  /// If allocation from `Primary` is unsuccessful then allocates from `Secondary`.
+  /// * `Primary` meets the `Resource` concept
+  /// Must either return a convertible bool value on dellocate or return a convertible bool value
+  /// from operator[](pointer ptr) in order to determine ownership.
+  /// * `Secondary` meets the `Resource` concept
   template<typename Primary, typename Secondary>
   class fallback
   {
@@ -22,26 +19,13 @@ namespace kp11
     static_assert(is_resource_v<Secondary>);
 
   public: // typedefs
-    /**
-     * @brief pointer type
-     */
     using pointer = typename Primary::pointer;
-    /**
-     * @brief size type
-     */
     using size_type = typename Primary::size_type;
 
   public: // constructors
-    /**
-     * @brief Construct a new fallback object
-     */
     fallback() = default;
-    /**
-     * @brief Construct a new fallback object
-     *
-     * @param first_args `Primary` constructor arguments
-     * @param second_args `Secondary` constructor arguments
-     */
+    /// * `first_args` are constructor arguments to `Primary`
+    /// * `second_args` are constructor arguments to `Secondary`
     template<typename... Args1, typename... Args2>
     fallback(std::piecewise_construct_t,
       std::tuple<Args1...> first_args,
@@ -54,6 +38,7 @@ namespace kp11
     }
 
   private: // constructor helper
+    /// Constructor that unpacks `tuple` arguments.
     template<std::size_t... Is1, typename... Args1, std::size_t... Is2, typename... Args2>
     fallback(std::tuple<Args1...> & first_args,
       std::tuple<Args2...> & second_args,
@@ -65,9 +50,6 @@ namespace kp11
     }
 
   public: // modifiers
-    /**
-     * @copydoc Resource::allocate
-     */
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
       if (auto ptr = primary.allocate(bytes, alignment))
@@ -76,9 +58,6 @@ namespace kp11
       }
       return secondary.allocate(bytes, alignment);
     }
-    /**
-     * @copydoc Resource::deallocate
-     */
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
       // it may be trivial for a type to return success or failure in it's deallocate function, if
@@ -110,30 +89,18 @@ namespace kp11
     }
 
   public: // accessors
-    /**
-     * @brief Get the primary object
-     */
     Primary & get_primary() noexcept
     {
       return primary;
     }
-    /**
-     * @brief Get the primary object
-     */
     Primary const & get_primary() const noexcept
     {
       return primary;
     }
-    /**
-     * @brief Get the secondary object
-     */
     Secondary & get_secondary() noexcept
     {
       return secondary;
     }
-    /**
-     * @brief Get the secondary object
-     */
     Secondary const & get_secondary() const noexcept
     {
       return secondary;

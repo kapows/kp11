@@ -8,25 +8,17 @@
 
 namespace kp11
 {
-  /**
-   * @brief Allocates from a buffer inside itself. Can only allocate once.
-   *
-   * @tparam Pointer pointer type
-   * @tparam Size size type
-   * @tparam Bytes size of buffer
-   * @tparam Alignment alignment of buffer
-   */
+  /// Allocates from a buffer inside itself.
+  /// Can only allocate one memory block at a time.
+  /// * `Pointer` pointer type
+  /// * `Size` size type
+  /// * `Bytes` is the size of the buffer
+  /// * `Alignment` is the alignment of the buffer
   template<typename Pointer, typename SizeType, std::size_t Bytes, std::size_t Alignment>
   class basic_local
   {
   public: // typedefs
-    /**
-     * @brief pointer type
-     */
     using pointer = Pointer;
-    /**
-     * @brief size type
-     */
     using size_type = SizeType;
 
   private: // typedefs
@@ -35,9 +27,6 @@ namespace kp11
     using buffer_pointer_traits = std::pointer_traits<buffer_pointer>;
 
   public: // modifiers
-    /**
-     * @copydoc Resource::allocate
-     */
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
       if (!allocated && bytes <= Bytes)
@@ -47,9 +36,6 @@ namespace kp11
       }
       return nullptr;
     }
-    /**
-     * @copydoc Resource::deallocate
-     */
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
       allocated = false;
@@ -60,6 +46,10 @@ namespace kp11
     buffer_type buffer;
   };
 
+  /// Allocates from a buffer inside itself.
+  /// Can only allocate one memory block at a time.
+  /// * `Bytes` is the size of the buffer
+  /// * `Alignment` is the alignment of the buffer
   template<std::size_t Bytes, std::size_t Alignment>
   using local = basic_local<void *, std::size_t, Bytes, Alignment>;
 }

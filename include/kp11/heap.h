@@ -4,30 +4,17 @@
 
 namespace kp11
 {
-  /**
-   * @brief Calls `new` on `allocate` and `delete` on `deallocate`.
-   *    Meets the requirements of `Resource`.
-   */
+  /// Calls `new` on `allocate` and `delete` on `deallocate`.
   class heap
   {
   public: // typedefs
-    /**
-     * @brief Pointer that `new` and `delete` use
-     */
     using pointer = void *;
-    /**
-     * @brief Size type that `new` and `delete` use
-     */
     using size_type = std::size_t;
 
   public: // modifiers
-    /**
-     * @copydoc Resource::allocate
-     */
+    /// Calls `new`.
     pointer allocate(size_type bytes, size_type alignment) noexcept;
-    /**
-     * @copydoc Resource::deallocate
-     */
+    /// Calls `delete`.
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
   };
 }

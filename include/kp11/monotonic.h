@@ -10,26 +10,16 @@
 
 namespace kp11
 {
-  /**
-   * @brief Allocates memory by incrementing a pointer.
-   *
-   * @tparam Replicas number of times to replicate
-   * @tparam Upstream type that meets the `Resource` concept. This is where memory will be allocated
-   * from.
-   */
+  /// Allocates memory by incrementing a pointer. Deallocation is a no-op.
+  /// * `Replicas` is the maximum of successful allocation requests to `Upstream`
+  /// * `Upstream` meets the `Resource` concept
   template<std::size_t Replicas, typename Upstream>
   class monotonic
   {
     static_assert(is_resource_v<Upstream>);
 
   public: // typedefs
-    /**
-     * @brief pointer type
-     */
     using pointer = typename Upstream::pointer;
-    /**
-     * @brief size type
-     */
     using size_type = typename Upstream::size_type;
 
   private: // typedefs
@@ -37,29 +27,19 @@ namespace kp11
       typename std::pointer_traits<pointer>::template rebind<unsigned char>;
 
   public: // constructors
-    /**
-     * @brief Construct a new monotonic object
-     *
-     * @param bytes Size in bytes of memory to alloate from `Upstream` per replica
-     * @param alignment Size in bytes of memory to alloate from `Upstream` per replica
-     * @param args `Upstream` constructor arguments
-     */
+    /// * `bytes` is the size in bytes of memory to request from `Upstream`
+    /// * `alignment` is the alignment in bytes of memory to request from `Upstream`
+    /// * `args` are the constructor arguments to `Upstream`
     template<typename... Args>
     monotonic(size_type bytes, size_type alignment, Args &&... args) noexcept :
         bytes(bytes), alignment(alignment), upstream(std::forward<Args>(args)...)
     {
     }
-    /**
-     * @brief Delete copy constructor since a resource is being held and managed.
-     */
+    /// Deleted because a resource is being held and managed.
     monotonic(monotonic const &) = delete;
-    /**
-     * @brief Delete copy assignment since a resource is being held and managed.
-     */
+    /// Deleted because a resource is being held and managed.
     monotonic & operator=(monotonic const &) = delete;
-    /**
-     * @brief Destroy the monotonic object. Deallocate all memory back to `Upstream`.
-     */
+    /// Defined because we need to release all allocated memory back to `Upstream`.
     ~monotonic() noexcept
     {
       while (length)
@@ -69,13 +49,8 @@ namespace kp11
     }
 
   public: // modifiers
-    /**
-     * @copydoc Resource::allocate
-     *
-     * @par Complexity
-     * `O(1)`
-     * @pre `alignment` must be at most the one passed into the constructor
-     */
+    /// * Precondition `alignment (from ctor) % alignment == 0`
+    /// * Complexity `O(1)`
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
       assert(this->alignment % alignment == 0);
@@ -96,14 +71,8 @@ namespace kp11
         return nullptr;
       }
     }
-    /**
-     * @copydoc Resource::deallocate
-     *
-     * @par Complexity
-     * `O(0)`
-     *
-     * @note No-op
-     */
+    /// No-op.
+    /// * Complexity `O(0)`
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
     }
@@ -113,6 +82,7 @@ namespace kp11
     {
       return bytes == 0 ? alignment : (bytes / alignment + (bytes % alignment != 0)) * alignment;
     }
+    /// * Precondition `bytes % alignment == 0`
     unsigned_char_pointer allocate_from_current_replica(size_type bytes) noexcept
     {
       assert(bytes % alignment == 0);
@@ -124,13 +94,7 @@ namespace kp11
     }
 
   private: // modifiers
-    /**
-     * @brief Add a replica to the end of our container. Calls Upstream::allocate.
-     * Increases length by 1.
-     *
-     * @return true if successful
-     * @return false otherwise
-     */
+    /// Allocates a new block of memory from `Upstream`.
     bool push_back() noexcept
     {
       if (length != Replicas)
@@ -145,9 +109,7 @@ namespace kp11
       }
       return false;
     }
-    /**
-     * @brief Deallocate memory from the back, back to `Upstream`. Decreases length by 1.
-     */
+    /// Deallocates allocated memory back to `Upstream`.
     void pop_back() noexcept
     {
       assert(length);
@@ -157,13 +119,6 @@ namespace kp11
     }
 
   public: // observers
-    /**
-     * @brief Check if `ptr` points to memory that was obtained from Upstream.
-     *
-     * @param ptr pointer to check
-     * @returns pointer to the beginning of the memory that was obtained from Upstream
-     * @returns nullptr otherwise
-     */
     pointer operator[](pointer ptr) const noexcept
     {
       for (std::size_t i = 0; i < length; ++i)
@@ -178,17 +133,17 @@ namespace kp11
     }
 
   private: // variables
-    // size to allocate from Upstream
+    /// Size in bytes of memory to allocate from `Upstream`.
     size_type const bytes;
-    // alignment to allocate from Upstream
+    /// Size in bytes of alignment of memory to allocate from `Upstream`.
     size_type const alignment;
-    // current position of beginning of allocatable memory
+    /// Current position of beginning of allocatable memory.
     unsigned_char_pointer first = nullptr;
-    // end of allocatable memory
+    /// End of allocatable memory.
     unsigned_char_pointer last = nullptr;
-    // length of ptrs
+    /// Number of allocations from `Upstream`.
     std::size_t length = 0;
-    // pointers to the beginning of allocated memory from Upstream
+    /// Holds pointers to memory allocated by `Upstream`
     unsigned_char_pointer ptrs[Replicas];
     Upstream upstream;
   };
