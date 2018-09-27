@@ -6,7 +6,7 @@
 namespace kp11
 {
   /// LIFO based marking with reverse ordered resets.
-  /// * `N` number of spots
+  /// * `N` is the number of spots
   template<std::size_t N>
   class stack
   {
