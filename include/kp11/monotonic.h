@@ -35,11 +35,11 @@ namespace kp11
         bytes(bytes), alignment(alignment), upstream(std::forward<Args>(args)...)
     {
     }
-    /// Deleted because a resource is being held and managed
+    /// Deleted because a resource is being held and managed.
     monotonic(monotonic const &) = delete;
-    /// Deleted because a resource is being held and managed
+    /// Deleted because a resource is being held and managed.
     monotonic & operator=(monotonic const &) = delete;
-    /// Defined because we need to release all allocated memory back to `Upstream`
+    /// Defined because we need to release all allocated memory back to `Upstream`.
     ~monotonic() noexcept
     {
       while (length)
@@ -49,8 +49,8 @@ namespace kp11
     }
 
   public: // modifiers
-    /// Complexity `O(1)`
-    /// * Pre `alignment` must be at most the one passed into the constructor
+    /// * Precondition `alignment` must be at most the one passed into the constructor
+    /// * Complexity `O(1)`
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
       assert(this->alignment % alignment == 0);
@@ -71,7 +71,8 @@ namespace kp11
         return nullptr;
       }
     }
-    /// Complexity `O(0)`
+    /// No-op.
+    /// * Complexity `O(0)`
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
     }
@@ -81,7 +82,7 @@ namespace kp11
     {
       return bytes == 0 ? alignment : (bytes / alignment + (bytes % alignment != 0)) * alignment;
     }
-    /// `bytes` must be some multiple of `alignment` passed into the constructor.
+    /// * Precondition `bytes` must be some multiple of `alignment` passed into the constructor.
     unsigned_char_pointer allocate_from_current_replica(size_type bytes) noexcept
     {
       assert(bytes % alignment == 0);
