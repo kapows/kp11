@@ -54,9 +54,9 @@ namespace kp11
     }
 
   private: // variables
-    /// First free index or `N`
+    /// First free index or `N`.
     size_type head = 0;
-    /// Holds the index of the next free index
+    /// Holds the index of the next free index.
     std::array<size_type, N> next;
   };
 }
