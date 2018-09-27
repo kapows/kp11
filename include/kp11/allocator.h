@@ -8,7 +8,7 @@
 
 namespace kp11
 {
-  /// Adaptor that allows a `Resource` to be used as an allocator
+  /// Adaptor that allows a `Resource` to be used as an allocator.
   /// * `T` is value type
   /// * `Resource` meets the `Resource` concept
   template<typename T, typename Resource>
@@ -29,7 +29,6 @@ namespace kp11
     };
 
   public: // constructors
-    /// * resource is a pointer to a `Resource`
     allocator(Resource * resource) noexcept : resource(resource)
     {
     }
