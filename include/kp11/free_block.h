@@ -10,6 +10,9 @@
 
 namespace kp11
 {
+  /// Allocate memory in blocks instead of per byte.
+  /// Allocations and deallocations will defer to `Marker` to determine functionality.
+  /// Meets the `Resource` concept.
   /// * `Replicas` is the maximum of successful allocation requests to `Upstream` and the number of
   /// `Markers` to hold
   /// * `Marker` meets the `Marker` concept
@@ -125,7 +128,7 @@ namespace kp11
     }
 
   private: // operator[] helper
-    /// Finds the index of the memory block to which `ptr` is pointing
+    /// Finds the index of the memory block to which `ptr` is pointing.
     /// * Returns `Replicas` on failure
     std::size_t find(unsigned_char_pointer ptr) const noexcept
     {
@@ -185,16 +188,16 @@ namespace kp11
   private: // variables
     /// Only modified by `push_back` and `pop_back`.
     std::size_t length = 0;
-    /// Holds pointers to memory allocated by `Upstream`
+    /// Holds pointers to memory allocated by `Upstream`.
     unsigned_char_pointer ptrs[Replicas];
-    /// Is in a union to avoid construction of all `Marker`s at object construction time
+    /// Is in a union to avoid construction of all `Marker`s at object construction time.
     union {
-      /// Holds `Markers` associated with each corresponding replica of `ptrs`
+      /// Holds `Markers` associated with each corresponding replica of `ptrs`.
       Marker markers[Replicas];
     };
-    /// size in bytes of memory to allocate from `Upstream`
+    /// Size in bytes of memory to allocate from `Upstream`.
     size_type const bytes;
-    /// size in bytes of alignment of memory to allocate from `Upstream`
+    /// Size in bytes of alignment of memory to allocate from `Upstream`.
     size_type const alignment;
     Upstream upstream;
   };
