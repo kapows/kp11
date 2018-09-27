@@ -13,7 +13,9 @@ namespace kp11
     using size_type = std::size_t;
 
   public: // modifiers
+    /// Calls `new`.
     pointer allocate(size_type bytes, size_type alignment) noexcept;
+    /// Calls `delete`.
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
   };
 }
