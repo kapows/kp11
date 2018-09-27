@@ -35,7 +35,7 @@ namespace kp11
     /// * `alignment` is the alignment in bytes of memory to request from `Upstream`
     /// * `args` are the constructor arguments to `Upstream`
     template<typename... Args>
-    free_block(size_type bytes, size_type alignment, Args &&... args) :
+    free_block(size_type bytes, size_type alignment, Args &&... args) noexcept :
         bytes(bytes), alignment(alignment), upstream(std::forward<Args>(args)...)
     {
     }
