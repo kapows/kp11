@@ -7,7 +7,7 @@
 
 namespace kp11
 {
-  /// If allocation from `Primary` is unsuccessful then allocates from `Secondary`
+  /// If allocation from `Primary` is unsuccessful then allocates from `Secondary`.
   /// * `Primary` meets the `Resource` concept
   /// Must either return a convertible bool value on dellocate or return a convertible bool value
   /// from operator[](pointer ptr) in order to determine ownership.
@@ -38,7 +38,7 @@ namespace kp11
     }
 
   private: // constructor helper
-    /// constructor that unpacks tuple arguments
+    /// Constructor that unpacks `tuple` arguments.
     template<std::size_t... Is1, typename... Args1, std::size_t... Is2, typename... Args2>
     fallback(std::tuple<Args1...> & first_args,
       std::tuple<Args2...> & second_args,
