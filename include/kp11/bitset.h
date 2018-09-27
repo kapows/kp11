@@ -7,7 +7,7 @@ namespace kp11
 {
   /// Forward iteration based marking using a bitset with random order resets.
   /// Vacancies will be summed until the correct number of vacancies is found.
-  /// * `N` number of spots
+  /// * `N` is the number of spots
   template<std::size_t N>
   class bitset
   {
