@@ -29,6 +29,7 @@ namespace kp11
     };
 
   public: // constructors
+    /// If `resource` is `nullptr` calling `allocate` or `deallocate` is undefined.
     allocator(Resource * resource) noexcept : resource(resource)
     {
     }
