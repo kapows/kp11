@@ -4,18 +4,12 @@
 
 namespace kp11
 {
-  /**
-   * @brief Check if `T` meets the requiements of `Resource`
-   *
-   * @tparam T Type to check
-   */
+  /// Check if `T` meets the `Resource` concept.
   template<typename T, typename Enable = void>
   struct is_resource : std::false_type
   {
   };
-  /**
-   * @private
-   */
+  /// Check if `T` meets the `Resource` concept.
   template<typename T>
   struct is_resource<T,
     std::void_t<typename T::pointer,
@@ -28,26 +22,16 @@ namespace kp11
         std::declval<typename T::size_type>()))>> : std::true_type
   {
   };
-  /**
-   * @brief Helper variable template for `is_resource`
-   *
-   * @tparam T Type to check
-   */
+  /// Check if `T` meets the `Resource` concept.
   template<typename T>
   constexpr bool is_resource_v = is_resource<T>::value;
 
-  /**
-   * @brief Check if `T` meets the requiements of `Marker`
-   *
-   * @tparam T type to check
-   */
+  /// Check if `T` meets the `Marker` concept.
   template<typename T, typename Enable = void>
   struct is_marker : std::false_type
   {
   };
-  /**
-   * @private
-   */
+  /// Check if `T` meets the `Marker` concept.
   template<typename T>
   struct is_marker<T,
     std::void_t<typename T::size_type,
@@ -58,11 +42,7 @@ namespace kp11
         std::declval<typename T::size_type>()))>> : std::true_type
   {
   };
-  /**
-   * @brief Helper variable template for `is_marker`
-   *
-   * @tparam T type to check
-   */
+  /// Check if `T` meets the `Marker` concept.
   template<typename T>
   constexpr bool is_marker_v = is_marker<T>::value;
 }
