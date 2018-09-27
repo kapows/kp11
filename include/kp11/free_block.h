@@ -12,7 +12,6 @@ namespace kp11
 {
   /// Allocate memory in blocks instead of per byte.
   /// Allocations and deallocations will defer to `Marker` to determine functionality.
-  /// Meets the `Resource` concept.
   /// * `Replicas` is the maximum of successful allocation requests to `Upstream` and the number of
   /// `Markers` to hold
   /// * `Marker` meets the `Marker` concept
