@@ -114,7 +114,7 @@ namespace kp11
     {
       assert(length);
       upstream.deallocate(static_cast<pointer>(ptrs[--length]), bytes, alignment);
-      first = ptrs[length - 1];
+      first = length ? ptrs[length - 1] : nullptr;
       last = first;
     }
 
