@@ -10,6 +10,7 @@ namespace kp11
   /// LIFO based marking (size limited) with random order deallocations.
   /// The most spots that can be marked by a call to `set` is 1.
   /// The most spots that can be vacated by a call to `reset` is 1.
+  /// Meets the `Marker` concept.
   /// * `N` number of spots
   template<std::size_t N>
   class pool
