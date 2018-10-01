@@ -4,90 +4,92 @@
 #include <cassert> // assert
 #include <cstddef> // size_t
 #include <limits> // numeric_limits
-#include <utility> // exchange
 
 namespace kp11
 {
   /// Forward iteration based marking using an implicit linked list with random order resets.
-  /// Vacancies from resets will be merged during a `set` call if they are adjacent to each other
-  /// and are currently being searched.
+  /// Vacancies from `reset`s will be merged if they are adjacent to each other.
   /// * `N` is the number of spots
   template<std::size_t N>
   class list
   {
-    static_assert(N <= std::numeric_limits<std::ptrdiff_t>::max(),
-      "list must have N <= std::numeric_limits<std::ptrdiff_t>::max()");
-
   public: // typedefs
-    using size_type = std::size_t;
-
-  private: // typedefs
-    using difference_type = std::ptrdiff_t;
+    using size_type = std::ptrdiff_t;
 
   public: // constructors
     list() noexcept
     {
       if (N > 0)
       {
-        next[0] = N;
-      }
-      for (size_type i = 1; i < N; ++i)
-      {
-        next[i] = 0;
+        mark_vacant(0, size());
       }
     }
 
   public: // capacity
     static constexpr size_type size() noexcept
     {
-      return N;
+      return static_cast<size_type>(N);
     }
 
   public: // modifiers
     /// * Complexity `O(n)`
     size_type set(size_type n) noexcept
     {
-      size_type i = 0;
-      while (i != size())
+      assert(n != 0);
+      for (size_type i = 0; i != size(); i += (sizes[i] < 0 ? -sizes[i] : sizes[i]))
       {
-        // skip if already occupied
-        if (next[i] < 0)
+        if (sizes[i] >= n)
         {
-          i -= next[i];
-          continue;
+          // have some spots left over
+          if (sizes[i] != n)
+          {
+            mark_vacant(i + n, sizes[i] - n);
+          }
+          mark_occupied(i, n);
+          return i;
         }
-        // vacant, we'll merge all other vacancies from reset calls
-        for (auto j = i + next[i]; j != size() && next[j] > 0; j = i + next[i])
-        {
-          next[i] += std::exchange(next[j], 0);
-        }
-        // skip if still not enough
-        if (next[i] < n)
-        {
-          i += next[i];
-          continue;
-        }
-        // split if there are more vacant spots than necessary
-        if (next[i] != n)
-        {
-          next[i + n] = next[i] - n;
-        }
-        // mark as occupied
-        next[i] = -n;
-        return i;
       }
       return size();
     }
     /// * Complexity `O(1)`
     void reset(size_type index, size_type n) noexcept
     {
-      assert(next[index] == -static_cast<difference_type>(n));
-      next[index] = n;
+      assert(index < size() && index + n <= size());
+      assert(sizes[index] == -n && sizes[index + (n - 1)] == -n);
+      // join with previous if it's vacant
+      if (auto const previous = index - 1; index && sizes[previous] > 0)
+      {
+        n += sizes[previous];
+        index = index - sizes[previous];
+      }
+      // join with next if it's vacant
+      if (auto const next = index + n; (index + n != size()) && sizes[next] > 0)
+      {
+        n += sizes[next];
+      }
+      mark_vacant(index, n);
+    }
+
+  private: // helpers
+    void mark_occupied(size_type index, size_type n) noexcept
+    {
+      sizes[index] = sizes[index + (n - 1)] = -n;
+    }
+    void mark_vacant(size_type index, size_type n) noexcept
+    {
+      sizes[index] = sizes[index + (n - 1)] = n;
     }
 
   private: // variables
-    /// Implicit linked list that stores it's own size (number of spots until next).
-    /// Positive for vacant, negative if occupied, and 0 if the spot is part of another.
-    std::array<difference_type, N> next;
+    /// Implicit linked list that stores it's own size (number of spots until next). The size is
+    /// stored both in the beginning and the end of the spots that it occupies. If the size is 1
+    /// then it only occupies 1 spot. Positive for vacant, negative
+    /// if occupied.
+    ///
+    /// Example: [-2, -2, 3, 0, 3, -4, 0, 0, -4, 2, 2, -1]
+    /// 0 is not necessarily 0 but a placeholder for garbage characters.
+    /// Here 0 is 2 wide and occupied, 2 is 3 wide and vacant, 5 is 4 wide and occupied, 9 is 2 wide
+    /// and vacant, 10 is 1 wide and occupied.
+    std::array<size_type, N> sizes;
   };
 }
