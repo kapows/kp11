@@ -59,6 +59,7 @@ TEST_CASE("unit test", "[unit-test]")
     u.deallocate(p, 32, 4);
     REQUIRE(&v == &u);
   }
+  m.release();
 }
 
 TEST_CASE("traits", "[traits]")

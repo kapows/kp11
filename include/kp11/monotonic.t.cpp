@@ -23,6 +23,7 @@ TEST_CASE("unit test", "[unit-test]")
   auto c = m.allocate(128, 4);
   REQUIRE(c == nullptr);
   REQUIRE(m[c] == nullptr);
+  m.release();
 }
 
 TEST_CASE("traits", "[traits]")
