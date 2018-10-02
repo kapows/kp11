@@ -3,7 +3,8 @@
 #include <array> // array
 #include <cassert> // assert
 #include <cstddef> // size_t
-#include <limits> // numeric_limits
+#include <cstdint> // int_least8_t, int_least16_t, int_least32_t, int_least64_t, intmax_t, INT_LEAST8_MAX, INT_LEAST16_MAX, INT_LEAST32_MAX, INT_LEAST64_MAX, INTMAX_MAX
+#include <type_traits> // conditional_t
 
 namespace kp11
 {
@@ -13,8 +14,18 @@ namespace kp11
   template<std::size_t N>
   class list
   {
+    // we'll need signed integers
+    static_assert(N <= INTMAX_MAX);
+
   public: // typedefs
-    using size_type = std::ptrdiff_t;
+    /// Pick the smallest type possible to reduce our array size
+    using size_type = std::conditional_t<N <= INT_LEAST8_MAX,
+      int_least8_t,
+      std::conditional_t<N <= INT_LEAST16_MAX,
+        int_least16_t,
+        std::conditional_t<N <= INT_LEAST32_MAX,
+          int_least32_t,
+          std::conditional_t<N <= INT_LEAST64_MAX, int_least64_t, intmax_t>>>>;
 
   public: // constructors
     list() noexcept
