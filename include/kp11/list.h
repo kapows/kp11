@@ -30,7 +30,7 @@ namespace kp11
   public: // constructors
     list() noexcept
     {
-      if (N > 0)
+      if (size() > 0)
       {
         mark_vacant(0, size());
       }
@@ -46,17 +46,19 @@ namespace kp11
     /// * Complexity `O(n)`
     size_type set(size_type n) noexcept
     {
-      assert(n != 0);
-      for (size_type i = 0; i != size(); i += (sizes[i] < 0 ? -sizes[i] : sizes[i]))
+      assert(n > 0);
+      for (size_type i = 0, last = size(); i < last; i += (sizes[i] < 0 ? -sizes[i] : sizes[i]))
       {
         if (sizes[i] >= n)
         {
-          // have some spots left over
-          if (sizes[i] != n)
-          {
-            mark_vacant(i + n, sizes[i] - n);
-          }
+          // Marking changes sizes[i] so leftover needs to be calculated before hand.
+          auto const leftover = sizes[i] - n;
+          // Mark occupied first so that we're always moving forward.
           mark_occupied(i, n);
+          if (leftover)
+          {
+            mark_vacant(i + n, leftover);
+          }
           return i;
         }
       }
@@ -65,16 +67,18 @@ namespace kp11
     /// * Complexity `O(1)`
     void reset(size_type index, size_type n) noexcept
     {
-      assert(index < size() && index + n <= size());
+      assert(0 <= index && index < size());
+      assert(0 <= n && n <= size());
+      assert(0 <= index + n && index + n <= size());
       assert(sizes[index] == -n && sizes[index + (n - 1)] == -n);
       // join with previous if it's vacant
-      if (auto const previous = index - 1; index && sizes[previous] > 0)
+      if (auto const previous = index - 1; index > 0 && sizes[previous] > 0)
       {
         n += sizes[previous];
         index = index - sizes[previous];
       }
       // join with next if it's vacant
-      if (auto const next = index + n; (index + n != size()) && sizes[next] > 0)
+      if (auto const next = index + n; next < size() && sizes[next] > 0)
       {
         n += sizes[next];
       }
@@ -82,12 +86,16 @@ namespace kp11
     }
 
   private: // helpers
+    /// Precondition `n > 0`
     void mark_occupied(size_type index, size_type n) noexcept
     {
+      assert(n > 0);
       sizes[index] = sizes[index + (n - 1)] = -n;
     }
+    /// Precondition `n > 0`
     void mark_vacant(size_type index, size_type n) noexcept
     {
+      assert(n > 0);
       sizes[index] = sizes[index + (n - 1)] = n;
     }
 
