@@ -55,6 +55,15 @@ namespace kp11
 
   /// Check if `T` meets the `Owner` concept.
   template<typename T>
+  struct is_owner<T,
+    std::enable_if_t<is_resource_v<T> &&
+                     std::is_same_v<typename T::pointer,
+                       decltype(std::declval<T>()[std::declval<typename T::pointer>()])>>>
+      : std::true_type
+  {
+  };
+  /// Check if `T` meets the `Owner` concept.
+  template<typename T>
   constexpr bool is_owner_v = is_owner<T>::value;
 
   /* Marker Exemplar
