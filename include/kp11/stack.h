@@ -36,7 +36,7 @@ namespace kp11
     {
       assert(index < size());
       assert(n <= size());
-      assert(index + n < size());
+      assert(index + n <= size());
       if (index + n == first)
       {
         first = index;
