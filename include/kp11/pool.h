@@ -20,7 +20,7 @@ namespace kp11
   public: // constructors
     pool() noexcept
     {
-      for (std::size_t i = 0; i < N; ++i)
+      for (size_type i = 0, last = size(); i < last; ++i)
       {
         next[i] = i + 1;
       }
@@ -29,7 +29,7 @@ namespace kp11
   public: // capacity
     static constexpr size_type size() noexcept
     {
-      return N;
+      return static_cast<size_type>(N);
     }
 
   public: // modifiers
