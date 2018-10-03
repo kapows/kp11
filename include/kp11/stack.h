@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert> // assert
 #include <cstddef> // size_t
 #include <utility> // exchange
 
