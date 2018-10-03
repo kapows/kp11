@@ -31,6 +31,30 @@ TEST_CASE("is_resource", "[modifiers]")
   REQUIRE(is_resource_v<test_resource> == true);
 }
 
+class test_owner
+{
+public:
+  using pointer = void *;
+  using size_type = std::size_t;
+  pointer allocate(size_type bytes, size_type alignment) noexcept;
+  bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
+  pointer operator[](pointer ptr) const noexcept;
+};
+class test_not_an_owner
+{
+public:
+  using pointer = void *;
+  using size_type = std::size_t;
+  pointer allocate(size_type bytes, size_type alignment) noexcept;
+  bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
+};
+TEST_CASE("is_owner", "[traits]")
+{
+  REQUIRE(is_owner_v<test_owner> == true);
+  REQUIRE(is_owner_v<test_not_an_owner> == false);
+  REQUIRE(is_owner_v<int> == false);
+}
+
 template<std::size_t N>
 class test_marker
 {
