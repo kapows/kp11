@@ -26,6 +26,10 @@ TEST_CASE("unit test", "[unit-test]")
   m.reset(5, 2);
   m.reset(0, 5);
   REQUIRE(m.set(10) == 0);
+  SECTION("accepts size() in reset")
+  {
+    m.reset(m.size(), 1);
+  }
 }
 
 TEST_CASE("traits", "[traits]")
