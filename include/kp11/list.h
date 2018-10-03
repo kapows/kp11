@@ -67,8 +67,12 @@ namespace kp11
     /// * Complexity `O(1)`
     void reset(size_type index, size_type n) noexcept
     {
-      assert(0 <= index && index < size());
+      assert(0 <= index && index <= size());
       assert(0 <= n && n <= size());
+      if (index == size())
+      {
+        return;
+      }
       assert(0 <= index + n && index + n <= size());
       assert(sizes[index] == -n && sizes[index + (n - 1)] == -n);
       // join with previous if it's vacant

@@ -34,6 +34,10 @@ TEST_CASE("set/reset", "[modifiers]")
     REQUIRE(m.set(4) == 1);
     REQUIRE(m.set(1) == 5);
   }
+  SECTION("accepts size() in reset")
+  {
+    m.reset(m.size(), 1);
+  }
 }
 
 TEST_CASE("traits", "[traits]")
