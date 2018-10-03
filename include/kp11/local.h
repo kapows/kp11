@@ -60,6 +60,9 @@ namespace kp11
     }
 
   private: // helpers
+    /// Check if `ptr` points inside our buffer.
+    /// * Returns `true` if `ptr` belongs to us
+    /// * Returns `false` on otherwise
     bool has(unsigned_char_pointer ptr) noexcept
     {
       if (auto const buf = buffer_ptr(); std::less_equal<unsigned_char_pointer>()(buf, ptr) &&
