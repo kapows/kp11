@@ -39,15 +39,20 @@ namespace kp11
       }
       return nullptr;
     }
-    void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+    bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
-      // we'll accept nullptrs since we're giving it out in allocation
-      if (ptr == nullptr)
+      if (ptr == static_cast<pointer>(&buffer))
       {
-        return;
+        allocated = false;
+        return true;
       }
-      assert(ptr == static_cast<pointer>(&buffer));
-      allocated = false;
+      return false;
+    }
+
+  public: // observers
+    pointer operator[](pointer ptr) const noexcept
+    {
+      return nullptr;
     }
 
   private: // variables
