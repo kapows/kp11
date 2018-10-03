@@ -29,4 +29,5 @@ TEST_CASE("unit test", "[unit-test]")
 TEST_CASE("traits", "[traits]")
 {
   REQUIRE(is_resource_v<monotonic<2, heap>> == true);
+  REQUIRE(is_owner_v<monotonic<2, heap>> == true);
 }

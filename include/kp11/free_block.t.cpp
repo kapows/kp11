@@ -65,4 +65,5 @@ TEST_CASE("unit test", "[unit-test]")
 TEST_CASE("traits", "[traits]")
 {
   REQUIRE(is_resource_v<free_block<1, stack<4>, heap>> == true);
+  REQUIRE(is_owner_v<free_block<1, stack<4>, heap>> == true);
 }

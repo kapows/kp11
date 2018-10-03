@@ -36,6 +36,36 @@ namespace kp11
   template<typename T>
   constexpr bool is_resource_v = is_resource<T>::value;
 
+  /* Owner Exemplar
+  class owner
+  {
+  public:
+    using pointer = void *;
+    using size_type = std::size_t;
+    pointer allocate(size_type bytes, size_type alignment) noexcept;
+    bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
+    pointer operator[](pointer ptr) const noexcept;
+  };
+  */
+  /// Check if `T` meets the `Owner` concept.
+  template<typename T, typename Enable = void>
+  struct is_owner : std::false_type
+  {
+  };
+
+  /// Check if `T` meets the `Owner` concept.
+  template<typename T>
+  struct is_owner<T,
+    std::enable_if_t<is_resource_v<T> &&
+                     std::is_same_v<typename T::pointer,
+                       decltype(std::declval<T>()[std::declval<typename T::pointer>()])>>>
+      : std::true_type
+  {
+  };
+  /// Check if `T` meets the `Owner` concept.
+  template<typename T>
+  constexpr bool is_owner_v = is_owner<T>::value;
+
   /* Marker Exemplar
   class marker
   {
