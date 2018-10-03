@@ -72,6 +72,9 @@ namespace kp11
       }
       return false;
     }
+
+  private: // accessors
+    /// * Returns `unsigned_char_pointer` created from our inner buffer.
     unsigned_char_pointer buffer_ptr() noexcept
     {
       return unsigned_char_pointer_traits::pointer_to(buffer[0]);
