@@ -11,9 +11,9 @@
 namespace kp11
 {
   /// Allocates memory by incrementing a pointer. Deallocation is a no-op.
-  /// * `Replicas` is the maximum of successful allocation requests to `Upstream`
+  /// * `Allocations` is the maximum of successful allocation requests to `Upstream`
   /// * `Upstream` meets the `Resource` concept
-  template<std::size_t Replicas, typename Upstream>
+  template<std::size_t Allocations, typename Upstream>
   class monotonic
   {
     static_assert(is_resource_v<Upstream>);
@@ -102,7 +102,7 @@ namespace kp11
     /// Allocates a new block of memory from `Upstream`.
     bool push_back() noexcept
     {
-      if (length != Replicas)
+      if (length != Allocations)
       {
         if (auto ptr = upstream.allocate(bytes, alignment))
         {
@@ -149,7 +149,7 @@ namespace kp11
     /// Number of allocations from `Upstream`.
     std::size_t length = 0;
     /// Holds pointers to memory allocated by `Upstream`
-    unsigned_char_pointer ptrs[Replicas];
+    unsigned_char_pointer ptrs[Allocations];
     Upstream upstream;
   };
 }
