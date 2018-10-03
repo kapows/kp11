@@ -2,6 +2,7 @@
 
 #include "traits.h" // is_strategy_v
 
+#include <cassert> // assert
 #include <cstddef> // size_t
 #include <memory> // pointer_traits
 #include <type_traits> // aligned_storage_t
@@ -27,8 +28,10 @@ namespace kp11
     using buffer_pointer_traits = std::pointer_traits<buffer_pointer>;
 
   public: // modifiers
+    /// Precondition `alignment (from ctor) % alignment == 0`
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
+      assert(Alignment % alignment == 0);
       if (!allocated && bytes <= Bytes)
       {
         allocated = true;
@@ -38,6 +41,12 @@ namespace kp11
     }
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
+      // we'll accept nullptrs since we're giving it out in allocation
+      if (ptr == nullptr)
+      {
+        return;
+      }
+      assert(ptr == static_cast<pointer>(&buffer));
       allocated = false;
     }
 
