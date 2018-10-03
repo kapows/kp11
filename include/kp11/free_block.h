@@ -12,11 +12,11 @@ namespace kp11
 {
   /// Allocate memory in blocks instead of per byte.
   /// Allocations and deallocations will defer to `Marker` to determine functionality.
-  /// * `Replicas` is the maximum of successful allocation requests to `Upstream` and the number of
-  /// `Markers` to hold
+  /// * `Allocations` is the maximum of successful allocation requests to `Upstream` and the number
+  /// of `Markers` to hold
   /// * `Marker` meets the `Marker` concept
   /// * `Upstream` meets the `Resource` concept
-  template<std::size_t Replicas, typename Marker, typename Upstream>
+  template<std::size_t Allocations, typename Marker, typename Upstream>
   class free_block
   {
     static_assert(is_marker_v<Marker>);
@@ -74,7 +74,7 @@ namespace kp11
     bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
       auto p = static_cast<unsigned_char_pointer>(ptr);
-      if (auto i = find(p); i != Replicas)
+      if (auto i = find(p); i != Allocations)
       {
         markers[i].reset(index_from(ptrs[i], p), size_from(bytes));
         return true;
@@ -114,7 +114,7 @@ namespace kp11
   public: // observers
     pointer operator[](pointer ptr) const noexcept
     {
-      if (auto i = find(static_cast<unsigned_char_pointer>(ptr)); i != Replicas)
+      if (auto i = find(static_cast<unsigned_char_pointer>(ptr)); i != Allocations)
       {
         return static_cast<pointer>(ptrs[i]);
       }
@@ -133,7 +133,7 @@ namespace kp11
 
   private: // operator[] helper
     /// Finds the index of the memory block to which `ptr` is pointing.
-    /// * Returns `Replicas` on failure
+    /// * Returns `Allocations` on failure
     std::size_t find(unsigned_char_pointer ptr) const noexcept
     {
       for (std::size_t i = 0; i < length; ++i)
@@ -144,14 +144,14 @@ namespace kp11
           return i;
         }
       }
-      return Replicas;
+      return Allocations;
     }
 
   private: // modifiers
     /// Allocates a new block of memory from `Upstream` and adds another `Marker` for it.
     bool push_back() noexcept
     {
-      if (length != Replicas)
+      if (length != Allocations)
       {
         if (auto ptr = upstream.allocate(bytes * Marker::size(), alignment))
         {
@@ -193,11 +193,11 @@ namespace kp11
     /// Only modified by `push_back` and `pop_back`.
     std::size_t length = 0;
     /// Holds pointers to memory allocated by `Upstream`.
-    unsigned_char_pointer ptrs[Replicas];
+    unsigned_char_pointer ptrs[Allocations];
     /// Is in a union to avoid construction of all `Marker`s at object construction time.
     union {
       /// Holds `Markers` associated with each corresponding replica of `ptrs`.
-      Marker markers[Replicas];
+      Marker markers[Allocations];
     };
     /// Size in bytes of memory to allocate from `Upstream`.
     size_type const bytes;
