@@ -28,7 +28,7 @@ namespace kp11
     using unsigned_char_pointer_traits = std::pointer_traits<unsigned_char_pointer>;
 
   public: // modifiers
-    /// Precondition `alignment (from ctor) % alignment == 0`
+    /// * Precondition `alignment (from ctor) % alignment == 0`
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
       assert(Alignment % alignment == 0);
