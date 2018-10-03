@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert> // assert
 #include <cstddef> // size_t
 #include <utility> // exchange
 
@@ -23,7 +24,8 @@ namespace kp11
     /// * Complexity `O(1)`
     size_type set(size_type n) noexcept
     {
-      if (N - first >= n)
+      assert(n > 0);
+      if (size() - first >= n)
       {
         return std::exchange(first, first + n);
       }
@@ -33,6 +35,10 @@ namespace kp11
     /// * Complexity `O(1)`
     void reset(size_type index, size_type n) noexcept
     {
+      assert(index < size());
+      assert(n <= size());
+      assert(index + n <= size());
+      assert(index < first);
       if (index + n == first)
       {
         first = index;
