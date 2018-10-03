@@ -16,9 +16,13 @@ TEST_CASE("unit test", "[unit-test]")
   m.deallocate(a, 32, 4);
   auto c = m.allocate(128, 4);
   REQUIRE(c != nullptr);
+  REQUIRE(m.deallocate(c, 128, 4) == true);
+  REQUIRE(m.deallocate(b, 32, 4) == false);
+  REQUIRE(m[c] != nullptr);
 }
 
 TEST_CASE("traits", "[traits]")
 {
   REQUIRE(is_resource_v<local<128, 4>> == true);
+  REQUIRE(is_owner_v<local<128, 4>> == true);
 }

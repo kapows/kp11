@@ -4,8 +4,8 @@
 
 #include <cassert> // assert
 #include <cstddef> // size_t
+#include <functional> // less, less_equal
 #include <memory> // pointer_traits
-#include <type_traits> // aligned_storage_t
 
 namespace kp11
 {
@@ -23,36 +23,66 @@ namespace kp11
     using size_type = SizeType;
 
   private: // typedefs
-    using buffer_type = std::aligned_storage_t<Bytes, Alignment>;
-    using buffer_pointer = typename std::pointer_traits<pointer>::template rebind<buffer_type>;
-    using buffer_pointer_traits = std::pointer_traits<buffer_pointer>;
+    using unsigned_char_pointer =
+      typename std::pointer_traits<pointer>::template rebind<unsigned char>;
+    using unsigned_char_pointer_traits = std::pointer_traits<unsigned_char_pointer>;
 
   public: // modifiers
-    /// Precondition `alignment (from ctor) % alignment == 0`
+    /// * Precondition `alignment (from ctor) % alignment == 0`
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
       assert(Alignment % alignment == 0);
       if (!allocated && bytes <= Bytes)
       {
         allocated = true;
-        return static_cast<pointer>(&buffer);
+        return static_cast<pointer>(buffer_ptr());
       }
       return nullptr;
     }
-    void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+    bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
-      // we'll accept nullptrs since we're giving it out in allocation
-      if (ptr == nullptr)
+      if (static_cast<unsigned_char_pointer>(ptr) == buffer_ptr())
       {
-        return;
+        allocated = false;
+        return true;
       }
-      assert(ptr == static_cast<pointer>(&buffer));
-      allocated = false;
+      return false;
+    }
+
+  public: // observers
+    pointer operator[](pointer ptr) noexcept
+    {
+      if (has(static_cast<unsigned_char_pointer>(ptr)))
+      {
+        return static_cast<pointer>(buffer_ptr());
+      }
+      return nullptr;
+    }
+
+  private: // helpers
+    /// Check if `ptr` points inside our buffer.
+    /// * Returns `true` if `ptr` belongs to us
+    /// * Returns `false` on otherwise
+    bool has(unsigned_char_pointer ptr) noexcept
+    {
+      if (auto const buf = buffer_ptr(); std::less_equal<unsigned_char_pointer>()(buf, ptr) &&
+                                         std::less<unsigned_char_pointer>()(ptr, buf + Bytes))
+      {
+        return true;
+      }
+      return false;
+    }
+
+  private: // accessors
+    /// * Returns `unsigned_char_pointer` created from our inner buffer.
+    unsigned_char_pointer buffer_ptr() noexcept
+    {
+      return unsigned_char_pointer_traits::pointer_to(buffer[0]);
     }
 
   private: // variables
     bool allocated = false;
-    buffer_type buffer;
+    alignas(Alignment) unsigned char buffer[Bytes];
   };
 
   /// Allocates from a buffer inside itself.
