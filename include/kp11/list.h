@@ -86,13 +86,13 @@ namespace kp11
     }
 
   private: // helpers
-    /// Precondition `n > 0`
+    /// * Precondition `n > 0`
     void mark_occupied(size_type index, size_type n) noexcept
     {
       assert(n > 0);
       sizes[index] = sizes[index + (n - 1)] = -n;
     }
-    /// Precondition `n > 0`
+    /// * Precondition `n > 0`
     void mark_vacant(size_type index, size_type n) noexcept
     {
       assert(n > 0);
