@@ -60,7 +60,7 @@ namespace kp11
     {
       assert(n == 1);
       assert(index <= size());
-      if (index >= size())
+      if (index == size())
       {
         return;
       }
