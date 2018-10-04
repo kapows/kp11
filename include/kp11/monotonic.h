@@ -51,14 +51,14 @@ namespace kp11
     {
       assert(this->alignment % alignment == 0);
       bytes = round_up_to_our_alignment(bytes);
-      if (auto ptr = allocate_from_current_replica(bytes))
+      if (auto ptr = allocate_from_back(bytes))
       {
         return static_cast<pointer>(ptr);
       }
       else if (push_back())
       {
         // this call should not fail as a full buffer should be able to fulfil any request made
-        auto ptr = allocate_from_current_replica(bytes);
+        auto ptr = allocate_from_back(bytes);
         assert(ptr != nullptr);
         return static_cast<pointer>(ptr);
       }
@@ -87,7 +87,7 @@ namespace kp11
       return bytes == 0 ? alignment : (bytes / alignment + (bytes % alignment != 0)) * alignment;
     }
     /// * Precondition `bytes % alignment == 0`
-    byte_pointer allocate_from_current_replica(size_type bytes) noexcept
+    byte_pointer allocate_from_back(size_type bytes) noexcept
     {
       assert(bytes % alignment == 0);
       if (auto space = static_cast<size_type>(last - first); bytes <= space)
