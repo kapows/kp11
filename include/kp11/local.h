@@ -3,7 +3,7 @@
 #include "traits.h" // is_strategy_v
 
 #include <cassert> // assert
-#include <cstddef> // size_t
+#include <cstddef> // size_t, byte
 #include <functional> // less, less_equal
 #include <memory> // pointer_traits
 
@@ -23,9 +23,8 @@ namespace kp11
     using size_type = SizeType;
 
   private: // typedefs
-    using unsigned_char_pointer =
-      typename std::pointer_traits<pointer>::template rebind<unsigned char>;
-    using unsigned_char_pointer_traits = std::pointer_traits<unsigned_char_pointer>;
+    using byte_pointer = typename std::pointer_traits<pointer>::template rebind<std::byte>;
+    using byte_pointer_traits = std::pointer_traits<byte_pointer>;
 
   public: // modifiers
     /// * Precondition `alignment (from ctor) % alignment == 0`
@@ -41,7 +40,7 @@ namespace kp11
     }
     bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
-      if (static_cast<unsigned_char_pointer>(ptr) == buffer_ptr())
+      if (static_cast<byte_pointer>(ptr) == buffer_ptr())
       {
         allocated = false;
         return true;
@@ -52,7 +51,7 @@ namespace kp11
   public: // observers
     pointer operator[](pointer ptr) noexcept
     {
-      if (has(static_cast<unsigned_char_pointer>(ptr)))
+      if (has(static_cast<byte_pointer>(ptr)))
       {
         return static_cast<pointer>(buffer_ptr());
       }
@@ -63,10 +62,10 @@ namespace kp11
     /// Check if `ptr` points inside our buffer.
     /// * Returns `true` if `ptr` belongs to us
     /// * Returns `false` on otherwise
-    bool has(unsigned_char_pointer ptr) noexcept
+    bool has(byte_pointer ptr) noexcept
     {
-      if (auto const buf = buffer_ptr(); std::less_equal<unsigned_char_pointer>()(buf, ptr) &&
-                                         std::less<unsigned_char_pointer>()(ptr, buf + Bytes))
+      if (auto const buf = buffer_ptr();
+          std::less_equal<byte_pointer>()(buf, ptr) && std::less<byte_pointer>()(ptr, buf + Bytes))
       {
         return true;
       }
@@ -74,15 +73,15 @@ namespace kp11
     }
 
   private: // accessors
-    /// * Returns `unsigned_char_pointer` created from our inner buffer.
-    unsigned_char_pointer buffer_ptr() noexcept
+    /// * Returns `byte_pointer` created from our inner buffer.
+    byte_pointer buffer_ptr() noexcept
     {
-      return unsigned_char_pointer_traits::pointer_to(buffer[0]);
+      return byte_pointer_traits::pointer_to(buffer[0]);
     }
 
   private: // variables
     bool allocated = false;
-    alignas(Alignment) unsigned char buffer[Bytes];
+    alignas(Alignment) std::byte buffer[Bytes];
   };
 
   /// Allocates from a buffer inside itself.

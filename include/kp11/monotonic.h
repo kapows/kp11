@@ -3,7 +3,7 @@
 #include "traits.h" // is_resource_v
 
 #include <cassert> // assert
-#include <cstddef> // size_t
+#include <cstddef> // size_t, byte
 #include <functional> // less, less_equal
 #include <memory> // pointer_traits
 #include <utility> // forward, exchange
@@ -23,8 +23,7 @@ namespace kp11
     using size_type = typename Upstream::size_type;
 
   private: // typedefs
-    using unsigned_char_pointer =
-      typename std::pointer_traits<pointer>::template rebind<unsigned char>;
+    using byte_pointer = typename std::pointer_traits<pointer>::template rebind<std::byte>;
 
   public: // constructors
     /// * `bytes` is the size in bytes of memory to request from `Upstream`
@@ -88,7 +87,7 @@ namespace kp11
       return bytes == 0 ? alignment : (bytes / alignment + (bytes % alignment != 0)) * alignment;
     }
     /// * Precondition `bytes % alignment == 0`
-    unsigned_char_pointer allocate_from_current_replica(size_type bytes) noexcept
+    byte_pointer allocate_from_current_replica(size_type bytes) noexcept
     {
       assert(bytes % alignment == 0);
       if (auto space = static_cast<size_type>(last - first); bytes <= space)
@@ -106,7 +105,7 @@ namespace kp11
       {
         if (auto ptr = upstream.allocate(bytes, alignment))
         {
-          ptrs[length++] = static_cast<unsigned_char_pointer>(ptr);
+          ptrs[length++] = static_cast<byte_pointer>(ptr);
           first = ptrs[length - 1];
           last = first + bytes;
           return true;
@@ -143,13 +142,13 @@ namespace kp11
     /// Size in bytes of alignment of memory to allocate from `Upstream`.
     size_type const alignment;
     /// Current position of beginning of allocatable memory.
-    unsigned_char_pointer first = nullptr;
+    byte_pointer first = nullptr;
     /// End of allocatable memory.
-    unsigned_char_pointer last = nullptr;
+    byte_pointer last = nullptr;
     /// Number of allocations from `Upstream`.
     std::size_t length = 0;
     /// Holds pointers to memory allocated by `Upstream`
-    unsigned_char_pointer ptrs[Allocations];
+    byte_pointer ptrs[Allocations];
     Upstream upstream;
   };
 }
