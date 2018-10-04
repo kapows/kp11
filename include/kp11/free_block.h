@@ -54,16 +54,19 @@ namespace kp11
     {
       assert(this->alignment % alignment == 0);
       auto const num_blocks = size_from(bytes);
-      if (auto ptr = allocate_from_current_replicas(num_blocks))
+      for (std::size_t i = 0; i < length; ++i)
       {
-        return static_cast<pointer>(ptr);
+        if (auto ptr = allocate_from(i, num_blocks))
+        {
+          return ptr;
+        }
       }
-      else if (push_back())
+      if (push_back())
       {
         // allocation here should not fail as a full buffer should be able to fulfil any request
-        auto ptr = allocate_from_replica(length - 1, num_blocks);
+        auto ptr = allocate_from(length - 1, num_blocks);
         assert(ptr != nullptr);
-        return static_cast<pointer>(ptr);
+        return ptr;
       }
       else
       {
@@ -90,22 +93,11 @@ namespace kp11
     }
 
   private: // allocate helper
-    byte_pointer allocate_from_replica(std::size_t index, std::size_t num_blocks) noexcept
+    pointer allocate_from(std::size_t index, std::size_t num_blocks) noexcept
     {
       if (auto i = markers[index].set(num_blocks); i != Marker::size())
       {
-        return ptrs[index] + i * this->bytes;
-      }
-      return nullptr;
-    }
-    byte_pointer allocate_from_current_replicas(std::size_t num_blocks) noexcept
-    {
-      for (std::size_t i = 0; i < length; ++i)
-      {
-        if (auto ptr = allocate_from_replica(i, num_blocks))
-        {
-          return ptr;
-        }
+        return static_cast<pointer>(ptrs[index] + i * this->bytes);
       }
       return nullptr;
     }
