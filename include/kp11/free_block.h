@@ -30,12 +30,13 @@ namespace kp11
     using byte_pointer = typename std::pointer_traits<pointer>::template rebind<std::byte>;
 
   public: // constructors
-    /// * `bytes` is the size in bytes of memory to request from `Upstream`
-    /// * `alignment` is the alignment in bytes of memory to request from `Upstream`
+    /// * `block_size` is the size in bytes of memory blocks. The request to `Upstream` is
+    /// `block_size * Marker::size()`.
+    /// * `alignment` is the alignment in bytes of memory blocks
     /// * `args` are the constructor arguments to `Upstream`
     template<typename... Args>
-    free_block(size_type bytes, size_type alignment, Args &&... args) noexcept :
-        bytes(bytes), alignment(alignment), upstream(std::forward<Args>(args)...)
+    free_block(size_type block_size, size_type alignment, Args &&... args) noexcept :
+        block_size(block_size), alignment(alignment), upstream(std::forward<Args>(args)...)
     {
     }
     /// Deleted because a resource is being held and managed.
@@ -89,7 +90,7 @@ namespace kp11
       while (length)
       {
         --length;
-        upstream.deallocate(static_cast<pointer>(ptrs[length]), bytes, alignment);
+        upstream.deallocate(static_cast<pointer>(ptrs[length]), request_size(), alignment);
         markers[length].~Marker();
       }
     }
@@ -99,7 +100,7 @@ namespace kp11
     {
       if (auto i = markers[index].set(num_blocks); i != Marker::size())
       {
-        return static_cast<pointer>(ptrs[index] + i * this->bytes);
+        return static_cast<pointer>(ptrs[index] + static_cast<size_type>(i) * block_size);
       }
       return nullptr;
     }
@@ -132,7 +133,7 @@ namespace kp11
       for (std::size_t i = 0; i < length; ++i)
       {
         if (std::less_equal<pointer>()(ptrs[i], ptr) &&
-            std::less<pointer>()(ptr, ptrs[i] + bytes * Marker::size()))
+            std::less<pointer>()(ptr, ptrs[i] + request_size()))
         {
           return i;
         }
@@ -146,7 +147,7 @@ namespace kp11
     {
       if (length != Allocations)
       {
-        if (auto ptr = upstream.allocate(bytes * Marker::size(), alignment))
+        if (auto ptr = upstream.allocate(request_size(), alignment))
         {
           ptrs[length] = static_cast<byte_pointer>(ptr);
           new (&markers[length]) Marker();
@@ -157,25 +158,34 @@ namespace kp11
       return false;
     }
 
+  private: // size helper
+    /// Size in bytes used in request to `Upstream`.
+    size_type request_size() const noexcept
+    {
+      return block_size * static_cast<size_type>(Marker::size());
+    }
+
   private: // Marker helper functions
     /// Convert from `bytes` to number of blocks to use with `Marker`.
     typename Marker::size_type size_from(size_type bytes) const noexcept
     {
       // 1 block minimum
       // moduloc is required to deal with non BlockSize sizes
-      size_type s = bytes == 0 ? 1 : bytes / this->bytes + (bytes % this->bytes != 0);
+      size_type s = bytes == 0 ? 1 : bytes / block_size + (bytes % block_size != 0);
       return static_cast<typename Marker::size_type>(s);
     }
     /// Convert from `byte_pointer` to an index to use with `Marker`
     typename Marker::size_type index_from(byte_pointer first, byte_pointer ptr) const noexcept
     {
-      auto p = (ptr - first) / bytes;
+      auto p = (ptr - first) / block_size;
       return static_cast<typename Marker::size_type>(p);
     }
 
   private: // variables
     /// Only modified by `push_back` and `pop_back`.
     std::size_t length = 0;
+    /// Size in bytes of memory blocks.
+    size_type const block_size;
     /// Holds pointers to memory allocated by `Upstream`.
     byte_pointer ptrs[Allocations];
     /// Is in a union to avoid construction of all `Marker`s at object construction time.
@@ -183,9 +193,7 @@ namespace kp11
       /// Holds `Markers` associated with each corresponding replica of `ptrs`.
       Marker markers[Allocations];
     };
-    /// Size in bytes of memory to allocate from `Upstream`.
-    size_type const bytes;
-    /// Size in bytes of alignment of memory to allocate from `Upstream`.
+    /// Size in bytes of alignment of memory blocks.
     size_type const alignment;
     Upstream upstream;
   };
