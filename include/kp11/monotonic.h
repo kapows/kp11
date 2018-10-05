@@ -1,5 +1,6 @@
 #pragma once
 
+#include "detail/static_vector.h" // static_vector
 #include "traits.h" // is_resource_v
 
 #include <cassert> // assert
@@ -75,11 +76,11 @@ namespace kp11
     /// Deallocates allocated memory back to `Upstream`.
     void release() noexcept
     {
-      while (length)
+      for (auto && p : ptrs)
       {
-        --length;
-        upstream.deallocate(static_cast<pointer>(ptrs[length]), bytes, alignment);
+        upstream.deallocate(static_cast<pointer>(p), bytes, alignment);
       }
+      ptrs.clear();
       last = first = nullptr;
     }
 
@@ -103,15 +104,15 @@ namespace kp11
     /// Allocates a new block of memory from `Upstream`.
     bool push_back() noexcept
     {
-      if (length != Allocations)
+      if (ptrs.size() == ptrs.capacity())
       {
-        if (auto ptr = upstream.allocate(bytes, alignment))
-        {
-          ptrs[length++] = static_cast<byte_pointer>(ptr);
-          first = ptrs[length - 1];
-          last = first + bytes;
-          return true;
-        }
+        return false;
+      }
+      if (auto ptr = upstream.allocate(bytes, alignment))
+      {
+        first = ptrs.emplace_back(static_cast<byte_pointer>(ptr));
+        last = first + bytes;
+        return true;
       }
       return false;
     }
@@ -119,12 +120,12 @@ namespace kp11
   public: // observers
     pointer operator[](pointer ptr) const noexcept
     {
-      for (std::size_t i = 0; i < length; ++i)
+      for (auto && p : ptrs)
       {
-        if (std::less_equal<pointer>()(static_cast<pointer>(ptrs[i]), ptr) &&
-            std::less<pointer>()(ptr, static_cast<pointer>(ptrs[i] + bytes)))
+        if (std::less_equal<pointer>()(static_cast<pointer>(p), ptr) &&
+            std::less<pointer>()(ptr, static_cast<pointer>(p + bytes)))
         {
-          return static_cast<pointer>(ptrs[i]);
+          return static_cast<pointer>(p);
         }
       }
       return nullptr;
@@ -139,10 +140,8 @@ namespace kp11
     byte_pointer first = nullptr;
     /// End of allocatable memory.
     byte_pointer last = nullptr;
-    /// Number of allocations from `Upstream`.
-    std::size_t length = 0;
     /// Holds pointers to memory allocated by `Upstream`
-    byte_pointer ptrs[Allocations];
+    kp11::detail::static_vector<byte_pointer, Allocations> ptrs;
     Upstream upstream;
   };
 }
