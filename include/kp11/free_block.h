@@ -183,7 +183,8 @@ namespace kp11
       /// Holds `Markers` associated with each corresponding replica of `ptrs`.
       Marker markers[Allocations];
     };
-    /// Size in bytes of memory to allocate from `Upstream`.
+    /// Size in bytes of memory blocks. `bytes * Marker::size()` is used to allocate from
+    /// `Upstream`.
     size_type const bytes;
     /// Size in bytes of alignment of memory to allocate from `Upstream`.
     size_type const alignment;
