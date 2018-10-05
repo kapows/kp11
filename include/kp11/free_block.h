@@ -89,7 +89,7 @@ namespace kp11
       while (length)
       {
         --length;
-        upstream.deallocate(static_cast<pointer>(ptrs[length]), bytes, alignment);
+        upstream.deallocate(static_cast<pointer>(ptrs[length]), bytes * Marker::size(), alignment);
         markers[length].~Marker();
       }
     }
