@@ -72,13 +72,15 @@ namespace kp11
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
     }
-
+    /// Deallocates allocated memory back to `Upstream`.
     void release() noexcept
     {
       while (length)
       {
-        pop_back();
+        --length;
+        upstream.deallocate(static_cast<pointer>(ptrs[length]), bytes, alignment);
       }
+      last = first = nullptr;
     }
 
   private: // allocate helpers
@@ -112,14 +114,6 @@ namespace kp11
         }
       }
       return false;
-    }
-    /// Deallocates allocated memory back to `Upstream`.
-    void pop_back() noexcept
-    {
-      assert(length);
-      upstream.deallocate(static_cast<pointer>(ptrs[--length]), bytes, alignment);
-      first = length ? ptrs[length - 1] : nullptr;
-      last = first;
     }
 
   public: // observers
