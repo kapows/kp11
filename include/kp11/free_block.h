@@ -1,5 +1,6 @@
 #pragma once
 
+#include "detail/static_vector.h" // static_vector
 #include "traits.h" // is_marker_v, is_resource_v
 
 #include <cassert> // assert
@@ -55,7 +56,7 @@ namespace kp11
     {
       assert(this->alignment % alignment == 0);
       auto const num_blocks = size_from(bytes);
-      for (std::size_t i = 0; i < length; ++i)
+      for (std::size_t i = 0, last = ptrs.size(); i < last; ++i)
       {
         if (auto ptr = allocate_from(i, num_blocks))
         {
@@ -65,7 +66,7 @@ namespace kp11
       if (push_back())
       {
         // allocation here should not fail as a full buffer should be able to fulfil any request
-        auto ptr = allocate_from(length - 1, num_blocks);
+        auto ptr = allocate_from(ptrs.size() - 1, num_blocks);
         assert(ptr != nullptr);
         return ptr;
       }
@@ -77,7 +78,7 @@ namespace kp11
     bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
       auto p = static_cast<byte_pointer>(ptr);
-      if (auto i = find(p); i != Allocations)
+      if (auto i = find(p); i != ptrs.max_size())
       {
         markers[i].reset(index_from(ptrs[i], p), size_from(bytes));
         return true;
@@ -87,12 +88,12 @@ namespace kp11
     /// Deallocates allocated memory back to `Upstream` and destroys it's associated `Marker`.
     void release() noexcept
     {
-      while (length)
+      for (auto && p : ptrs)
       {
-        --length;
-        upstream.deallocate(static_cast<pointer>(ptrs[length]), request_size(), alignment);
-        markers[length].~Marker();
+        upstream.deallocate(static_cast<pointer>(p), request_size(), alignment);
       }
+      ptrs.clear();
+      markers.clear();
     }
 
   private: // allocate helper
@@ -108,7 +109,7 @@ namespace kp11
   public: // observers
     pointer operator[](pointer ptr) const noexcept
     {
-      if (auto i = find(static_cast<byte_pointer>(ptr)); i != Allocations)
+      if (auto i = find(static_cast<byte_pointer>(ptr)); i != ptrs.max_size())
       {
         return static_cast<pointer>(ptrs[i]);
       }
@@ -127,10 +128,10 @@ namespace kp11
 
   private: // operator[] helper
     /// Finds the index of the memory block to which `ptr` is pointing.
-    /// * Returns `Allocations` on failure
+    /// * Returns `ptrs.max_size()` on failure
     std::size_t find(byte_pointer ptr) const noexcept
     {
-      for (std::size_t i = 0; i < length; ++i)
+      for (std::size_t i = 0, last = ptrs.size(); i < last; ++i)
       {
         if (std::less_equal<pointer>()(ptrs[i], ptr) &&
             std::less<pointer>()(ptr, ptrs[i] + request_size()))
@@ -138,22 +139,22 @@ namespace kp11
           return i;
         }
       }
-      return Allocations;
+      return ptrs.max_size();
     }
 
   private: // modifiers
     /// Allocates a new block of memory from `Upstream` and adds another `Marker` for it.
     bool push_back() noexcept
     {
-      if (length != Allocations)
+      if (ptrs.size() == ptrs.capacity())
       {
-        if (auto ptr = upstream.allocate(request_size(), alignment))
-        {
-          ptrs[length] = static_cast<byte_pointer>(ptr);
-          new (&markers[length]) Marker();
-          ++length;
-          return true;
-        }
+        return false;
+      }
+      if (auto ptr = upstream.allocate(request_size(), alignment))
+      {
+        ptrs.emplace_back(static_cast<byte_pointer>(ptr));
+        markers.emplace_back();
+        return true;
       }
       return false;
     }
@@ -182,17 +183,12 @@ namespace kp11
     }
 
   private: // variables
-    /// Only modified by `push_back` and `pop_back`.
-    std::size_t length = 0;
     /// Size in bytes of memory blocks.
     size_type const block_size;
     /// Holds pointers to memory allocated by `Upstream`.
-    byte_pointer ptrs[Allocations];
-    /// Is in a union to avoid construction of all `Marker`s at object construction time.
-    union {
-      /// Holds `Markers` associated with each corresponding replica of `ptrs`.
-      Marker markers[Allocations];
-    };
+    kp11::detail::static_vector<byte_pointer, Allocations> ptrs;
+    /// Holds a `Marker` corresponding to each allocation.
+    kp11::detail::static_vector<Marker, Allocations> markers;
     /// Size in bytes of alignment of memory blocks.
     size_type const alignment;
     Upstream upstream;
