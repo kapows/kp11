@@ -83,12 +83,14 @@ namespace kp11
       }
       return false;
     }
-
+    /// Deallocates allocated memory back to `Upstream` and destroys it's associated `Marker`.
     void release() noexcept
     {
       while (length)
       {
-        pop_back();
+        --length;
+        upstream.deallocate(static_cast<pointer>(ptrs[length]), bytes, alignment);
+        markers[length].~Marker();
       }
     }
 
@@ -153,14 +155,6 @@ namespace kp11
         }
       }
       return false;
-    }
-    /// Deallocates allocated memory back to `Upstream` and destroys it's associated `Marker`.
-    void pop_back() noexcept
-    {
-      assert(length > 0);
-      upstream.deallocate(static_cast<pointer>(ptrs[length - 1]), bytes, alignment);
-      markers[length - 1].~Marker();
-      --length;
     }
 
   private: // Marker helper functions
