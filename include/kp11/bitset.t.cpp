@@ -6,29 +6,53 @@
 
 using namespace kp11;
 
-TEST_CASE("unit test", "[unit-test]")
+TEST_CASE("size", "[size]")
+{
+  SECTION("1")
+  {
+    bitset<10> m;
+    REQUIRE(m.size() == 10);
+  }
+  SECTION("2")
+  {
+    bitset<101581> m;
+    REQUIRE(m.size() == 101581);
+  }
+}
+TEST_CASE("set", "[set]")
 {
   bitset<10> m;
-  REQUIRE(m.size() == 10);
-  SECTION("make sure size isnt fixed")
+  SECTION("success")
   {
-    bitset<101581> n;
-    REQUIRE(n.size() == 101581);
+    auto a = m.set(5);
+    REQUIRE(a == 0);
+    SECTION("post condition")
+    {
+      auto b = m.set(5);
+      REQUIRE(b == 5);
+      REQUIRE(b != a);
+    }
   }
-  REQUIRE(m.set(16) == m.size());
-  REQUIRE(m.set(5) == 0);
-  REQUIRE(m.set(5) == 5);
-  REQUIRE(m.set(1) == m.size());
-  m.reset(5, 5);
-  REQUIRE(m.set(2) == 5);
-  REQUIRE(m.set(3) == 7);
-  m.reset(7, 3);
-  m.reset(5, 2);
-  m.reset(0, 5);
-  REQUIRE(m.set(10) == 0);
+  SECTION("failure")
+  {
+    REQUIRE(m.set(16) == m.size());
+  }
+}
+TEST_CASE("reset", "[reset]")
+{
+  bitset<10> m;
+  auto a = m.set(5);
+  SECTION("recovers indexes")
+  {
+    m.reset(a, 5);
+    auto b = m.set(10);
+    REQUIRE(b == a);
+  }
   SECTION("accepts size() in reset")
   {
-    m.reset(m.size(), 1);
+    auto b = m.set(16);
+    REQUIRE(b == m.size());
+    m.reset(b, 16);
   }
 }
 
