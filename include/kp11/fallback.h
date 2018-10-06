@@ -106,22 +106,22 @@ namespace kp11
     }
 
   public: // accessors
-    /// @returns a reference to `Primary`.
+    /// @returns Reference to `Primary`.
     Primary & get_primary() noexcept
     {
       return primary;
     }
-    /// @returns a reference to `Primary`.
+    /// @returns Reference to `Primary`.
     Primary const & get_primary() const noexcept
     {
       return primary;
     }
-    /// @returns a reference to `Secondary`.
+    /// @returns Reference to `Secondary`.
     Secondary & get_secondary() noexcept
     {
       return secondary;
     }
-    /// @returns a reference to `Secondary`.
+    /// @returns Reference to `Secondary`.
     Secondary const & get_secondary() const noexcept
     {
       return secondary;
