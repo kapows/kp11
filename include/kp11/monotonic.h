@@ -11,25 +11,31 @@
 
 namespace kp11
 {
-  /// Allocates memory by incrementing a pointer. Deallocation is a no-op.
-  /// * `Allocations` is the maximum of successful allocation requests to `Upstream`
-  /// * `Upstream` meets the `Resource` concept
+  /// Allocates memory in blocks instead of per byte. Allocation is done by incrementing a pointer
+  /// through a memory block. Deallocation is a no-op.
+  ///
+  /// @tparam Allocations Maximum number of concurrent allocations from `Upstream`.
+  /// @tparam Upstream Meets the `Resource` concept.
   template<std::size_t Allocations, typename Upstream>
   class monotonic
   {
     static_assert(is_resource_v<Upstream>);
 
   public: // typedefs
+    /// Pointer type.
     using pointer = typename Upstream::pointer;
+    /// Size type.
     using size_type = typename Upstream::size_type;
 
   private: // typedefs
+    /// Byte pointer for arithmetic purposes.
     using byte_pointer = typename std::pointer_traits<pointer>::template rebind<std::byte>;
 
   public: // constructors
-    /// * `bytes` is the size in bytes of memory to request from `Upstream`
-    /// * `alignment` is the alignment in bytes of memory to request from `Upstream`
-    /// * `args` are the constructor arguments to `Upstream`
+    /// @param bytes Size in bytes of memory to request from `Upstream`.
+    /// @param alignment Alignment in bytes of memory to request from `Upstream` and the size of
+    /// each memory block.
+    /// @param args Constructor arguments to `Upstream`.
     template<typename... Args>
     monotonic(size_type bytes, size_type alignment, Args &&... args) noexcept :
         bytes(bytes), alignment(alignment), upstream(std::forward<Args>(args)...)
@@ -46,8 +52,18 @@ namespace kp11
     }
 
   public: // modifiers
-    /// * Precondition `alignment (from ctor) % alignment == 0`
+    /// Tries to allocate from the latest memory block. If that fails then tries to allocate a new
+    /// memory block from `Upstream` and allocates from this new memory block.
     /// * Complexity `O(1)`
+    ///
+    /// @param bytes Size in bytes of memory to allocate.
+    /// @param alignment Alignment of memory to allocate.
+    ///
+    /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
+    /// `alignment`.
+    /// @returns (failure) `nullptr`.
+    ///
+    /// @pre `alignment (from ctor) % alignment == 0`
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
       assert(this->alignment % alignment == 0);
@@ -58,7 +74,7 @@ namespace kp11
       }
       else if (push_back())
       {
-        // this call should not fail as a full buffer should be able to fulfil any request made
+        // This call should not fail as a full buffer should be able to fulfil any request made.
         auto ptr = allocate_from_back(bytes);
         assert(ptr != nullptr);
         return ptr;
@@ -69,7 +85,11 @@ namespace kp11
       }
     }
     /// No-op.
-    /// * Complexity `O(0)`
+    /// * Complexity `O(0)`.
+    ///
+    /// @param ptr Pointer to the beginning of a memory block.
+    /// @param bytes Size in bytes of the memory block.
+    /// @param alignment Alignment in bytes of the memory block.
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
     }
@@ -89,7 +109,7 @@ namespace kp11
     {
       return bytes == 0 ? alignment : (bytes / alignment + (bytes % alignment != 0)) * alignment;
     }
-    /// * Precondition `bytes % alignment == 0`
+    /// @pre `bytes % alignment == 0`.
     pointer allocate_from_back(size_type bytes) noexcept
     {
       assert(bytes % alignment == 0);
@@ -101,7 +121,11 @@ namespace kp11
     }
 
   private: // modifiers
-    /// Allocates a new block of memory from `Upstream`.
+    /// Allocates a new block of memory from `Upstream`. Can fail if max allocations has been
+    /// reached or if `Upstream` fails allocation.
+    ///
+    /// @returns (success) `true`.
+    /// @returns (failure) `false`.
     bool push_back() noexcept
     {
       if (ptrs.size() == ptrs.capacity())
@@ -118,6 +142,12 @@ namespace kp11
     }
 
   public: // observers
+    /// Checks whether or not `ptr` points in to memory owned by us.
+    ///
+    /// @param ptr Pointer to memory.
+    ///
+    /// @returns (success) Pointer to the beginning of the memory block to which `ptr` points.
+    /// @returns (failure) `nullptr`.
     pointer operator[](pointer ptr) const noexcept
     {
       for (auto && p : ptrs)
