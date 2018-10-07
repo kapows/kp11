@@ -6,6 +6,8 @@
 
 namespace kp11
 {
+  /// @brief LIFO marker. Only supports `reset` of the most recent successful `set` call.
+  ///
   /// Spots are stored as a single number. This number is increased by the number of spots that
   /// need to be occupied by a call to `set`. It is only decreased if `reset` is called by the most
   /// recent call to `set`.
