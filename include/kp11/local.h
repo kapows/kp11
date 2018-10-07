@@ -11,8 +11,8 @@ namespace kp11
 {
   /// @brief Allocates from a buffer of memory inside itself.
   ///
-  /// Only one address will ever be allocated and that is to the start of the buffer. Whether or the
-  /// not buffer has been allocated is tracked using a `bool`.
+  /// Only one address will ever be allocated and that is to the start of the buffer. A `bool` is
+  /// used to track the whether the buffer has been allocated or not.
   ///
   /// @tparam Pointer Pointer type.
   /// @tparam Size Size type.
