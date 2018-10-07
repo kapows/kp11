@@ -12,7 +12,7 @@
 namespace kp11
 {
   /// Allocate memory in blocks instead of per byte. Each memory block has an associated `Marker`
-  /// which will be used to determine vacant and occupied blocks.
+  /// which will be used to determine allocated and unallocated blocks.
   ///
   /// @tparam Allocations is the maximum of successful allocation requests to `Upstream`.
   /// @tparam Marker Meets the `Marker` concept.
