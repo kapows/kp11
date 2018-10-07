@@ -7,7 +7,7 @@
 
 namespace kp11
 {
-  /// Allocates from `Secondary` if allocation from `Primary` returns `nullptr`.
+  /// @brief Allocates from `Secondary` if allocation from `Primary` returns `nullptr`.
   ///
   /// @tparam Primary Meets the `Owner` concept
   /// @tparam Secondary Meets the `Resource` concept
