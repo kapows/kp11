@@ -20,6 +20,7 @@ namespace kp11
   {
   };
   /// Check if `T` meets the `Resource` concept.
+  /// @private
   template<typename T>
   struct is_resource<T,
     std::void_t<typename T::pointer,
@@ -54,6 +55,7 @@ namespace kp11
   };
 
   /// Check if `T` meets the `Owner` concept.
+  /// @private
   template<typename T>
   struct is_owner<T,
     std::enable_if_t<is_resource_v<T> &&
@@ -82,6 +84,7 @@ namespace kp11
   {
   };
   /// Check if `T` meets the `Marker` concept.
+  /// @private
   template<typename T>
   struct is_marker<T,
     std::void_t<typename T::size_type,
