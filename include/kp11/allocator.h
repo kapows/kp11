@@ -8,7 +8,7 @@
 
 namespace kp11
 {
-  /// Adaptor that wraps a `Resource` so that it can be used as an allocator.
+  /// @brief Adaptor that wraps a `Resource` so that it can be used as an allocator.
   ///
   /// @tparam T Value type.
   /// @tparam Resource Meets the `Resource` concept.
