@@ -9,9 +9,10 @@
 
 namespace kp11
 {
-  /// Allocates from a buffer of memory inside itself. Only one address will ever be allocated and
-  /// that is to the start of the buffer. Whether or the not buffer has been allocated is tracked
-  /// using a `bool`.
+  /// @brief Allocates from a buffer of memory inside itself.
+  ///
+  /// Only one address will ever be allocated and that is to the start of the buffer. Whether or the
+  /// not buffer has been allocated is tracked using a `bool`.
   ///
   /// @tparam Pointer Pointer type.
   /// @tparam Size Size type.
