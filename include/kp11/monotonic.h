@@ -11,8 +11,7 @@
 
 namespace kp11
 {
-  /// Allocates memory in blocks instead of per byte. Allocation is done by incrementing a pointer
-  /// through a memory block. Deallocation is a no-op.
+  /// @brief Advances a pointer through single allocations from `Upstream`. Deallocation is a no-op.
   ///
   /// @tparam Allocations Maximum number of concurrent allocations from `Upstream`.
   /// @tparam Upstream Meets the `Resource` concept.
