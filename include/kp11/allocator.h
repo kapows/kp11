@@ -8,9 +8,10 @@
 
 namespace kp11
 {
-  /// Adaptor that allows a `Resource` to be used as an allocator.
-  /// * `T` is value type
-  /// * `Resource` meets the `Resource` concept
+  /// @brief Adaptor that wraps a `Resource` so that it can be used as an allocator.
+  ///
+  /// @tparam T Value type.
+  /// @tparam Resource Meets the `Resource` concept.
   template<typename T, typename Resource>
   class allocator
   {
@@ -30,6 +31,8 @@ namespace kp11
 
   public: // constructors
     /// If `resource` is `nullptr` calling `allocate` or `deallocate` is undefined.
+    ///
+    /// @param resource Pointer to a `Resource`.
     allocator(Resource * resource) noexcept : resource(resource)
     {
     }
@@ -39,7 +42,13 @@ namespace kp11
     }
 
   public: // modifiers
-    /// * throws std::bad_alloc if unsuccessful
+    /// Forwards the request of `sizeof(T) * n` to `Resource::allocate`.
+    ///
+    /// @param n Number of `sizeof(T)` bytes to allocate.
+    ///
+    /// @returns Pointer to a memory block of size `sizeof(T) * n` bytes aligned to `alignof(T)`.
+    ///
+    /// @throws (failure) std::bad_alloc
     pointer allocate(size_type n)
     {
       auto ptr = resource->allocate(static_cast<size_type>(sizeof(T) * n), alignof(T));
@@ -49,6 +58,10 @@ namespace kp11
       }
       return static_cast<pointer>(ptr);
     }
+    /// Forwards the request to deallocate to `Resource::deallocate`.
+    ///
+    /// @param ptr Pointer to memory returned by `allocate`.
+    /// @param n Corresponding parameter in the call to `allocate`.
     void deallocate(pointer ptr, size_type n) noexcept
     {
       resource->deallocate(
@@ -56,6 +69,7 @@ namespace kp11
     }
 
   public: // accessors
+    /// @returns Pointer to the `Resource` which was passed into the constructor.
     Resource * get_resource() const noexcept
     {
       return resource;

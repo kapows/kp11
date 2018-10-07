@@ -6,39 +6,62 @@
 
 using namespace kp11;
 
-TEST_CASE("unit test", "[unit-test]")
+TEST_CASE("size", "[size]")
+{
+  SECTION("1")
+  {
+    stack<10> m;
+    REQUIRE(m.size() == 10);
+  }
+  SECTION("2")
+  {
+    stack<101581> m;
+    REQUIRE(m.size() == 101581);
+  }
+}
+TEST_CASE("set", "[set]")
 {
   stack<10> m;
-  REQUIRE(m.size() == 10);
-  SECTION("make sure that size isn't fixed")
+  SECTION("success")
   {
-    stack<101581> n;
-    REQUIRE(n.size() == 101581);
+    auto a = m.set(5);
+    REQUIRE(a == 0);
+    SECTION("post condition")
+    {
+      auto b = m.set(5);
+      REQUIRE(b == 5);
+      REQUIRE(b != a);
+    }
   }
-
-  REQUIRE(m.set(1) == 0);
-  REQUIRE(m.set(2) == 1);
-  REQUIRE(m.set(3) == 3);
-  REQUIRE(m.set(4) == 6);
-  REQUIRE(m.set(1) == m.size());
-
-  SECTION("out of order reset does not recover spots")
+  SECTION("failure")
   {
-    m.reset(0, 1);
-    m.reset(1, 2);
-    REQUIRE(m.set(1) == m.size());
+    REQUIRE(m.set(16) == m.size());
   }
-  SECTION("reverse order reset recovers spots")
+}
+TEST_CASE("reset", "[reset]")
+{
+  stack<10> m;
+  SECTION("recovers indexes")
   {
-    m.reset(6, 4);
-    m.reset(3, 3);
-    REQUIRE(m.set(1) == 3);
-    REQUIRE(m.set(1) == 4);
-    REQUIRE(m.set(5) == 5);
+    auto a = m.set(5);
+    m.reset(a, 5);
+    auto b = m.set(10);
+    REQUIRE(b == a);
+  }
+  SECTION("doesn't recover indexes")
+  {
+    auto a = m.set(3);
+    m.set(4);
+    m.reset(a, 3);
+    auto c = m.set(3);
+    REQUIRE(c != m.size());
+    REQUIRE(c != a);
   }
   SECTION("accepts size() in reset")
   {
-    m.reset(m.size(), 4);
+    auto b = m.set(16);
+    REQUIRE(b == m.size());
+    m.reset(b, 16);
   }
 }
 TEST_CASE("traits", "[traits]")

@@ -6,40 +6,55 @@
 
 using namespace kp11;
 
-TEST_CASE("set/reset", "[modifiers]")
+TEST_CASE("size", "[size]")
+{
+  SECTION("1")
+  {
+    list<10> m;
+    REQUIRE(m.size() == 10);
+  }
+  SECTION("2")
+  {
+    list<101581> m;
+    REQUIRE(m.size() == 101581);
+  }
+}
+TEST_CASE("set", "[set]")
 {
   list<10> m;
-  REQUIRE(m.size() == 10);
-  SECTION("make sure size is not fixed")
+  SECTION("success")
   {
-    list<101581> n;
-    REQUIRE(n.size() == 101581);
+    auto a = m.set(5);
+    REQUIRE(a == 0);
+    SECTION("post condition")
+    {
+      auto b = m.set(5);
+      REQUIRE(b == 5);
+      REQUIRE(b != a);
+    }
   }
-  REQUIRE(m.set(16) == m.size());
-  REQUIRE(m.set(1) == 0);
-  REQUIRE(m.set(2) == 1);
-  REQUIRE(m.set(3) == 3);
-  REQUIRE(m.set(4) == 6);
-  REQUIRE(m.set(1) == m.size());
-
-  SECTION("reset allows setting")
+  SECTION("failure")
   {
-    m.reset(3, 3);
-    REQUIRE(m.set(3) == 3);
+    REQUIRE(m.set(16) == m.size());
   }
-  SECTION("reset merges allow setting")
+}
+TEST_CASE("reset", "[reset]")
+{
+  list<10> m;
+  auto a = m.set(5);
+  SECTION("recovers indexes")
   {
-    m.reset(3, 3);
-    m.reset(1, 2);
-    REQUIRE(m.set(4) == 1);
-    REQUIRE(m.set(1) == 5);
+    m.reset(a, 5);
+    auto b = m.set(10);
+    REQUIRE(b == a);
   }
   SECTION("accepts size() in reset")
   {
-    m.reset(m.size(), 1);
+    auto b = m.set(16);
+    REQUIRE(b == m.size());
+    m.reset(b, 16);
   }
 }
-
 TEST_CASE("traits", "[traits]")
 {
   REQUIRE(is_marker_v<list<10>> == true);

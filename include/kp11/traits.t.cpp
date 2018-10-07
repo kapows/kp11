@@ -6,6 +6,7 @@
 
 using namespace kp11;
 
+/// @private
 class test_resource
 {
 public:
@@ -15,6 +16,7 @@ public:
   void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
 };
 
+/// @private
 class test_not_a_resource
 {
 public:
@@ -31,6 +33,7 @@ TEST_CASE("is_resource", "[modifiers]")
   REQUIRE(is_resource_v<test_resource> == true);
 }
 
+/// @private
 class test_owner
 {
 public:
@@ -40,6 +43,7 @@ public:
   bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
   pointer operator[](pointer ptr) const noexcept;
 };
+/// @private
 class test_not_an_owner
 {
 public:
@@ -55,6 +59,7 @@ TEST_CASE("is_owner", "[traits]")
   REQUIRE(is_owner_v<int> == false);
 }
 
+/// @private
 template<std::size_t N>
 class test_marker
 {
@@ -68,6 +73,7 @@ public:
   void reset(size_type index, size_type n) noexcept;
 };
 
+/// @private
 template<std::size_t N>
 class test_not_a_marker
 {

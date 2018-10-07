@@ -14,12 +14,13 @@ namespace kp11
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
   };
   */
-  /// Check if `T` meets the `Resource` concept.
+  /// Checks if `T` meets the `Resource` concept.
   template<typename T, typename Enable = void>
   struct is_resource : std::false_type
   {
   };
-  /// Check if `T` meets the `Resource` concept.
+  /// Checks if `T` meets the `Resource` concept.
+  /// @private
   template<typename T>
   struct is_resource<T,
     std::void_t<typename T::pointer,
@@ -32,7 +33,7 @@ namespace kp11
         std::declval<typename T::size_type>()))>> : std::true_type
   {
   };
-  /// Check if `T` meets the `Resource` concept.
+  /// Checks if `T` meets the `Resource` concept.
   template<typename T>
   constexpr bool is_resource_v = is_resource<T>::value;
 
@@ -47,13 +48,14 @@ namespace kp11
     pointer operator[](pointer ptr) const noexcept;
   };
   */
-  /// Check if `T` meets the `Owner` concept.
+  /// Checks if `T` meets the `Owner` concept.
   template<typename T, typename Enable = void>
   struct is_owner : std::false_type
   {
   };
 
-  /// Check if `T` meets the `Owner` concept.
+  /// Checks if `T` meets the `Owner` concept.
+  /// @private
   template<typename T>
   struct is_owner<T,
     std::enable_if_t<is_resource_v<T> &&
@@ -62,7 +64,7 @@ namespace kp11
       : std::true_type
   {
   };
-  /// Check if `T` meets the `Owner` concept.
+  /// Checks if `T` meets the `Owner` concept.
   template<typename T>
   constexpr bool is_owner_v = is_owner<T>::value;
 
@@ -76,12 +78,13 @@ namespace kp11
     void reset(size_type index, size_type n) noexcept;
   };
   */
-  /// Check if `T` meets the `Marker` concept.
+  /// Checks if `T` meets the `Marker` concept.
   template<typename T, typename Enable = void>
   struct is_marker : std::false_type
   {
   };
-  /// Check if `T` meets the `Marker` concept.
+  /// Checks if `T` meets the `Marker` concept.
+  /// @private
   template<typename T>
   struct is_marker<T,
     std::void_t<typename T::size_type,
@@ -92,7 +95,7 @@ namespace kp11
         std::declval<typename T::size_type>()))>> : std::true_type
   {
   };
-  /// Check if `T` meets the `Marker` concept.
+  /// Checks if `T` meets the `Marker` concept.
   template<typename T>
   constexpr bool is_marker_v = is_marker<T>::value;
 }
