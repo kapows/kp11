@@ -22,6 +22,8 @@ namespace kp11
     /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
     /// `alignment`.
     /// @returns (failure) `nullptr`.
+    ///
+    /// @post (success) (Return value) will not be returned again until it has been `deallocated`.
     pointer allocate(size_type bytes, size_type alignment) noexcept;
     /// Deallocate memory pointed to by `ptr` by calling `delete`.
     ///
