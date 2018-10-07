@@ -11,7 +11,7 @@
 
 namespace kp11
 {
-  /// @brief Splits a single allocation from `Upstream` into multiple blocks that can be allocated.
+  /// @brief Splits single allocations from `Upstream` into multiple blocks that can be allocated.
   ///
   /// Each memory block allocated from `Upstream` has an associated `Marker` which is used to
   /// determine allocated and unallocated blocks.
