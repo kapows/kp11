@@ -9,6 +9,15 @@
 
 using namespace kp11;
 
+TEST_CASE("relation", "[relation]")
+{
+  heap m;
+  std::vector<int, allocator<int, decltype(m)>> v(&m);
+  REQUIRE(v.get_allocator() == v.get_allocator());
+  heap n;
+  std::list<int, allocator<int, decltype(n)>> l(&n);
+  REQUIRE(v.get_allocator() != l.get_allocator());
+}
 TEST_CASE("basic allocation", "[basic]")
 {
   heap m;
