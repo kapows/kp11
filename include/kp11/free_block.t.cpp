@@ -66,6 +66,17 @@ TEST_CASE("deallocate", "[deallocate]")
     }
   }
 }
+TEST_CASE("release", "[release]")
+{
+  free_block<2, stack<4>, heap> m(32, 4);
+  auto a = m.allocate(128, 4);
+  auto b = m.allocate(128, 4);
+  REQUIRE(a != nullptr);
+  REQUIRE(b != nullptr);
+  m.release();
+  auto c = m.allocate(128, 4);
+  REQUIRE(c != nullptr);
+}
 TEST_CASE("traits", "[traits]")
 {
   REQUIRE(is_owner_v<free_block<1, stack<4>, heap>> == true);
