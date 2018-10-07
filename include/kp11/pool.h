@@ -8,6 +8,8 @@
 
 namespace kp11
 {
+  /// @brief Fixed size LIFO marker. Only supports `set` and `reset` with `n == 1`.
+  ///
   /// Spots are stored as a singly linked list inside of an array with each element being a node.
   /// The node points to the next node by using an index. `set` and `reset` calls are each limited
   /// to 1 spot.
