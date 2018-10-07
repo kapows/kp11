@@ -9,25 +9,42 @@
 
 namespace kp11
 {
-  /// Allocates from a buffer inside itself.
-  /// Can only allocate one memory block at a time.
-  /// * `Pointer` pointer type
-  /// * `Size` size type
-  /// * `Bytes` is the size of the buffer
-  /// * `Alignment` is the alignment of the buffer
+  /// Allocates from a buffer of memory inside itself. Only one address will ever be allocated and
+  /// that is to the start of the buffer. Whether or the not buffer has been allocated is tracked
+  /// using a `bool`.
+  ///
+  /// @tparam Pointer Pointer type.
+  /// @tparam Size Size type.
+  /// @tparam Bytes Size in bytes of the buffer.
+  /// @tparam Alignment Alignment in bytes of the buffer.
   template<typename Pointer, typename SizeType, std::size_t Bytes, std::size_t Alignment>
   class basic_local
   {
   public: // typedefs
+    /// Pointer type.
     using pointer = Pointer;
+    /// Size type.
     using size_type = SizeType;
 
   private: // typedefs
+    /// Byte pointer for arithmetic purposes.
     using byte_pointer = typename std::pointer_traits<pointer>::template rebind<std::byte>;
     using byte_pointer_traits = std::pointer_traits<byte_pointer>;
 
   public: // modifiers
-    /// * Precondition `alignment (from ctor) % alignment == 0`
+    /// If our memory has not already been allocated and we can fulfil the size request then a
+    /// pointer to the beginning of our buffer is allocated.
+    /// * Complexity `O(1)`.
+    ///
+    /// @param bytes Size in bytes of memory to allocate.
+    /// @param alignment Alignment of memory to allocate.
+    ///
+    /// @returns (success) Pointer to the beginning of our buffer.
+    /// @returns (failure) `nullptr`.
+    ///
+    /// @pre `Alignment % alignment == 0`.
+    ///
+    /// @post (success) (Return value) will not be returned again until it has been `deallocated`.
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
       assert(Alignment % alignment == 0);
@@ -38,6 +55,15 @@ namespace kp11
       }
       return nullptr;
     }
+    /// If `ptr` points to the beginning of our buffer then we can allocate our buffer again.
+    /// * Complexity `O(1)`.
+    ///
+    /// @param ptr Pointer to the beginning of a memory block.
+    /// @param bytes Size in bytes of the memory block.
+    /// @param alignment Alignment in bytes of the memory block.
+    ///
+    /// @returns (success) `true`.
+    /// @returns (failure) `false`.
     bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
       if (static_cast<byte_pointer>(ptr) == buffer_ptr())
@@ -49,6 +75,12 @@ namespace kp11
     }
 
   public: // observers
+    /// Checks whether or not `ptr` points in to memory owned by us.
+    ///
+    /// @param ptr Pointer to memory.
+    ///
+    /// @returns (success) Pointer to the beginning of our buffer.
+    /// @returns (failure) `nullptr`.
     pointer operator[](pointer ptr) noexcept
     {
       if (has(static_cast<byte_pointer>(ptr)))
@@ -60,8 +92,9 @@ namespace kp11
 
   private: // helpers
     /// Check if `ptr` points inside our buffer.
-    /// * Returns `true` if `ptr` belongs to us
-    /// * Returns `false` on otherwise
+    ///
+    /// @returns (success) `true`.
+    /// @returns (failure) `false`.
     bool has(byte_pointer ptr) noexcept
     {
       if (auto const buf = buffer_ptr();
@@ -72,22 +105,23 @@ namespace kp11
       return false;
     }
 
-  private: // accessors
-    /// * Returns `byte_pointer` created from our inner buffer.
+  private: // helpers
+    /// @returns `byte_pointer` created from our inner buffer.
     byte_pointer buffer_ptr() noexcept
     {
       return byte_pointer_traits::pointer_to(buffer[0]);
     }
 
   private: // variables
+    /// Flag whether or not we have allocated our buffer.
     bool allocated = false;
     alignas(Alignment) std::byte buffer[Bytes];
   };
 
-  /// Allocates from a buffer inside itself.
-  /// Can only allocate one memory block at a time.
-  /// * `Bytes` is the size of the buffer
-  /// * `Alignment` is the alignment of the buffer
+  /// Typedef of basic_local with `void *` as the `pointer` and `std::size_t` as the `size_type`.
+  ///
+  /// @tparam Bytes Size in bytes of the buffer.
+  /// @tparam Alignment Alignment in bytes of the buffer.
   template<std::size_t Bytes, std::size_t Alignment>
   using local = basic_local<void *, std::size_t, Bytes, Alignment>;
 }
