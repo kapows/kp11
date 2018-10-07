@@ -49,6 +49,9 @@ namespace kp11
     /// @param index Starting index of the spots to mark as vacant.
     /// @param n Number of spots to mark as vacant.
     ///
+    /// @pre `index <= size()`.
+    /// @pre `index + n <= size()`.
+    ///
     /// @post `index` to `index + n - 1` may be returned by a call to `set` with appropriate
     /// parameters.
     void reset(size_type index, size_type n) noexcept
