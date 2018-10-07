@@ -66,6 +66,8 @@ namespace kp11
     /// @returns (failure) `nullptr`.
     ///
     /// @pre `alignment (from ctor) % alignment == 0`
+    ///
+    /// @post (success) (Return value) will not be returned again until it has been `deallocated`.
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
       assert(this->alignment % alignment == 0);
