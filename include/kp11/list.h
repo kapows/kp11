@@ -8,6 +8,8 @@
 
 namespace kp11
 {
+  /// @brief Natural order marking. Iterates through an implicit linked list.
+  ///
   /// Spots are stored as an implicit linked list inside of an array of signed integers where each
   /// node denotes it's own number of spots and whether it is vacant or occupied. Vacancies will be
   /// merged on a `reset` if they are adjacent to each other.
