@@ -14,7 +14,7 @@ namespace kp11
   /// Allocate memory in blocks instead of per byte. Each memory block has an associated `Marker`
   /// which will be used to determine allocated and unallocated blocks.
   ///
-  /// @tparam Allocations Maximum of successful allocation requests to `Upstream`.
+  /// @tparam Allocations Maximum number of concurrent allocations from `Upstream`.
   /// @tparam Marker Meets the `Marker` concept.
   /// @tparam Upstream Meets the `Resource` concept.
   template<std::size_t Allocations, typename Marker, typename Upstream>
