@@ -8,17 +8,18 @@
 
 namespace kp11
 {
-  /// LIFO based marking (size limited) with random order deallocations.
-  /// The most spots that can be marked by a call to `set` is 1.
-  /// The most spots that can be vacated by a call to `reset` is 1.
-  /// * `N` is the number of spots
+  /// Spots are stored as a singly linked list inside of an array with each element being a node.
+  /// The node points to the next node by using an index. `set` and `reset` calls are each limited
+  /// to 1 spot.
+  ///
+  /// @tparam N Total number of spots.
   template<std::size_t N>
   class pool
   {
     static_assert(N <= UINTMAX_MAX);
 
   public: // typedefs
-    /// Pick the smallest type possible to reduce our array size
+    /// Size type is the smallest type possible to reduce our array size.
     using size_type = std::conditional_t<N <= UINT_LEAST8_MAX,
       uint_least8_t,
       std::conditional_t<N <= UINT_LEAST16_MAX,
@@ -37,14 +38,26 @@ namespace kp11
     }
 
   public: // capacity
+    /// @returns Total number of spots (`N`).
     static constexpr size_type size() noexcept
     {
       return static_cast<size_type>(N);
     }
 
   public: // modifiers
-    /// * Precondition `n == 1`
+    /// Checks to see if the head of the linked list is a valid index and marks it as occupied. The
+    /// next node becomes the head of the linked list.
     /// * Complexity `O(1)`
+    ///
+    /// @param n Number of spots to mark as occupied.
+    ///
+    /// @returns (success) Index of the spot marked occupied.
+    /// @returns (failure) `size()`.
+    ///
+    /// @pre `n == 1`.
+    ///
+    /// @post (success) `(return value)` will not returned again from any subsequent call to `set`
+    /// unless `reset` has been called on it.
     size_type set(size_type n) noexcept
     {
       assert(n == 1);
@@ -54,8 +67,16 @@ namespace kp11
       }
       return size();
     }
-    /// * Precondition `n == 1`
+    /// The node at `index` becomes the new head node and the head node is pointed at the previous
+    /// head node.
     /// * Complexity `O(1)`
+    ///
+    /// @param index Returned by a call to `set`.
+    /// @param n Corresponding parameter used in `set`.
+    ///
+    /// @pre `n == 1`.
+    ///
+    /// @post `index` may be returned by a call to `set`.
     void reset(size_type index, size_type n) noexcept
     {
       assert(n == 1);
