@@ -55,7 +55,6 @@ TEST_CASE("reset", "[reset]")
     m.reset(b, 16);
   }
 }
-
 TEST_CASE("traits", "[traits]")
 {
   REQUIRE(is_marker_v<bitset<10>> == true);
