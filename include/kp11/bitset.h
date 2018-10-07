@@ -6,7 +6,7 @@
 
 namespace kp11
 {
-  /// @brief Natural order marking. Iterates through individual bits in a bitset.
+  /// @brief Natural order marker. Iterates through individual bits in a bitset.
   ///
   /// Spots are stored in a bitset, where each bit corresponds to a single spot.
   ///
