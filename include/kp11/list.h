@@ -8,17 +8,18 @@
 
 namespace kp11
 {
-  /// Forward iteration based marking using an implicit linked list with random order resets.
-  /// Vacancies from `reset`s will be merged if they are adjacent to each other.
-  /// * `N` is the number of spots
+  /// Spots stored as an implicit linked list inside of an array of signed integers where each node
+  /// denotes it's own number of spots and whether it is vacant or occupied. Vacancies will be
+  /// merged on a `reset` if they are adjacent to each other.
+  ///
+  /// @tparam N Total number of spots.
   template<std::size_t N>
   class list
   {
-    // we'll need signed integers
     static_assert(N <= INTMAX_MAX);
 
   public: // typedefs
-    /// Pick the smallest type possible to reduce our array size
+    /// Size type is the smallest signed type possible to reduce our array size.
     using size_type = std::conditional_t<N <= INT_LEAST8_MAX,
       int_least8_t,
       std::conditional_t<N <= INT_LEAST16_MAX,
@@ -37,13 +38,28 @@ namespace kp11
     }
 
   public: // capacity
+    /// @returns Total number of spots (`N`).
     static constexpr size_type size() noexcept
     {
       return static_cast<size_type>(N);
     }
 
   public: // modifiers
-    /// * Complexity `O(n)`
+    /// Forward iterates through the implicit linked list to find an `n` sized vacant node and mark
+    /// it as occupied. If a node has more vacant spots than required a new node is created at the
+    /// end of the required `n` spots with the remaining vacant spots.
+    /// * Complexity `O(n)`.
+    ///
+    /// @param n Number of spots to mark as occupied.
+    ///
+    /// @returns (success) Index of the start of the `n` spots marked occupied.
+    /// @returns (failure) `size()`.
+    ///
+    /// @pre `n > 0`.
+    ///
+    /// @post (success) Spots from the `(return value)` to `(return value) + n - 1` will not
+    /// returned again from any subsequent call to `set` unless `reset` has been called on those
+    /// parameters.
     size_type set(size_type n) noexcept
     {
       assert(n > 0);
@@ -64,9 +80,19 @@ namespace kp11
       }
       return size();
     }
+    /// We consider the node at `index` of size `n`. The adjacent nodes are both checked to
+    /// see if they are also vacant. If either are then the vacant nodes are merged into a single
+    /// vacant node. Then node is then marked as vacant.
     /// * Complexity `O(1)`
+    ///
+    /// @param index Returned by a call to `set`.
+    /// @param n Corresponding parameter used in `set`.
+    ///
+    /// @post `index` to `index + n - 1` may be returned by a call to `set` with appropriate
+    /// parameters.
     void reset(size_type index, size_type n) noexcept
     {
+      // Need to bounds check 0 because we're using signed types.
       assert(0 <= index && index <= size());
       assert(0 <= n && n <= size());
       if (index == size())
@@ -75,13 +101,13 @@ namespace kp11
       }
       assert(0 <= index + n && index + n <= size());
       assert(sizes[index] == -n && sizes[index + (n - 1)] == -n);
-      // join with previous if it's vacant
+      // Join with previous if it's vacant.
       if (auto const previous = index - 1; index > 0 && sizes[previous] > 0)
       {
         n += sizes[previous];
         index = index - sizes[previous];
       }
-      // join with next if it's vacant
+      // Join with next if it's vacant.
       if (auto const next = index + n; next < size() && sizes[next] > 0)
       {
         n += sizes[next];
@@ -90,13 +116,13 @@ namespace kp11
     }
 
   private: // helpers
-    /// * Precondition `n > 0`
+    /// Marks the start and end of the node with the size and occupied sign.
     void mark_occupied(size_type index, size_type n) noexcept
     {
       assert(n > 0);
       sizes[index] = sizes[index + (n - 1)] = -n;
     }
-    /// * Precondition `n > 0`
+    /// Marks the start and end of the node with the size and vacant sign.
     void mark_vacant(size_type index, size_type n) noexcept
     {
       assert(n > 0);
