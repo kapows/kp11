@@ -10,7 +10,7 @@ namespace kp11
   ///
   /// Spots are stored in a bitset, where each bit corresponds to a single spot.
   ///
-  /// @tparam `N` Total number of spots
+  /// @tparam N Total number of spots
   template<std::size_t N>
   class bitset
   {
