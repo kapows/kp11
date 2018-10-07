@@ -94,11 +94,11 @@ namespace kp11
     {
       // Need to bounds check 0 because we're using signed types.
       assert(0 <= index && index <= size());
-      assert(0 <= n && n <= size());
       if (index == size())
       {
         return;
       }
+      assert(0 <= n);
       assert(0 <= index + n && index + n <= size());
       assert(sizes[index] == -n && sizes[index + (n - 1)] == -n);
       // Join with previous if it's vacant.
