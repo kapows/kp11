@@ -4,6 +4,7 @@
 #include <cassert> // assert
 #include <cstddef> // size_t
 #include <cstdint> // uint_least8_t, uint_least16_t, uint_least32_t, uint_least64_t, uintmax_t, UINT_LEAST8_MAX, UINT_LEAST16_MAX, UINT_LEAST32_MAX, UINT_LEAST64_MAX, UINTMAX_MAX
+#include <type_traits> // conditional_t
 #include <utility> // exchange
 
 namespace kp11
