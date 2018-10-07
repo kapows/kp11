@@ -6,31 +6,61 @@
 
 using namespace kp11;
 
-TEST_CASE("unit test", "[unit-test]")
+TEST_CASE("size", "[size]")
+{
+  SECTION("1")
+  {
+    pool<10> m;
+    REQUIRE(m.size() == 10);
+  }
+  SECTION("2")
+  {
+    pool<101581> m;
+    REQUIRE(m.size() == 101581);
+  }
+}
+TEST_CASE("set", "[set]")
 {
   pool<10> m;
-  REQUIRE(m.size() == 10);
-  SECTION("make sure size is not fixed")
+  SECTION("success")
   {
-    pool<101581> n;
+    auto a = m.set(1);
+    REQUIRE(a == 0);
+    SECTION("post condition")
+    {
+      auto b = m.set(1);
+      REQUIRE(b == 1);
+      REQUIRE(b != a);
+    }
   }
-  for (auto i = 0; i < 10; ++i)
+  SECTION("failure")
   {
-    REQUIRE(m.set(1) == i);
+    for (auto i = 0; i < m.size(); ++i)
+    {
+      m.set(1);
+    }
+    REQUIRE(m.set(1) == m.size());
   }
-  REQUIRE(m.set(1) == m.size());
-  SECTION("reset allows setting in LIFO order")
+}
+TEST_CASE("reset", "[reset]")
+{
+  pool<10> m;
+  SECTION("recovers indexes")
   {
-    m.reset(8, 1);
-    m.reset(2, 1);
-    m.reset(4, 1);
-    REQUIRE(m.set(1) == 4);
-    REQUIRE(m.set(1) == 2);
-    REQUIRE(m.set(1) == 8);
+    auto a = m.set(1);
+    m.reset(a, 1);
+    auto b = m.set(1);
+    REQUIRE(b == a);
   }
   SECTION("accepts size() in reset")
   {
-    m.reset(m.size(), 1);
+    for (auto i = 0; i < m.size(); ++i)
+    {
+      m.set(1);
+    }
+    auto b = m.set(1);
+    REQUIRE(b == m.size());
+    m.reset(b, 1);
   }
 }
 TEST_CASE("traits", "[traits]")
