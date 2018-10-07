@@ -6,6 +6,8 @@
 
 namespace kp11
 {
+  /// @brief Natural order marking. Counts individual bits in a bitset.
+  ///
   /// Spots are stored in a bitset, where each bit corresponds to a single spot.
   ///
   /// @tparam `N` Total number of spots
