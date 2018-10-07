@@ -54,7 +54,7 @@ namespace kp11
     }
 
   public: // modifiers
-    /// Tries to allocate from `Primary`, if allocation fails then allocates from `Secondary`.
+    /// Calls `Primary::allocate`, if that fails calls `Secondary::allocate`.
     ///
     /// @param bytes Size in bytes of memory to allocate.
     /// @param alignment Alignment of memory to allocate.
@@ -62,6 +62,8 @@ namespace kp11
     /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
     /// `alignment`.
     /// @returns (failure) `nullptr`.
+    ///
+    /// @post (success) (Return value) will not be returned again until it has been `deallocated`.
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
       if (auto ptr = primary.allocate(bytes, alignment))
@@ -70,9 +72,9 @@ namespace kp11
       }
       return secondary.allocate(bytes, alignment);
     }
-    /// If `ptr` is owned by `Primary` then deallocates from `Primary` else deallocates from
-    /// `Secondary`. If `Primary` supplies a `deallocate` that returns a value convertible to `bool`
-    /// then that function will be used to determine if `Primary` owns `ptr`.
+    /// If `ptr` is owned by `Primary` then calls `Primary:deallocate` else calls
+    /// `Secondary::deallocate`. If `Primary` supplies a `deallocate` that returns a value
+    /// convertible to `bool` then that function will be used to determine if `Primary` owns `ptr`.
     ///
     /// @param ptr Pointer to the beginning of memory returned by a call to `allocate`.
     /// @param bytes Corresposing argument to call to `allocate`.
