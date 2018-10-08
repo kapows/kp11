@@ -22,6 +22,7 @@ add_library(kp11 STATIC
     include/kp11/fallback.h
     include/kp11/allocator.h
     include/kp11/detail/static_vector.h
+    include/kp11/segregator.h
     )
 add_library(kp11::kp11 ALIAS kp11)
 target_compile_features(kp11 PUBLIC cxx_std_17)
