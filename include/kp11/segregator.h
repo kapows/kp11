@@ -8,6 +8,11 @@
 
 namespace kp11
 {
+  /// @brief Sizes less than `threshold` will be allocated by `Small`, greater or equal will be
+  /// allocated by `Large`.
+  ///
+  /// @tparam Small Meets the `Resource` concept
+  /// @tparam Large Meets the `Resource` concept
   template<typename Small, typename Large>
   class segregator
   {
@@ -15,7 +20,9 @@ namespace kp11
     static_assert(is_resource_v<Large>);
 
   public: // typedefs
+    /// Pointer type
     using pointer = typename Small::pointer;
+    /// Size type
     using size_type = typename Small::size_type;
 
   public: // constructor
