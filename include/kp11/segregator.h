@@ -20,7 +20,7 @@ namespace kp11
 
   public: // constructor
     /// @param threshold Threshold size in bytes.
-    segregator(size_type threshold) noexcept
+    segregator(size_type threshold) noexcept : threshold(threshold)
     {
     }
     /// Fowarding constructor for `Small` and `Large`.
@@ -65,7 +65,14 @@ namespace kp11
     /// @returns (failure) `nullptr`.
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
-      return nullptr;
+      if (bytes < threshold)
+      {
+        return small.allocate(bytes, alignment);
+      }
+      else
+      {
+        return large.allocate(bytes, alignment);
+      }
     }
     /// If `bytes < threshold` calls `Small::deallocate` else calls `Large::deallocate`.
     ///
@@ -74,6 +81,14 @@ namespace kp11
     /// @param alignment Corresposing argument to call to `allocate`.
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
+      if (bytes < threshold)
+      {
+        small.deallocate(ptr, bytes, alignment);
+      }
+      else
+      {
+        large.deallocate(ptr, bytes, alignment);
+      }
     }
 
   public: // accessors
