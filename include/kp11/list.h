@@ -129,14 +129,20 @@ namespace kp11
     }
 
   private: // variables
-    /// Nodes that stores it's own size and free list index. The size is stored both in the
+    /// Nodes that stores it's own size and index into `free_list`. The size is stored both in the
     /// beginning and the end of node. If the size is 1 then it only occupies 1 spot. Vacant spots
     /// will have free list `index < size()`, occupied nodes will have `index == size()`.
     ///
-    /// Example: Assume size() == 255, then
-    /// [(255, 2), (255, 2), (1, 3), 0, (1, 3), (255, 4), 0, 0, (255, 4), (0, 2), (0, 2), (255, 1)]
+    /// Example: Assume size() == 11, then
+    /// [(11, 2), (11, 2), (1, 3), 0, (1, 3), (11, 4), 0, 0, (11, 4), (0, 2), (0, 2), (11, 1)]
     /// 0 is not necessarily 0 but a placeholder for garbage characters.
     /// Notice that the node at index 2 has free list index 1, as it is the largest node.
     std::array<size_type, N> sizes;
+    /// Free list stores it's own size and index into `sizes`. The biggest node at the back.
+    /// `N / 2 + N % 2` because that is the maximum number of free list nodes we will ever have
+    /// (this will happen when we have an alternating vacant, occupied, vacant, occupied pattern).
+    ///
+    /// Example:
+    /// [(9, 2), (2, 3)]
   };
 }
