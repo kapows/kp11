@@ -26,11 +26,23 @@ TEST_CASE("set", "[set]")
   {
     auto a = m.set(5);
     REQUIRE(a == 0);
-    SECTION("post condition")
+    SECTION("early return")
     {
-      auto b = m.set(5);
+      auto b = m.set(6);
+      REQUIRE(b == m.size());
+    }
+    SECTION("success")
+    {
+      auto b = m.set(1);
       REQUIRE(b == 5);
       REQUIRE(b != a);
+    }
+    SECTION("biggest node")
+    {
+      m.set(1);
+      m.reset(a, 5);
+      auto c = m.set(5);
+      REQUIRE(c == a);
     }
   }
   SECTION("failure")

@@ -8,11 +8,13 @@
 
 namespace kp11
 {
-  /// @brief Natural order marker. Iterates through an implicit linked list.
+  /// @brief Unordered marker. Iterates through a free list.
   ///
-  /// Spots are stored as an implicit linked list inside of an array of signed integers where each
-  /// node denotes it's own number of spots and whether it is vacant or occupied. Vacancies will be
-  /// merged on a `reset` if they are adjacent to each other.
+  /// All nodes are stored inside of an array with their size and free list index, size is negative
+  /// if the node is occupied. The free list index is stored so make allow indexing on merges. Free
+  /// list nodes are stored inside of an array with their size and node index. The biggest node in
+  /// the free list is always at the back, otherwise there is no ordering. Vacancies will be merged
+  /// on a `reset` if they are adjacent to each other.
   ///
   /// @tparam N Total number of spots.
   template<std::size_t N>
@@ -21,14 +23,7 @@ namespace kp11
     static_assert(N <= INTMAX_MAX);
 
   public: // typedefs
-    /// Size type is the smallest signed type possible to reduce our array size.
-    using size_type = std::conditional_t<N <= INT_LEAST8_MAX,
-      int_least8_t,
-      std::conditional_t<N <= INT_LEAST16_MAX,
-        int_least16_t,
-        std::conditional_t<N <= INT_LEAST32_MAX,
-          int_least32_t,
-          std::conditional_t<N <= INT_LEAST64_MAX, int_least64_t, intmax_t>>>>;
+    /// Size type is the smallest unsigned type possible to reduce our array size.
 
   public: // constructors
     list() noexcept
@@ -47,10 +42,13 @@ namespace kp11
     }
 
   public: // modifiers
-    /// Forward iterates through the implicit linked list to find an `n` sized vacant node and mark
-    /// it as occupied. If a node has more vacant spots than required a new node is created at the
-    /// end of the required `n` spots with the remaining vacant spots.
-    /// * Complexity `O(n)`.
+    /// If `n` is bigger than the last node in our free list just return `size()`. Else we are
+    /// definately able to fulfil the request so forward iterates through the free list to find an
+    /// `n` sized vacant node index and remove it from the free list. If the selected node is the
+    /// back of the free list then the next biggest node will take it's place. Mark [`index`, `index
+    /// + n`) as occupied in the all node array. If `n` is smaller than the node's size mark [`index
+    /// + n`, `index + old_size`) as vacant and add it to the free list.
+    /// * Complexity `n==1` is `O(1)`, otherwise `O(n)`.
     ///
     /// @param n Number of spots to mark as occupied.
     ///
@@ -59,9 +57,8 @@ namespace kp11
     ///
     /// @pre `n > 0`.
     ///
-    /// @post (success) Spots from the `(return value)` to `(return value) + n - 1` will not
-    /// returned again from any subsequent call to `set` unless `reset` has been called on those
-    /// parameters.
+    /// @post (success) Spots [`(return value)`, `(return value) + n`) will not returned again from
+    /// any subsequent call to `set` unless `reset` has been called on those parameters.
     size_type set(size_type n) noexcept
     {
       assert(n > 0);
@@ -83,15 +80,15 @@ namespace kp11
       return size();
     }
     /// We consider the node at `index` of size `n`. The adjacent nodes are both checked to
-    /// see if they are also vacant. If either are then the vacant nodes are merged into a single
-    /// vacant node. Then node is then marked as vacant.
+    /// see if they are also vacant. If either are then the vacant nodes are removed from the free
+    /// list and are merged into a single vacant node. Then node is then marked as vacant and added
+    /// to the free list.
     /// * Complexity `O(1)`
     ///
     /// @param index Returned by a call to `set`.
     /// @param n Corresponding parameter used in `set`.
     ///
-    /// @post `index` to `index + n - 1` may be returned by a call to `set` with appropriate
-    /// parameters.
+    /// @post [`index`, `index + n`) may be returned by a call to `set` with appropriate parameters.
     void reset(size_type index, size_type n) noexcept
     {
       // Need to bounds check 0 because we're using signed types.
@@ -132,15 +129,14 @@ namespace kp11
     }
 
   private: // variables
-    /// Implicit linked list that stores it's own size (number of spots until next). The size is
-    /// stored both in the beginning and the end of the spots that it occupies. If the size is 1
-    /// then it only occupies 1 spot. Positive for vacant, negative
-    /// if occupied.
+    /// Nodes that stores it's own size and free list index. The size is stored both in the
+    /// beginning and the end of node. If the size is 1 then it only occupies 1 spot. Vacant spots
+    /// will have free list `index < size()`, occupied nodes will have `index == size()`.
     ///
-    /// Example: [-2, -2, 3, 0, 3, -4, 0, 0, -4, 2, 2, -1]
+    /// Example: Assume size() == 255, then
+    /// [(255, 2), (255, 2), (1, 3), 0, (1, 3), (255, 4), 0, 0, (255, 4), (0, 2), (0, 2), (255, 1)]
     /// 0 is not necessarily 0 but a placeholder for garbage characters.
-    /// Here 0 is 2 wide and occupied, 2 is 3 wide and vacant, 5 is 4 wide and occupied, 9 is 2 wide
-    /// and vacant, 10 is 1 wide and occupied.
+    /// Notice that the node at index 2 has free list index 1, as it is the largest node.
     std::array<size_type, N> sizes;
   };
 }
