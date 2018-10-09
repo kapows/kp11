@@ -15,8 +15,8 @@ TEST_CASE("size", "[size]")
   }
   SECTION("2")
   {
-    list<101581> m;
-    REQUIRE(m.size() == 101581);
+    list<101> m;
+    REQUIRE(m.size() == 101);
   }
 }
 TEST_CASE("set", "[set]")
