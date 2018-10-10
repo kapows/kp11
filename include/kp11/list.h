@@ -5,51 +5,45 @@
 #include <array> // array
 #include <cassert> // assert
 #include <cstddef> // size_t
-#include <cstdint> // uint_least8_t, uint_least16_t, uint_least32_t, uint_least64_t, uintmax_t, UINT_LEAST8_MAX, UINT_LEAST16_MAX, UINT_LEAST32_MAX, UINT_LEAST64_MAX, UINTMAX_MAX
-#include <type_traits> // conditional_t
+#include <cstdint> // uint_least8_t, UINT_LEAST8_MAX
 
 namespace kp11
 {
   /// @brief Unordered marker. Iterates through a free list.
   ///
-  /// All nodes are stored inside of an array with their size and free list index, size is negative
-  /// if the node is occupied. The free list index is stored so make allow indexing on merges. Free
-  /// list nodes are stored inside of an array with their size and node index. The biggest size
-  /// available in the free list will be also be stored separately, this is to allow early returning
-  /// when we cannot fulfil a request. Vacancies will be merged on a `reset` if they are adjacent to
-  /// each other.
+  /// Free list is stored as a `size` and `index` inside of an array. A cache of the free list index
+  /// is kept for each index to make merges `O(1)`. Occupied spots will have `size()` as their value
+  /// in the cache. Vacancies will be merged on a `reset` if they are adjacent to each other.
   ///
   /// @tparam N Total number of spots.
   template<std::size_t N>
   class list
   {
-    static_assert(N <= UINTMAX_MAX);
+    static_assert(N <= UINT_LEAST8_MAX);
 
   public: // typedefs
     /// Size type is the smallest unsigned type possible to reduce our array size.
-    using size_type = std::conditional_t<N <= UINT_LEAST8_MAX,
-      uint_least8_t,
-      std::conditional_t<N <= UINT_LEAST16_MAX,
-        uint_least16_t,
-        std::conditional_t<N <= UINT_LEAST32_MAX,
-          uint_least32_t,
-          std::conditional_t<N <= UINT_LEAST64_MAX, uint_least64_t, uintmax_t>>>>;
+    using size_type = uint_least8_t;
 
-  public: // typedefs
+  private: // typedefs
     /// Internal node type
     struct node
     {
-      size_type index;
       size_type size;
+      size_type index;
+      node(size_type size, size_type index) : size(size), index(index)
+      {
+      }
     };
 
   public: // constructors
     list() noexcept
     {
-      if (size() > 0)
+      if constexpr (size() > 0)
       {
-        free_list.push_back({0, size()});
-        mark_vacant(0, size(), 0);
+        auto & node = free_list.emplace_back(size(), 0);
+        auto node_index = static_cast<size_type>(free_list.size() - 1);
+        set_cache(node.index, node.size, node_index);
       }
     }
 
@@ -61,12 +55,9 @@ namespace kp11
     }
 
   public: // modifiers
-    /// If `n` is bigger than the the biggest size in our free list just return `size()`. Else we
-    /// are definately able to fulfil the request so forward iterates through the free list to find
-    /// an `n` sized vacant node index. If the size of the selected node is bigger than `n` then the
-    /// node will be shrunk in the free list. If the size is the same as `n` then the node will be
-    /// removed. [`index`, `index + n`) is marked occupied in the all node array. If there are
-    /// leftovers then mark [`index + n`, `index + old_size`) as vacant.
+    /// Forward iterate through the free list to find an `n` sized vacant node. If the size of the
+    /// selected node is bigger than `n` then the node will be shrunk in the free list. If the size
+    /// is the same as `n` then the node will be removed.
     /// * Complexity `n==1` is `O(1)`, otherwise `O(n)`.
     ///
     /// @param n Number of spots to mark as occupied.
@@ -85,40 +76,39 @@ namespace kp11
       {
         return size();
       }
-      auto first = free_list.begin();
-      auto last = free_list.end();
-      for (; first != last; ++first)
+      size_type node_index = 0;
+      for (auto last = free_list.size(); node_index != last; ++node_index)
       {
-        if (n <= first->size)
+        if (n <= free_list[node_index].size)
         {
           break;
         }
       }
-      if (first == last)
+      if (node_index == free_list.size())
       {
         return size();
       }
-      auto selected = *first;
-      if (n < selected.size)
+      auto & node = free_list[node_index];
+      auto const index = node.index;
+      set_cache(index, n, size());
+      if (node.size == n)
       {
-        node leftover = {
-          static_cast<size_type>(selected.index + n), static_cast<size_type>(selected.size - n)};
-        mark_occupied(selected.index, selected.size);
-        mark_vacant(
-          leftover.index, leftover.size, static_cast<size_type>(first - free_list.begin()));
+        remove_node(node_index);
       }
       else
       {
-        *first = free_list.back();
-        mark_vacant(first->index, first->size, static_cast<size_type>(first - free_list.begin()));
-        free_list.pop_back();
+        node.size -= n;
+        node.index += n;
+        set_cache(node.index, node.size, node_index);
       }
-      return selected.index;
+      return index;
     }
-    /// We consider the node at `index` of size `n`. The adjacent nodes are both checked to
-    /// see if they are also vacant. If either are then the vacant nodes are removed from the free
-    /// list and are merged into a single vacant node. Then node is then marked as vacant and added
-    /// to the free list.
+    /// Checks to see if the node either sits at a boundary or has an adjacent node on either
+    /// side. If it has adjacent nodes then they are checked to see whether or not they are vacant.
+    /// If there are two vacant adjacent nodes then we will merge them into one node whilst removing
+    /// the other.
+    /// If there is one vacant adjacent node then we will merge with that node.
+    /// If there are no vacant adjacent nodes then we will add a new node to our free list.
     /// * Complexity `O(1)`
     ///
     /// @param index Returned by a call to `set`.
@@ -132,64 +122,88 @@ namespace kp11
       {
         return;
       }
+      assert(index < index + n);
       assert(index + n <= size());
       // Join with previous if it's vacant.
-      auto const previous = index - 1;
-      auto const next = index + n;
-      bool join_with_previous = index > 0 && all[previous].index != size();
-      bool join_with_next = next < size() && all[next].index != size();
-      if (join_with_previous && join_with_next)
+      auto const previous_cache_index = index - 1;
+      auto const previous_is_vacant = index > 0 && cache[previous_cache_index] != size();
+      auto const next_cache_index = index + n;
+      auto const next_is_vacant = index + n < size() && cache[next_cache_index] != size();
+      if (previous_is_vacant && next_is_vacant)
       {
-        // We'll have to remove one of them so we'll remove next.
-        mark_vacant(previous, all[previous].size + n + all[next].size, all[previous].index);
-        free_list[all[next].index] = free_list.back();
-        free_list.pop_back();
+        // There will be 2 active nodes, and so we'll have to remove one of them. We will keep the
+        // previous node, and remove the next node.
+        auto const node_index = cache[previous_cache_index];
+        auto const next_node_index = cache[next_cache_index];
+        auto & node = free_list[node_index];
+        auto const & next_node = free_list[next_node_index];
+        node.size = node.size + n + next_node.size;
+        set_cache(node.index, node.size, node_index);
+        remove_node(next_node_index);
       }
-      else if (join_with_previous)
+      else if (previous_is_vacant)
       {
-        mark_vacant(previous, all[previous].size + n, all[previous].index);
+        // Combine all sizes into the previous node.
+        auto const node_index = cache[previous_cache_index];
+        auto & node = free_list[node_index];
+        node.size = node.size + n;
+        set_cache(node.index, node.size, node_index);
       }
-      else if (join_with_next)
+      else if (next_is_vacant)
       {
-        mark_vacant(index, n + all[next].size, all[next].index);
-        free_list[all[index].index] = {index, all[index].size};
+        auto const node_index = cache[next_cache_index];
+        auto & node = free_list[node_index];
+        node.size = node.size + n;
+        node.index = index;
+        set_cache(node.index, node.size, node_index);
       }
       else
       {
-        free_list.push_back({index, n});
-        mark_vacant(index, n, static_cast<size_type>(free_list.size() - 1));
+        auto & node = free_list.emplace_back(n, index);
+        auto const node_index = static_cast<size_type>(free_list.size() - 1);
+        set_cache(node.index, node.size, node_index);
       }
     }
 
   private: // helpers
-    /// Marks the start and end of the node with the size and invalid free list index.
-    void mark_occupied(size_type index, size_type n) noexcept
+    /// Cache setting helper because we'll have to set both the start and end.
+    void set_cache(size_type index, size_type size, size_type node_index) noexcept
     {
-      all[index + (n - 1)] = all[index] = {size(), n};
+      assert(index < this->size());
+      assert(index + size - 1 < this->size());
+      assert(size > 0);
+      cache[index + (size - 1)] = cache[index] = node_index;
     }
-    /// Marks the start and end of the node with the size and free list index.
-    void mark_vacant(size_type index, size_type n, size_type free_list_index) noexcept
+    /// Node removal helper because we'll have to update the cache of the node that replaces the
+    /// removed node. Note the removed node does not get cache updating. Order is not guaranteed.
+    void remove_node(size_type index) noexcept
     {
-      all[index + (n - 1)] = all[index] = {free_list_index, n};
-      free_list[free_list_index] = {index, n};
+      assert(index < free_list.size());
+      auto & node = free_list[index];
+      node = free_list.back();
+      if (index != free_list.size() - 1)
+      {
+        set_cache(node.index, node.size, index);
+      }
+      free_list.pop_back();
     }
 
   private: // variables
-    /// Nodes that stores it's own size and index into `free_list`. The size is stored both in the
-    /// beginning and the end of node. If the size is 1 then it only occupies 1 spot. Vacant spots
-    /// will have free list `index < size()`, occupied nodes will have `index == size()`.
-    ///
-    /// Example: Assume size() == 11, then
-    /// [(11, 2), (11, 2), (1, 3), 0, (1, 3), (11, 4), 0, 0, (11, 4), (0, 2), (0, 2), (11, 1)]
-    /// 0 is not necessarily 0 but a placeholder for garbage characters.
-    std::array<node, N> all;
-    /// Free list stores it's own size and index into `sizes`.
+    /// Free list stores it's own size and index.
     /// `N / 2 + N % 2` because that is the maximum number of free list nodes we will ever have
     /// (this will happen when we have an alternating vacant, occupied, vacant, occupied pattern).
     ///
-    /// Example:
+    /// Example: Assume size() == 11, then
     /// [(9, 2), (2, 3)]
     kp11::detail::static_vector<node, N / 2 + N % 2> free_list;
-    // size_type biggest = N;
+    /// Cache stores an index into the free list for each run. The index is stored at the beginning
+    /// and the end of the run. If the run is size 1 then the index is only stored in one element.
+    /// If the run is not in the free list (it's been occupied) then `size()` is used as its index.
+    /// We'll need the cache to do merges in `O(1)` time.
+    ///
+    /// Example: Assume size() == 11, then
+    /// [11, 11, 1, X, 1, 11, X, X, 11, 0, 0, 11]
+    /// X is just a placeholder here for garbage indexes.
+    std::array<size_type, N> cache;
   };
 }
