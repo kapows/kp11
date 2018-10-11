@@ -226,7 +226,7 @@ namespace kp11
     }
 
   private: // variables
-    /// Biggest sized node
+    /// Biggest sized node, this is always valid if `free_list` is not empty.
     size_type biggest_node_index = 0;
     /// Free list stores it's own size and index.
     /// `N / 2 + N % 2` because that is the maximum number of free list nodes we will ever have
