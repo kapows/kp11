@@ -47,8 +47,33 @@ namespace kp11
     }
     /// Deleted because a resource is being held and managed.
     free_block(free_block const &) = delete;
+    /// Defined because the destructor is defined.
+    free_block(free_block && x) noexcept :
+        block_size(x.block_size), bytes(x.bytes), alignment(x.alignment), ptrs(std::move(x.ptrs)),
+        markers(std::move(x.markers)), upstream(std::move(x.upstream))
+    {
+      x.ptrs.clear();
+      x.markers.clear();
+    }
     /// Deleted because a resource is being held and managed.
     free_block & operator=(free_block const &) = delete;
+    /// Defined because the destructor is defined.
+    free_block & operator=(free_block && x) noexcept
+    {
+      if (this != &x)
+      {
+        release();
+        block_size = x.block_size;
+        bytes = x.bytes;
+        alignment = x.alignment;
+        ptrs = std::move(x.ptrs);
+        markers = std::move(x.markers);
+        upstream = std::move(x.upstream);
+        x.ptrs.clear();
+        x.markers.clear();
+      }
+      return *this;
+    }
     /// Defined because we need to release all allocated memory back to `Upstream`.
     ~free_block() noexcept
     {
@@ -231,11 +256,11 @@ namespace kp11
 
   private: // variables
     /// Size in bytes of a free block.
-    size_type const block_size;
+    size_type block_size;
     /// Size in bytes of memory allocated by `Upstream`.
-    size_type const bytes;
+    size_type bytes;
     /// Size in bytes of alignment of memory blocks.
-    size_type const alignment;
+    size_type alignment;
     /// Holds pointers to memory allocated by `Upstream`.
     kp11::detail::static_vector<byte_pointer, Allocations> ptrs;
     /// Holds a `Marker` corresponding to each allocation.
