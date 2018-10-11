@@ -19,12 +19,13 @@ TEST_CASE("constructor", "[constructor]")
   }
   SECTION("forwarding")
   {
-    segregator<small_t, large_t> m(128, std::forward_as_tuple(32, 4), std::forward_as_tuple(64, 4));
+    segregator<small_t, large_t> m(
+      128, std::forward_as_tuple(128, 4), std::forward_as_tuple(256, 4));
   }
 }
 TEST_CASE("allocate", "[allocate]")
 {
-  segregator<small_t, large_t> m(128, std::forward_as_tuple(32, 4), std::forward_as_tuple(64, 4));
+  segregator<small_t, large_t> m(128, std::forward_as_tuple(128, 4), std::forward_as_tuple(256, 4));
   SECTION("small")
   {
     auto a = m.allocate(64, 4);
@@ -48,7 +49,7 @@ TEST_CASE("allocate", "[allocate]")
 }
 TEST_CASE("deallocate", "[deallocate]")
 {
-  segregator<small_t, large_t> m(128, std::forward_as_tuple(32, 4), std::forward_as_tuple(64, 4));
+  segregator<small_t, large_t> m(128, std::forward_as_tuple(128, 4), std::forward_as_tuple(256, 4));
   SECTION("small")
   {
     auto a = m.allocate(64, 4);
