@@ -231,7 +231,7 @@ namespace kp11
     /// (this will happen when we have an alternating vacant, occupied, vacant, occupied pattern).
     ///
     /// Example: Assume size() == 11, then
-    /// [(9, 2), (2, 3)]
+    /// [(2, 9), (3, 2)]
     kp11::detail::static_vector<node, N / 2 + N % 2> free_list;
     /// Cache stores an index into the free list for each run. The index is stored at the beginning
     /// and the end of the run. If the run is size 1 then the index is only stored in one element.
