@@ -12,6 +12,10 @@ TEST_CASE("constructor", "[constructor]")
 {
   free_block<2, stack<4>, heap> m(128, 4);
   REQUIRE(m.get_block_size() == 32);
+  SECTION("initial allocation")
+  {
+    decltype(m) n(128, 4, 2);
+  }
   SECTION("move")
   {
     auto n = std::move(m);
