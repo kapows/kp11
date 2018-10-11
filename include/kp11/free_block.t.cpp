@@ -11,6 +11,7 @@ using namespace kp11;
 TEST_CASE("constructor", "[constructor]")
 {
   free_block<2, stack<4>, heap> m(128, 4);
+  REQUIRE(m.get_block_size() == 32);
 }
 TEST_CASE("operator[]", "[operator[]]")
 {
