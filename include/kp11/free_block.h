@@ -218,7 +218,7 @@ namespace kp11
     typename Marker::size_type to_marker_size(size_type bytes) const noexcept
     {
       // 1 block minimum
-      // moduloc is required to deal with non BlockSize sizes
+      // modulo is required to deal with non block_size sizes
       size_type s = bytes == 0 ? 1 : bytes / block_size + (bytes % block_size != 0);
       return static_cast<typename Marker::size_type>(s);
     }
