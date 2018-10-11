@@ -232,14 +232,14 @@ namespace kp11
   private: // variables
     /// Size in bytes of a free block.
     size_type const block_size;
-    /// Holds pointers to memory allocated by `Upstream`.
-    kp11::detail::static_vector<byte_pointer, Allocations> ptrs;
-    /// Holds a `Marker` corresponding to each allocation.
-    kp11::detail::static_vector<Marker, Allocations> markers;
     /// Size in bytes of memory allocated by `Upstream`.
     size_type const bytes;
     /// Size in bytes of alignment of memory blocks.
     size_type const alignment;
+    /// Holds pointers to memory allocated by `Upstream`.
+    kp11::detail::static_vector<byte_pointer, Allocations> ptrs;
+    /// Holds a `Marker` corresponding to each allocation.
+    kp11::detail::static_vector<Marker, Allocations> markers;
     Upstream upstream;
   };
 }
