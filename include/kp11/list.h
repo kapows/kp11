@@ -93,8 +93,8 @@ namespace kp11
       }
       size_type node_index = 0;
       size_type replacement_biggest_node_index = 0;
-      // We're guaranteed to find a suitable size since n is at maximum, the biggest size we have.
-      // Don't need to guard againt going off the end here, we'll just find the element.
+      // Guaranteed to find a suitable size since n is at maximum, the biggest node size.
+      // Don't need to guard againt going off the end here, just find the element.
       for (; free_list[node_index].size < n; ++node_index)
       {
         // The replacement will always be 1 behind the node_index, this is because node_index will
@@ -108,7 +108,7 @@ namespace kp11
       auto replace_biggest_node_index = node_index == biggest_node_index;
 
       auto & node = free_list[node_index];
-      // index is the return value, we'll have to copy it because node will be modified.
+      // index is the return value, have to copy it because node will be modified.
       auto const index = node.index;
       set_cache(index, n, size());
       if (node.size == n)
@@ -123,7 +123,7 @@ namespace kp11
       }
       if (replace_biggest_node_index)
       {
-        // Search the rest of the free list for the biggest node.
+        // Continue to search the rest of the free list for the biggest node.
         for (auto last = free_list.size(); node_index != last; ++node_index)
         {
           if (free_list[replacement_biggest_node_index].size < free_list[node_index].size)
@@ -137,12 +137,10 @@ namespace kp11
     }
     /// Checks to see if the node either sits at a boundary or has an adjacent node on either
     /// side. If it has adjacent nodes then they are checked to see whether or not they are vacant.
-    /// If there are two vacant adjacent nodes then we will merge them into one node whilst removing
-    /// the other.
-    /// If there is one vacant adjacent node then we will merge with that node.
-    /// If there are no vacant adjacent nodes then we will add a new node to our free list.
-    /// If merging or adding a new node results in a node bigger than our biggest node, then it
-    /// becomes the new biggest node.
+    /// If there are two vacant adjacent nodes then merge them into one node whilst removing the
+    /// other. If there is one vacant adjacent node then merge with that node. If there are no
+    /// vacant adjacent nodes then add a new node to the free list. If merging or adding a new node
+    /// results in a node bigger than then biggest node, then it becomes the new biggest node.
     /// * Complexity `O(1)`
     ///
     /// @param index Returned by a call to `set`.
@@ -156,6 +154,7 @@ namespace kp11
       {
         return;
       }
+      assert(n > 0);
       assert(index + n <= size());
 
       size_type node_index;
@@ -165,7 +164,7 @@ namespace kp11
       auto const next_is_vacant = index + n < size() && cache[next_cache_index] != size();
       if (previous_is_vacant && next_is_vacant)
       {
-        // There will be 2 active nodes, so we'll remove the next node.
+        // There will be 2 active nodes. Keep previous and remove next.
         node_index = cache[previous_cache_index];
         auto const next_node_index = cache[next_cache_index];
         free_list[node_index].size += n + free_list[next_node_index].size;
@@ -173,7 +172,6 @@ namespace kp11
       }
       else if (previous_is_vacant)
       {
-        // Combine all sizes into the previous node.
         node_index = cache[previous_cache_index];
         free_list[node_index].size += n;
       }
@@ -197,7 +195,7 @@ namespace kp11
     }
 
   private: // helpers
-    /// Cache setting helper because we'll have to set both the start and end.
+    /// Cache setting helper because both the start and end must be set.
     void set_cache(size_type index, size_type size, size_type node_index) noexcept
     {
       assert(index < this->size());
@@ -218,7 +216,7 @@ namespace kp11
         set_cache(node.index, node.size, index);
       }
       free_list.pop_back();
-      // biggest node was moved
+      // If the biggest node was moved then the index must also be changed.
       if (biggest_node_index == free_list.size())
       {
         biggest_node_index = index;
@@ -238,7 +236,7 @@ namespace kp11
     /// Cache stores an index into the free list for each run. The index is stored at the beginning
     /// and the end of the run. If the run is size 1 then the index is only stored in one element.
     /// If the run is not in the free list (it's been occupied) then `size()` is used as its index.
-    /// We'll need the cache to do merges in `O(1)` time.
+    /// Cache enables merges in to be `O(1)`.
     ///
     /// Example: Assume size() == 11, then
     /// [11, 11, 1, X, 1, 11, X, X, 11, 0, 0, 11]
