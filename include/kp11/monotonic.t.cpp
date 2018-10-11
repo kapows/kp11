@@ -7,6 +7,19 @@
 
 using namespace kp11;
 
+TEST_CASE("constructor", "[constructor]")
+{
+  monotonic<2, heap> m(128, 4);
+  SECTION("move")
+  {
+    auto n = std::move(m);
+  }
+  SECTION("move assignment")
+  {
+    decltype(m) n(32, 4);
+    n = std::move(m);
+  }
+}
 TEST_CASE("allocate", "[allocate]")
 {
   monotonic<2, heap> m(128, 4);
