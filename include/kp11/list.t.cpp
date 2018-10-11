@@ -169,13 +169,13 @@ TEST_CASE("biggest", "[biggest]")
   auto a = m.set(1);
   auto b = m.set(1);
   auto c = m.set(1);
-  auto d = m.set(1);
+  [[maybe_unused]] auto d = m.set(1);
   auto e = m.set(1);
   auto f = m.set(1);
-  auto g = m.set(1);
-  auto h = m.set(1);
-  auto i = m.set(1);
-  auto j = m.set(1);
+  [[maybe_unused]] auto g = m.set(1);
+  [[maybe_unused]] auto h = m.set(1);
+  [[maybe_unused]] auto i = m.set(1);
+  [[maybe_unused]] auto j = m.set(1);
   // empty
   REQUIRE(m.set(1) == m.size());
   // make biggest is 2
