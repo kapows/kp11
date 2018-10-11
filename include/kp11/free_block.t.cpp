@@ -12,6 +12,18 @@ TEST_CASE("constructor", "[constructor]")
 {
   free_block<2, stack<4>, heap> m(128, 4);
   REQUIRE(m.get_block_size() == 32);
+  SECTION("move")
+  {
+    auto n = std::move(m);
+    REQUIRE(n.get_block_size() == 32);
+  }
+  SECTION("move assignment")
+  {
+    free_block<2, stack<4>, heap> n(32, 4);
+    REQUIRE(n.get_block_size() == 8);
+    n = std::move(m);
+    REQUIRE(n.get_block_size() == 32);
+  }
 }
 TEST_CASE("operator[]", "[operator[]]")
 {

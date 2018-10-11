@@ -42,8 +42,35 @@ namespace kp11
     }
     /// Deleted because a resource is being held and managed.
     monotonic(monotonic const &) = delete;
+    /// Defined because the destructor is defined.
+    monotonic(monotonic && x) noexcept :
+        bytes(x.bytes), alignment(x.alignment), first(x.first), last(x.last),
+        ptrs(std::move(x.ptrs)), upstream(std::move(x.upstream))
+    {
+      x.first = nullptr;
+      x.last = nullptr;
+      x.ptrs.clear();
+    }
     /// Deleted because a resource is being held and managed.
     monotonic & operator=(monotonic const &) = delete;
+    /// Defined because the destructor is defined.
+    monotonic & operator=(monotonic && x) noexcept
+    {
+      if (this != &x)
+      {
+        bytes = x.bytes;
+        alignment = x.alignment;
+        first = x.first;
+        last = x.last;
+        ptrs = std::move(x.ptrs);
+        upstream = std::move(x.upstream);
+
+        x.first = nullptr;
+        x.last = nullptr;
+        x.ptrs.clear();
+      }
+      return *this;
+    }
     /// Defined because we need to release all allocated memory back to `Upstream`.
     ~monotonic() noexcept
     {
@@ -162,9 +189,9 @@ namespace kp11
 
   private: // variables
     /// Size in bytes of memory to allocate from `Upstream`.
-    size_type const bytes;
+    size_type bytes;
     /// Size in bytes of alignment of memory to allocate from `Upstream`.
-    size_type const alignment;
+    size_type alignment;
     /// Current position of beginning of allocatable memory.
     byte_pointer first = nullptr;
     /// End of allocatable memory.
