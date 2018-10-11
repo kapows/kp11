@@ -39,11 +39,16 @@ namespace kp11
     /// @param block_size Size in bytes of memory blocks.
     /// @param alignment Alignment of memory blocks.
     /// @param args Constructor arguments to `Upstream`.
+    ///
+    /// @pre `bytes % Marker::size() == 0`
+    /// @pre `bytes / Marker::size() % alignment == 0`
     template<typename... Args>
     free_block(size_type bytes, size_type alignment, Args &&... args) noexcept :
         block_size(bytes / Marker::size()), bytes(bytes), alignment(alignment),
         upstream(std::forward<Args>(args)...)
     {
+      assert(bytes % Marker::size() == 0);
+      assert(bytes / Marker::size() % alignment == 0);
     }
     /// Deleted because a resource is being held and managed.
     free_block(free_block const &) = delete;
