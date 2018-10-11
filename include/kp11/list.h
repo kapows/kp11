@@ -9,12 +9,33 @@
 
 namespace kp11
 {
+  namespace list_detail
+  {
+    /// @private
+    /// Free list node type.
+    template<typename SizeType>
+    struct node
+    {
+    public: // typedefs
+      using size_type = SizeType;
+
+    public: // constructors
+      node(size_type size, size_type index) noexcept : size(size), index(index)
+      {
+      }
+
+    public: // variables
+      size_type size;
+      size_type index;
+    };
+  }
   /// @brief Unordered marker. Iterates through a free list.
   ///
   /// Free list is stored as a `size` and `index` inside of an array. A cache of the free list index
   /// is kept for each index to make merges `O(1)`. Occupied spots will have `size()` as their value
   /// in the cache. Vacancies will be merged on a `reset` if they are adjacent to each other. The
-  /// biggest size available is cached, so a request that can't be met is `O(1)`.
+  /// biggest size available is cached, so a request that can't be met is `O(1)`. A request of 1 is
+  /// `O(1)`, all other request are `O(n)`.
   ///
   /// @tparam N Total number of spots.
   template<std::size_t N>
@@ -27,15 +48,7 @@ namespace kp11
     using size_type = uint_least8_t;
 
   private: // typedefs
-    /// Internal node type
-    struct node
-    {
-      size_type size;
-      size_type index;
-      node(size_type size, size_type index) : size(size), index(index)
-      {
-      }
-    };
+    using node = list_detail::node<size_type>;
 
   public: // constructors
     list() noexcept
