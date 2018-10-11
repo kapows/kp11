@@ -163,6 +163,43 @@ TEST_CASE("reset", "[reset]")
     REQUIRE(m.set(7) != m.size());
   }
 }
+TEST_CASE("biggest", "[biggest]")
+{
+  list<10> m;
+  auto a = m.set(1);
+  auto b = m.set(1);
+  auto c = m.set(1);
+  auto d = m.set(1);
+  auto e = m.set(1);
+  auto f = m.set(1);
+  auto g = m.set(1);
+  auto h = m.set(1);
+  auto i = m.set(1);
+  auto j = m.set(1);
+  // empty
+  REQUIRE(m.set(1) == m.size());
+  // make biggest is 2
+  m.reset(e, 1);
+  m.reset(f, 1);
+
+  // make biggest is 3
+  m.reset(a, 1);
+  m.reset(c, 1);
+  m.reset(b, 1);
+  // should early exit
+  REQUIRE(m.set(4) == m.size());
+
+  SECTION("set the biggest")
+  {
+    auto k = m.set(3);
+    REQUIRE(k != m.size());
+  }
+  SECTION("set the 2nd biggest")
+  {
+    auto k = m.set(2);
+    REQUIRE(k != m.size());
+  }
+}
 TEST_CASE("traits", "[traits]")
 {
   REQUIRE(is_marker_v<list<10>> == true);
