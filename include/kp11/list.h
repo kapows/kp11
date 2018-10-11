@@ -6,6 +6,7 @@
 #include <cassert> // assert
 #include <cstddef> // size_t
 #include <cstdint> // uint_least8_t, UINT_LEAST8_MAX
+#include <utility> // swap
 
 namespace kp11
 {
@@ -34,7 +35,7 @@ namespace kp11
   /// Free list is stored as a `size` and `index` inside of an array. A cache of the free list index
   /// is kept for each index to make merges `O(1)`. Occupied spots will have `size()` as their value
   /// in the cache. Vacancies will be merged on a `reset` if they are adjacent to each other. The
-  /// biggest size available is cached, so a request that can't be met is `O(1)`. A request of 1 is
+  /// biggest size available is known, so a request that can't be met is `O(1)`. A request of 1 is
   /// `O(1)`, all other request are `O(n)`.
   ///
   /// @tparam N Total number of spots.
@@ -72,7 +73,8 @@ namespace kp11
     /// Forward iterate through the free list to find an `n` sized vacant node. If the size of the
     /// selected node is bigger than `n` then the node will be shrunk in the free list. If the size
     /// is the same as `n` then the node will be removed. If the chosen free list node was the
-    /// biggest then a new biggest node will be cached by searching the entire free list.
+    /// biggest and was shrunk or removed then a new biggest will replace it at the front of the
+    /// free list.
     /// * Complexity `n==1` is `O(1)`, otherwise `O(n)`.
     ///
     /// @param n Number of spots to mark as occupied.
@@ -87,15 +89,15 @@ namespace kp11
     size_type set(size_type n) noexcept
     {
       assert(n > 0);
-      if (free_list.empty() || free_list[biggest_node_index].size < n)
+      if (free_list.empty() || free_list.front().size < n)
       {
         return size();
       }
-      size_type node_index = 0;
-      size_type replacement_biggest_node_index = 0;
+      size_type node_index = free_list.size() - 1;
+      size_type replacement_biggest_node_index = node_index;
       // Guaranteed to find a suitable size since n is at maximum, the biggest node size.
       // Don't need to guard againt going off the end here, just find the element.
-      for (; free_list[node_index].size < n; ++node_index)
+      for (; free_list[node_index].size < n; --node_index)
       {
         // The replacement will always be 1 behind the node_index, this is because node_index will
         // be modified. If it is then we can continue the search from node_index after modification
@@ -105,7 +107,6 @@ namespace kp11
           replacement_biggest_node_index = node_index;
         }
       }
-      auto replace_biggest_node_index = node_index == biggest_node_index;
 
       auto & node = free_list[node_index];
       // index is the return value, have to copy it because node will be modified.
@@ -121,17 +122,11 @@ namespace kp11
         node.index += n;
         set_cache(node.index, node.size, node_index);
       }
-      if (replace_biggest_node_index)
+      // Make sure the biggest node is at the front.
+      if (node_index == 0 && !free_list.empty() &&
+          free_list.front().size < free_list[replacement_biggest_node_index].size)
       {
-        // Continue to search the rest of the free list for the biggest node.
-        for (auto last = free_list.size(); node_index != last; ++node_index)
-        {
-          if (free_list[replacement_biggest_node_index].size < free_list[node_index].size)
-          {
-            replacement_biggest_node_index = node_index;
-          }
-        }
-        biggest_node_index = replacement_biggest_node_index;
+        swap_node(0, replacement_biggest_node_index);
       }
       return index;
     }
@@ -187,11 +182,12 @@ namespace kp11
         node_index = static_cast<size_type>(free_list.size() - 1);
       }
       auto & node = free_list[node_index];
-      if (free_list[biggest_node_index].size < node.size)
-      {
-        biggest_node_index = node_index;
-      }
       set_cache(node.index, node.size, node_index);
+      // Make sure the biggest node is at the front.
+      if (free_list.front().size < node.size)
+      {
+        swap_node(0, node_index);
+      }
     }
 
   private: // helpers
@@ -204,8 +200,7 @@ namespace kp11
       cache[index + (size - 1)] = cache[index] = node_index;
     }
     /// Node removal helper because we'll have to update the cache of the node that replaces the
-    /// removed node. Note the removed node does not get cache updating. Order is not guaranteed. If
-    /// the biggest node was moved from the back the the biggest node index will change to match.
+    /// removed node. Note the removed node does not get cache updating. Order is not guaranteed.
     void remove_node(size_type index) noexcept
     {
       assert(index < free_list.size());
@@ -216,19 +211,20 @@ namespace kp11
         set_cache(node.index, node.size, index);
       }
       free_list.pop_back();
-      // If the biggest node was moved then the index must also be changed.
-      if (biggest_node_index == free_list.size())
-      {
-        biggest_node_index = index;
-      }
+    }
+    /// Node swap helper because we'll have to update the cache of both nodes.
+    void swap_node(size_type x, size_type y)
+    {
+      std::swap(free_list[x], free_list[y]);
+      set_cache(free_list[x].index, free_list[x].size, y);
+      set_cache(free_list[y].index, free_list[y].size, x);
     }
 
   private: // variables
-    /// Biggest sized node, this is always valid if `free_list` is not empty.
-    size_type biggest_node_index = 0;
     /// Free list stores it's own size and index.
     /// `N / 2 + N % 2` because that is the maximum number of free list nodes we will ever have
     /// (this will happen when we have an alternating vacant, occupied, vacant, occupied pattern).
+    /// The node with the biggest size is at the front.
     ///
     /// Example: Assume size() == 11, then
     /// [(2, 9), (3, 2)]
