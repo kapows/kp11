@@ -187,7 +187,11 @@ TEST_CASE("biggest", "[biggest]")
   m.reset(c, 1);
   m.reset(b, 1);
   // should early exit
-  REQUIRE(m.set(4) == m.size());
+  SECTION("exit early")
+  {
+    auto k = m.set(4);
+    REQUIRE(k == m.size());
+  }
 
   SECTION("set the biggest")
   {
