@@ -69,6 +69,7 @@ namespace kp11
         ptrs = std::move(x.ptrs);
         markers = std::move(x.markers);
         upstream = std::move(x.upstream);
+
         x.ptrs.clear();
         x.markers.clear();
       }
