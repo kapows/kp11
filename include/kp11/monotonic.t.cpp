@@ -10,6 +10,10 @@ using namespace kp11;
 TEST_CASE("constructor", "[constructor]")
 {
   monotonic<2, heap> m(128, 4);
+  SECTION("initial allocation")
+  {
+    decltype(m) n(128, 4, true);
+  }
   SECTION("move")
   {
     auto n = std::move(m);
