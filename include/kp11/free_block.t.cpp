@@ -10,11 +10,11 @@ using namespace kp11;
 
 TEST_CASE("constructor", "[constructor]")
 {
-  free_block<2, stack<4>, heap> m(32, 4);
+  free_block<2, stack<4>, heap> m(128, 4);
 }
 TEST_CASE("operator[]", "[operator[]]")
 {
-  free_block<2, stack<4>, heap> m(32, 4);
+  free_block<2, stack<4>, heap> m(128, 4);
   SECTION("failure")
   {
     REQUIRE(m[&m] == nullptr);
@@ -27,7 +27,7 @@ TEST_CASE("operator[]", "[operator[]]")
 }
 TEST_CASE("allocate", "[allocate]")
 {
-  free_block<2, stack<4>, heap> m(32, 4);
+  free_block<2, stack<4>, heap> m(128, 4);
   auto a = m.allocate(128, 4);
   REQUIRE(a != nullptr);
   SECTION("allocate a new memory block")
@@ -44,7 +44,7 @@ TEST_CASE("allocate", "[allocate]")
 }
 TEST_CASE("deallocate", "[deallocate]")
 {
-  free_block<2, stack<4>, heap> m(32, 4);
+  free_block<2, stack<4>, heap> m(128, 4);
   auto a = m.allocate(128, 4);
   auto b = m.allocate(128, 4);
   SECTION("success")
@@ -68,7 +68,7 @@ TEST_CASE("deallocate", "[deallocate]")
 }
 TEST_CASE("release", "[release]")
 {
-  free_block<2, stack<4>, heap> m(32, 4);
+  free_block<2, stack<4>, heap> m(128, 4);
   auto a = m.allocate(128, 4);
   auto b = m.allocate(128, 4);
   REQUIRE(a != nullptr);
