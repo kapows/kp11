@@ -40,8 +40,9 @@ namespace kp11
     /// @param alignment Alignment of memory blocks.
     /// @param args Constructor arguments to `Upstream`.
     template<typename... Args>
-    free_block(size_type block_size, size_type alignment, Args &&... args) noexcept :
-        block_size(block_size), alignment(alignment), upstream(std::forward<Args>(args)...)
+    free_block(size_type bytes, size_type alignment, Args &&... args) noexcept :
+        block_size(bytes / Marker::size()), bytes(bytes), alignment(alignment),
+        upstream(std::forward<Args>(args)...)
     {
     }
     /// Deleted because a resource is being held and managed.
@@ -122,7 +123,7 @@ namespace kp11
     {
       for (auto && p : ptrs)
       {
-        upstream.deallocate(static_cast<pointer>(p), request_size(), alignment);
+        upstream.deallocate(static_cast<pointer>(p), bytes, alignment);
       }
       ptrs.clear();
       markers.clear();
@@ -178,8 +179,7 @@ namespace kp11
     {
       for (std::size_t i = 0, last = ptrs.size(); i < last; ++i)
       {
-        if (std::less_equal<pointer>()(ptrs[i], ptr) &&
-            std::less<pointer>()(ptr, ptrs[i] + request_size()))
+        if (std::less_equal<pointer>()(ptrs[i], ptr) && std::less<pointer>()(ptr, ptrs[i] + bytes))
         {
           return i;
         }
@@ -199,20 +199,13 @@ namespace kp11
       {
         return false;
       }
-      if (auto ptr = upstream.allocate(request_size(), alignment))
+      if (auto ptr = upstream.allocate(bytes, alignment))
       {
         ptrs.emplace_back(static_cast<byte_pointer>(ptr));
         markers.emplace_back();
         return true;
       }
       return false;
-    }
-
-  private: // size helper
-    /// Size in bytes used in request to `Upstream`.
-    size_type request_size() const noexcept
-    {
-      return block_size * static_cast<size_type>(Marker::size());
     }
 
   private: // Marker helper functions
@@ -232,12 +225,14 @@ namespace kp11
     }
 
   private: // variables
-    /// Size in bytes of memory blocks.
+    /// Size in bytes of a free block.
     size_type const block_size;
     /// Holds pointers to memory allocated by `Upstream`.
     kp11::detail::static_vector<byte_pointer, Allocations> ptrs;
     /// Holds a `Marker` corresponding to each allocation.
     kp11::detail::static_vector<Marker, Allocations> markers;
+    /// Size in bytes of memory allocated by `Upstream`.
+    size_type const bytes;
     /// Size in bytes of alignment of memory blocks.
     size_type const alignment;
     Upstream upstream;
