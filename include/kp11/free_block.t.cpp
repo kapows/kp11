@@ -29,6 +29,13 @@ TEST_CASE("constructor", "[constructor]")
     REQUIRE(n.get_block_size() == 32);
   }
 }
+TEST_CASE("accessor", "[accessor]")
+{
+  free_block<2, stack<4>, heap> m(128, 4);
+  [[maybe_unused]] auto & a = m.get_upstream();
+  auto const & n = m;
+  [[maybe_unused]] auto & b = n.get_upstream();
+}
 TEST_CASE("operator[]", "[operator[]]")
 {
   free_block<2, stack<4>, heap> m(128, 4);

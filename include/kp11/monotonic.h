@@ -196,6 +196,18 @@ namespace kp11
       return nullptr;
     }
 
+  public: // accessors
+    /// @returns Reference to `Upstream`.
+    Upstream & get_upstream() noexcept
+    {
+      return upstream;
+    }
+    /// @returns Reference to `Upstream`.
+    Upstream const & get_upstream() const noexcept
+    {
+      return upstream;
+    }
+
   private: // variables
     /// Size in bytes of memory to allocate from `Upstream`.
     size_type bytes;

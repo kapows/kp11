@@ -23,6 +23,15 @@ TEST_CASE("constructor", "[constructor]")
       std::piecewise_construct, std::forward_as_tuple(128, 4), std::forward_as_tuple());
   }
 }
+TEST_CASE("accessor", "[accessor]")
+{
+  fallback<local<128, 4>, local<128, 4>> m;
+  [[maybe_unused]] auto & a = m.get_primary();
+  [[maybe_unused]] auto & b = m.get_secondary();
+  auto const & n = m;
+  [[maybe_unused]] auto & c = n.get_primary();
+  [[maybe_unused]] auto & d = n.get_secondary();
+}
 TEST_CASE("allocate", "[allocate]")
 {
   fallback<free_block<1, stack<4>, local<128, 4>>, local<128, 4>> m(
