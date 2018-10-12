@@ -48,11 +48,11 @@ namespace kp11
       size_type alignment,
       size_type initial_allocations = 0,
       Args &&... args) noexcept :
-        block_size(bytes / Marker::size()),
+        block_size(bytes / Marker::max_size()),
         bytes(bytes), alignment(alignment), upstream(std::forward<Args>(args)...)
     {
-      assert(bytes % Marker::size() == 0);
-      assert(bytes / Marker::size() % alignment == 0);
+      assert(bytes % Marker::max_size() == 0);
+      assert(bytes / Marker::max_size() % alignment == 0);
       assert(initial_allocations <= Allocations);
       for (size_type i = 0; i != initial_allocations; ++i)
       {
@@ -173,7 +173,7 @@ namespace kp11
     /// Helper function to make it easier to allocate from each `Marker`.
     pointer allocate_from(std::size_t index, std::size_t num_blocks) noexcept
     {
-      if (auto i = markers[index].set(num_blocks); i != Marker::size())
+      if (auto i = markers[index].set(num_blocks); i != Marker::max_size())
       {
         return static_cast<pointer>(ptrs[index] + static_cast<size_type>(i) * block_size);
       }
