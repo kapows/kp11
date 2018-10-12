@@ -34,7 +34,7 @@ namespace kp11
   public: // constructors
     pool() noexcept
     {
-      for (size_type i = 0, last = size(); i < last; ++i)
+      for (size_type i = 0, last = max_size(); i < last; ++i)
       {
         next[i] = i + 1;
       }
@@ -42,7 +42,7 @@ namespace kp11
 
   public: // capacity
     /// @returns Total number of spots (`N`).
-    static constexpr size_type size() noexcept
+    static constexpr size_type max_size() noexcept
     {
       return static_cast<size_type>(N);
     }
@@ -55,7 +55,7 @@ namespace kp11
     /// @param n Number of spots to mark as occupied.
     ///
     /// @returns (success) Index of the spot marked occupied.
-    /// @returns (failure) `size()`.
+    /// @returns (failure) `max_size()`.
     ///
     /// @pre `n == 1`.
     ///
@@ -64,11 +64,11 @@ namespace kp11
     size_type set(size_type n) noexcept
     {
       assert(n == 1);
-      if (head != size())
+      if (head != max_size())
       {
         return std::exchange(head, next[head]);
       }
-      return size();
+      return max_size();
     }
     /// The node at `index` becomes the new head node and the head node is pointed at the previous
     /// head node.
@@ -83,8 +83,8 @@ namespace kp11
     void reset(size_type index, size_type n) noexcept
     {
       assert(n == 1);
-      assert(index <= size());
-      if (index == size())
+      assert(index <= max_size());
+      if (index == max_size())
       {
         return;
       }
