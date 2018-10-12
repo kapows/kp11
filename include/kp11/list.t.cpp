@@ -6,7 +6,7 @@
 
 using namespace kp11;
 
-TEST_CASE("size", "[size]")
+TEST_CASE("max_size", "[max_size]")
 {
   SECTION("1")
   {
