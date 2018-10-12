@@ -52,7 +52,7 @@ TEST_CASE("reset", "[reset]")
     auto b = m.set(1);
     REQUIRE(b == a);
   }
-  SECTION("accepts size() in reset")
+  SECTION("accepts max_size() in reset")
   {
     for (auto i = 0; i < m.max_size(); ++i)
     {
