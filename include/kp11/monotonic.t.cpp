@@ -24,6 +24,13 @@ TEST_CASE("constructor", "[constructor]")
     n = std::move(m);
   }
 }
+TEST_CASE("accessor", "[accessor]")
+{
+  monotonic<2, heap> m(128, 4);
+  [[maybe_unused]] auto & a = m.get_upstream();
+  auto const & n = m;
+  [[maybe_unused]] auto & b = n.get_upstream();
+}
 TEST_CASE("allocate", "[allocate]")
 {
   monotonic<2, heap> m(128, 4);
