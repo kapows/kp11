@@ -76,7 +76,7 @@ TEST_CASE("set", "[set]")
     SECTION("less than size")
     {
       REQUIRE(m.set(2) != m.max_size());
-      REQUIRE(m.size() == 7);
+      REQUIRE(m.size() == 5);
     }
     SECTION("exact size")
     {
