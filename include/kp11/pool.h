@@ -66,6 +66,7 @@ namespace kp11
     ///
     /// @post (success) `(return value)` will not returned again from any subsequent call to `set`
     /// unless `reset` has been called on it.
+    /// @post (success) `size() == (previous) size() - n`.
     size_type set(size_type n) noexcept
     {
       assert(n == 1);
@@ -86,6 +87,7 @@ namespace kp11
     /// @pre `n == 1`.
     ///
     /// @post `index` may be returned by a call to `set`.
+    /// @post (success) `size() == (previous) size() + n`.
     void reset(size_type index, size_type n) noexcept
     {
       assert(n == 1);
