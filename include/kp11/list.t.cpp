@@ -11,12 +11,12 @@ TEST_CASE("size", "[size]")
   SECTION("1")
   {
     list<10> m;
-    REQUIRE(m.size() == 10);
+    REQUIRE(m.max_size() == 10);
   }
   SECTION("2")
   {
     list<101> m;
-    REQUIRE(m.size() == 101);
+    REQUIRE(m.max_size() == 101);
   }
 }
 TEST_CASE("set", "[set]")
@@ -29,12 +29,12 @@ TEST_CASE("set", "[set]")
       SECTION("less than size")
       {
         auto a = m.set(5);
-        REQUIRE(a != m.size());
+        REQUIRE(a != m.max_size());
       }
       SECTION("exact size")
       {
         auto a = m.set(10);
-        REQUIRE(a != m.size());
+        REQUIRE(a != m.max_size());
       }
     }
     SECTION("some occupied")
@@ -43,19 +43,19 @@ TEST_CASE("set", "[set]")
       SECTION("less than size")
       {
         auto b = m.set(3);
-        REQUIRE(b != m.size());
+        REQUIRE(b != m.max_size());
         REQUIRE(b != a);
       }
       SECTION("exact size")
       {
         auto b = m.set(7);
-        REQUIRE(b != m.size());
+        REQUIRE(b != m.max_size());
         REQUIRE(b != a);
       }
       SECTION("greater than size")
       {
         auto b = m.set(8);
-        REQUIRE(b == m.size());
+        REQUIRE(b == m.max_size());
       }
     }
   }
@@ -68,47 +68,47 @@ TEST_CASE("set", "[set]")
     m.reset(c, 4);
     SECTION("less than size")
     {
-      REQUIRE(m.set(2) != m.size());
+      REQUIRE(m.set(2) != m.max_size());
     }
     SECTION("exact size")
     {
-      REQUIRE(m.set(4) != m.size());
+      REQUIRE(m.set(4) != m.max_size());
     }
     SECTION("greater than size")
     {
-      REQUIRE(m.set(5) == m.size());
+      REQUIRE(m.set(5) == m.max_size());
     }
   }
 }
 TEST_CASE("reset", "[reset]")
 {
   list<10> m;
-  SECTION("accepts size()")
+  SECTION("accepts max_size()")
   {
     [[maybe_unused]] auto a = m.set(10);
     auto b = m.set(1);
-    REQUIRE(b == m.size());
+    REQUIRE(b == m.max_size());
     m.reset(b, 1);
   }
   SECTION("boundary, boundary")
   {
     auto a = m.set(10);
     m.reset(a, 10);
-    REQUIRE(m.set(10) != m.size());
+    REQUIRE(m.set(10) != m.max_size());
   }
   SECTION("boundary, occupied")
   {
     auto a = m.set(5);
     [[maybe_unused]] auto b = m.set(5);
     m.reset(a, 5);
-    REQUIRE(m.set(5) != m.size());
+    REQUIRE(m.set(5) != m.max_size());
   }
   SECTION("occupied, boundary")
   {
     [[maybe_unused]] auto a = m.set(5);
     auto b = m.set(5);
     m.reset(b, 5);
-    REQUIRE(m.set(5) != m.size());
+    REQUIRE(m.set(5) != m.max_size());
   }
   SECTION("boundary, vacant")
   {
@@ -116,7 +116,7 @@ TEST_CASE("reset", "[reset]")
     auto b = m.set(5);
     m.reset(b, 5);
     m.reset(a, 5);
-    REQUIRE(m.set(10) != m.size());
+    REQUIRE(m.set(10) != m.max_size());
   }
   SECTION("vacant, boundary")
   {
@@ -124,7 +124,7 @@ TEST_CASE("reset", "[reset]")
     auto b = m.set(5);
     m.reset(a, 5);
     m.reset(b, 5);
-    REQUIRE(m.set(10) != m.size());
+    REQUIRE(m.set(10) != m.max_size());
   }
   SECTION("occupied, occupied")
   {
@@ -132,7 +132,7 @@ TEST_CASE("reset", "[reset]")
     auto b = m.set(4);
     [[maybe_unused]] auto c = m.set(3);
     m.reset(b, 4);
-    REQUIRE(m.set(4) != m.size());
+    REQUIRE(m.set(4) != m.max_size());
   }
   SECTION("vacant, vacant")
   {
@@ -142,7 +142,7 @@ TEST_CASE("reset", "[reset]")
     m.reset(a, 3);
     m.reset(c, 3);
     m.reset(b, 4);
-    REQUIRE(m.set(10) != m.size());
+    REQUIRE(m.set(10) != m.max_size());
   }
   SECTION("occupied, vacant")
   {
@@ -151,7 +151,7 @@ TEST_CASE("reset", "[reset]")
     auto c = m.set(3);
     m.reset(c, 3);
     m.reset(b, 4);
-    REQUIRE(m.set(7) != m.size());
+    REQUIRE(m.set(7) != m.max_size());
   }
   SECTION("vacant, occupied")
   {
@@ -160,7 +160,7 @@ TEST_CASE("reset", "[reset]")
     [[maybe_unused]] auto c = m.set(3);
     m.reset(a, 3);
     m.reset(b, 4);
-    REQUIRE(m.set(7) != m.size());
+    REQUIRE(m.set(7) != m.max_size());
   }
 }
 TEST_CASE("biggest", "[biggest]")
@@ -177,7 +177,7 @@ TEST_CASE("biggest", "[biggest]")
   [[maybe_unused]] auto i = m.set(1);
   [[maybe_unused]] auto j = m.set(1);
   // empty
-  REQUIRE(m.set(1) == m.size());
+  REQUIRE(m.set(1) == m.max_size());
   // make biggest is 2
   m.reset(e, 1);
   m.reset(f, 1);
@@ -190,18 +190,18 @@ TEST_CASE("biggest", "[biggest]")
   SECTION("exit early")
   {
     auto k = m.set(4);
-    REQUIRE(k == m.size());
+    REQUIRE(k == m.max_size());
   }
 
   SECTION("set the biggest")
   {
     auto k = m.set(3);
-    REQUIRE(k != m.size());
+    REQUIRE(k != m.max_size());
   }
   SECTION("set the 2nd biggest")
   {
     auto k = m.set(2);
-    REQUIRE(k != m.size());
+    REQUIRE(k != m.max_size());
   }
 }
 TEST_CASE("traits", "[traits]")

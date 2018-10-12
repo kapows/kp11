@@ -54,9 +54,9 @@ namespace kp11
   public: // constructors
     list() noexcept
     {
-      if constexpr (size() > 0)
+      if constexpr (max_size() > 0)
       {
-        auto & node = free_list.emplace_back(size(), 0);
+        auto & node = free_list.emplace_back(max_size(), 0);
         auto node_index = static_cast<size_type>(free_list.size() - 1);
         set_cache(node.index, node.size, node_index);
       }
@@ -64,7 +64,7 @@ namespace kp11
 
   public: // capacity
     /// @returns Total number of spots (`N`).
-    static constexpr size_type size() noexcept
+    static constexpr size_type max_size() noexcept
     {
       return static_cast<size_type>(N);
     }
@@ -91,7 +91,7 @@ namespace kp11
       assert(n > 0);
       if (free_list.empty() || free_list.front().size < n)
       {
-        return size();
+        return max_size();
       }
       size_type node_index = free_list.size() - 1;
       size_type replacement_biggest_node_index = node_index;
@@ -111,7 +111,7 @@ namespace kp11
       auto & node = free_list[node_index];
       // index is the return value, have to copy it because node will be modified.
       auto const index = node.index;
-      set_cache(index, n, size());
+      set_cache(index, n, max_size());
       if (node.size == n)
       {
         remove_node(node_index);
@@ -144,19 +144,19 @@ namespace kp11
     /// @post [`index`, `index + n`) may be returned by a call to `set` with appropriate parameters.
     void reset(size_type index, size_type n) noexcept
     {
-      assert(index <= size());
-      if (index == size())
+      assert(index <= max_size());
+      if (index == max_size())
       {
         return;
       }
       assert(n > 0);
-      assert(index + n <= size());
+      assert(index + n <= max_size());
 
       size_type node_index;
       auto const previous_cache_index = index - 1;
-      auto const previous_is_vacant = index > 0 && cache[previous_cache_index] != size();
+      auto const previous_is_vacant = index > 0 && cache[previous_cache_index] != max_size();
       auto const next_cache_index = index + n;
-      auto const next_is_vacant = index + n < size() && cache[next_cache_index] != size();
+      auto const next_is_vacant = index + n < max_size() && cache[next_cache_index] != max_size();
       if (previous_is_vacant && next_is_vacant)
       {
         // There will be 2 active nodes. Keep previous and remove next.
@@ -194,8 +194,8 @@ namespace kp11
     /// Cache setting helper because both the start and end must be set.
     void set_cache(size_type index, size_type size, size_type node_index) noexcept
     {
-      assert(index < this->size());
-      assert(index + size - 1 < this->size());
+      assert(index < this->max_size());
+      assert(index + size - 1 < this->max_size());
       assert(size > 0);
       cache[index + (size - 1)] = cache[index] = node_index;
     }
