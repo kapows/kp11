@@ -11,12 +11,12 @@ TEST_CASE("size", "[size]")
   SECTION("1")
   {
     bitset<10> m;
-    REQUIRE(m.size() == 10);
+    REQUIRE(m.max_size() == 10);
   }
   SECTION("2")
   {
     bitset<101581> m;
-    REQUIRE(m.size() == 101581);
+    REQUIRE(m.max_size() == 101581);
   }
 }
 TEST_CASE("set", "[set]")
@@ -35,7 +35,7 @@ TEST_CASE("set", "[set]")
   }
   SECTION("failure")
   {
-    REQUIRE(m.set(16) == m.size());
+    REQUIRE(m.set(16) == m.max_size());
   }
 }
 TEST_CASE("reset", "[reset]")
@@ -51,7 +51,7 @@ TEST_CASE("reset", "[reset]")
   SECTION("accepts size() in reset")
   {
     auto b = m.set(16);
-    REQUIRE(b == m.size());
+    REQUIRE(b == m.max_size());
     m.reset(b, 16);
   }
 }

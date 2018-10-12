@@ -20,7 +20,7 @@ namespace kp11
 
   public: // capacity
     /// @returns Total number of spots (`N`).
-    static constexpr size_type size() noexcept
+    static constexpr size_type max_size() noexcept
     {
       return N;
     }
@@ -33,7 +33,7 @@ namespace kp11
     /// @param n Number of spots to mark as occupied.
     ///
     /// @returns (success) Index of the start of the `n` spots marked occupied.
-    /// @returns (failure) `size()`.
+    /// @returns (failure) `max_size()`.
     ///
     /// @pre `n > 0`
     ///
@@ -51,20 +51,20 @@ namespace kp11
     /// @param index Starting index of the spots to mark as vacant.
     /// @param n Number of spots to mark as vacant.
     ///
-    /// @pre `index <= size()`.
-    /// @pre `index + n <= size()`.
+    /// @pre `index <= max_size()`.
+    /// @pre `index + n <= max_size()`.
     ///
     /// @post `index` to `index + n - 1` may be returned by a call to `set` with appropriate
     /// parameters.
     void reset(size_type index, size_type n) noexcept
     {
-      // size() can be returned by `set` so we'll have to deal with it.
-      assert(index <= size());
-      if (index == size())
+      // max_size() can be returned by `set` so we'll have to deal with it.
+      assert(index <= max_size());
+      if (index == max_size())
       {
         return;
       }
-      assert(index + n <= size());
+      assert(index + n <= max_size());
       for (auto first = index, last = index + n; first < last; ++first)
       {
         bits.reset(first);
@@ -75,7 +75,7 @@ namespace kp11
     /// Setting one is a much simpler algorithm because we don't have to count adjacent bits.
     size_type set_one() noexcept
     {
-      for (size_type first = 0, last = size(); first < last; ++first)
+      for (size_type first = 0, last = max_size(); first < last; ++first)
       {
         if (!bits[first])
         {
@@ -83,12 +83,12 @@ namespace kp11
           return first;
         }
       }
-      return size();
+      return max_size();
     }
     /// Works for all `n` but inefficient if only setting one.
     size_type set_many(size_type n) noexcept
     {
-      for (size_type first = 0, last = size(), count = 0; first < last; ++first)
+      for (size_type first = 0, last = max_size(), count = 0; first < last; ++first)
       {
         if (bits[first])
         {
@@ -105,7 +105,7 @@ namespace kp11
           return first;
         }
       }
-      return size();
+      return max_size();
     }
 
   private: // variables

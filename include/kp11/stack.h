@@ -22,20 +22,20 @@ namespace kp11
 
   public: // capacity
     /// @returns Total number of spots (`N`).
-    static constexpr size_type size() noexcept
+    static constexpr size_type max_size() noexcept
     {
       return N;
     }
 
   public: // modifiers
-    /// Compares our number with `size()` to see if we have `n` vacant spots and increases our
+    /// Compares our number with `max_size()` to see if we have `n` vacant spots and increases our
     /// number by `n`.
     /// * Complexity `O(1)`.
     ///
     /// @param n Number of spots to mark as occupied.
     ///
     /// @returns (success) Index of the start of the `n` spots marked occupied.
-    /// @returns (failure) `size()`.
+    /// @returns (failure) `max_size()`.
     ///
     /// @pre `n > 0`.
     ///
@@ -45,11 +45,11 @@ namespace kp11
     size_type set(size_type n) noexcept
     {
       assert(n > 0);
-      if (size() - first >= n)
+      if (max_size() - first >= n)
       {
         return std::exchange(first, first + n);
       }
-      return size();
+      return max_size();
     }
     /// The `index + n` is checked to see whether it is the most recent `set` call. If it is then
     /// our number becomes `index` and thus our first vacant index will start at `index`. If it is
@@ -63,12 +63,12 @@ namespace kp11
     /// parameters if these parameters are from the most recent call to `set`.
     void reset(size_type index, size_type n) noexcept
     {
-      assert(index <= size());
-      if (index == size())
+      assert(index <= max_size());
+      if (index == max_size())
       {
         return;
       }
-      assert(index + n <= size());
+      assert(index + n <= max_size());
       assert(index < first);
       if (index + n == first)
       {
