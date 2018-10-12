@@ -11,12 +11,12 @@ TEST_CASE("size", "[size]")
   SECTION("1")
   {
     pool<10> m;
-    REQUIRE(m.size() == 10);
+    REQUIRE(m.max_size() == 10);
   }
   SECTION("2")
   {
     pool<101581> m;
-    REQUIRE(m.size() == 101581);
+    REQUIRE(m.max_size() == 101581);
   }
 }
 TEST_CASE("set", "[set]")
@@ -35,11 +35,11 @@ TEST_CASE("set", "[set]")
   }
   SECTION("failure")
   {
-    for (auto i = 0; i < m.size(); ++i)
+    for (auto i = 0; i < m.max_size(); ++i)
     {
       m.set(1);
     }
-    REQUIRE(m.set(1) == m.size());
+    REQUIRE(m.set(1) == m.max_size());
   }
 }
 TEST_CASE("reset", "[reset]")
@@ -54,12 +54,12 @@ TEST_CASE("reset", "[reset]")
   }
   SECTION("accepts size() in reset")
   {
-    for (auto i = 0; i < m.size(); ++i)
+    for (auto i = 0; i < m.max_size(); ++i)
     {
       m.set(1);
     }
     auto b = m.set(1);
-    REQUIRE(b == m.size());
+    REQUIRE(b == m.max_size());
     m.reset(b, 1);
   }
 }
