@@ -19,6 +19,11 @@ namespace kp11
     using size_type = std::size_t;
 
   public: // capacity
+    /// @returns Number of vacant spots.
+    size_type size() const noexcept
+    {
+      return num_vacant;
+    }
     /// @returns Total number of spots (`N`).
     static constexpr size_type max_size() noexcept
     {
@@ -65,6 +70,7 @@ namespace kp11
         return;
       }
       assert(index + n <= max_size());
+      num_vacant += n;
       for (auto first = index, last = index + n; first < last; ++first)
       {
         bits.reset(first);
@@ -80,6 +86,7 @@ namespace kp11
         if (!bits[first])
         {
           bits.set(first);
+          --num_vacant;
           return first;
         }
       }
@@ -102,6 +109,7 @@ namespace kp11
           {
             bits.set(--first);
           }
+          num_vacant -= n;
           return first;
         }
       }
@@ -109,6 +117,8 @@ namespace kp11
     }
 
   private: // variables
+    /// Number of vacant spots.
+    size_type num_vacant = N;
     /// `true` if occupied, `false` if vacant, this is to be consistent with `bitset::set`.
     std::bitset<N> bits;
   };
