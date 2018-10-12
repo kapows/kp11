@@ -21,6 +21,10 @@ namespace kp11
     using size_type = std::size_t;
 
   public: // capacity
+    size_type size() noexcept
+    {
+      return max_size() - first;
+    }
     /// @returns Total number of spots (`N`).
     static constexpr size_type max_size() noexcept
     {
