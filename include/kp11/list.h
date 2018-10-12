@@ -91,6 +91,7 @@ namespace kp11
     ///
     /// @post (success) Spots [`(return value)`, `(return value) + n`) will not returned again from
     /// any subsequent call to `set` unless `reset` has been called on those parameters.
+    /// @post (success) `size() == (previous) size() - n`.
     size_type set(size_type n) noexcept
     {
       assert(n > 0);
@@ -148,6 +149,7 @@ namespace kp11
     /// @param n Corresponding parameter used in `set`.
     ///
     /// @post [`index`, `index + n`) may be returned by a call to `set` with appropriate parameters.
+    /// @post (success) `size() == (previous) size() + n`.
     void reset(size_type index, size_type n) noexcept
     {
       assert(index <= max_size());
