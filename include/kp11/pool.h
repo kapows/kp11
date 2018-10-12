@@ -41,6 +41,11 @@ namespace kp11
     }
 
   public: // capacity
+    /// @returns Number of vacant spots.
+    size_type size() const noexcept
+    {
+      return num_vacant;
+    }
     /// @returns Total number of spots (`N`).
     static constexpr size_type max_size() noexcept
     {
@@ -61,11 +66,13 @@ namespace kp11
     ///
     /// @post (success) `(return value)` will not returned again from any subsequent call to `set`
     /// unless `reset` has been called on it.
+    /// @post (success) `size() == (previous) size() - n`.
     size_type set(size_type n) noexcept
     {
       assert(n == 1);
       if (head != max_size())
       {
+        --num_vacant;
         return std::exchange(head, next[head]);
       }
       return max_size();
@@ -80,6 +87,7 @@ namespace kp11
     /// @pre `n == 1`.
     ///
     /// @post `index` may be returned by a call to `set`.
+    /// @post (success) `size() == (previous) size() + n`.
     void reset(size_type index, size_type n) noexcept
     {
       assert(n == 1);
@@ -88,11 +96,14 @@ namespace kp11
       {
         return;
       }
+      ++num_vacant;
       next[index] = head;
       head = index;
     }
 
   private: // variables
+    /// Number of vacant spots.
+    size_type num_vacant = N;
     /// First free index or `N`.
     size_type head = 0;
     /// Holds the index of the next free index.

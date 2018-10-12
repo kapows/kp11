@@ -19,6 +19,11 @@ namespace kp11
     using size_type = std::size_t;
 
   public: // capacity
+    /// @returns Number of vacant spots.
+    size_type size() const noexcept
+    {
+      return num_vacant;
+    }
     /// @returns Total number of spots (`N`).
     static constexpr size_type max_size() noexcept
     {
@@ -40,6 +45,7 @@ namespace kp11
     /// @post (success) Spots from the `(return value)` to `(return value) + n - 1` will not
     /// returned again from any subsequent call to `set` unless `reset` has been called on those
     /// parameters.
+    /// @post (success) `size() == (previous) size() - n`.
     size_type set(size_type n) noexcept
     {
       assert(n > 0);
@@ -54,8 +60,9 @@ namespace kp11
     /// @pre `index <= max_size()`.
     /// @pre `index + n <= max_size()`.
     ///
-    /// @post `index` to `index + n - 1` may be returned by a call to `set` with appropriate
-    /// parameters.
+    /// @post (success) `index` to `index + n - 1` may be returned by a call to `set` with
+    /// appropriate parameters.
+    /// @post (success) `size() == (previous) size() + n`.
     void reset(size_type index, size_type n) noexcept
     {
       // max_size() can be returned by `set` so we'll have to deal with it.
@@ -65,6 +72,7 @@ namespace kp11
         return;
       }
       assert(index + n <= max_size());
+      num_vacant += n;
       for (auto first = index, last = index + n; first < last; ++first)
       {
         bits.reset(first);
@@ -80,6 +88,7 @@ namespace kp11
         if (!bits[first])
         {
           bits.set(first);
+          --num_vacant;
           return first;
         }
       }
@@ -102,6 +111,7 @@ namespace kp11
           {
             bits.set(--first);
           }
+          num_vacant -= n;
           return first;
         }
       }
@@ -109,6 +119,8 @@ namespace kp11
     }
 
   private: // variables
+    /// Number of vacant spots.
+    size_type num_vacant = N;
     /// `true` if occupied, `false` if vacant, this is to be consistent with `bitset::set`.
     std::bitset<N> bits;
   };

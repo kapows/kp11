@@ -12,11 +12,13 @@ TEST_CASE("max_size", "[max_size]")
   {
     pool<10> m;
     REQUIRE(m.max_size() == 10);
+    REQUIRE(m.size() == m.max_size());
   }
   SECTION("2")
   {
     pool<101581> m;
     REQUIRE(m.max_size() == 101581);
+    REQUIRE(m.size() == m.max_size());
   }
 }
 TEST_CASE("set", "[set]")
@@ -26,11 +28,13 @@ TEST_CASE("set", "[set]")
   {
     auto a = m.set(1);
     REQUIRE(a == 0);
+    REQUIRE(m.size() == 9);
     SECTION("post condition")
     {
       auto b = m.set(1);
       REQUIRE(b == 1);
       REQUIRE(b != a);
+      REQUIRE(m.size() == 8);
     }
   }
   SECTION("failure")
@@ -40,6 +44,7 @@ TEST_CASE("set", "[set]")
       m.set(1);
     }
     REQUIRE(m.set(1) == m.max_size());
+    REQUIRE(m.size() == 0);
   }
 }
 TEST_CASE("reset", "[reset]")
@@ -49,6 +54,7 @@ TEST_CASE("reset", "[reset]")
   {
     auto a = m.set(1);
     m.reset(a, 1);
+    REQUIRE(m.size() == 10);
     auto b = m.set(1);
     REQUIRE(b == a);
   }
@@ -61,6 +67,7 @@ TEST_CASE("reset", "[reset]")
     auto b = m.set(1);
     REQUIRE(b == m.max_size());
     m.reset(b, 1);
+    REQUIRE(m.size() == 0);
   }
 }
 TEST_CASE("traits", "[traits]")

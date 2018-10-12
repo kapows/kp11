@@ -12,11 +12,13 @@ TEST_CASE("max_size", "[max_size]")
   {
     list<10> m;
     REQUIRE(m.max_size() == 10);
+    REQUIRE(m.size() == m.max_size());
   }
   SECTION("2")
   {
     list<101> m;
     REQUIRE(m.max_size() == 101);
+    REQUIRE(m.size() == m.max_size());
   }
 }
 TEST_CASE("set", "[set]")
@@ -30,11 +32,13 @@ TEST_CASE("set", "[set]")
       {
         auto a = m.set(5);
         REQUIRE(a != m.max_size());
+        REQUIRE(m.size() == 5);
       }
       SECTION("exact size")
       {
         auto a = m.set(10);
         REQUIRE(a != m.max_size());
+        REQUIRE(m.size() == 0);
       }
     }
     SECTION("some occupied")
@@ -45,17 +49,20 @@ TEST_CASE("set", "[set]")
         auto b = m.set(3);
         REQUIRE(b != m.max_size());
         REQUIRE(b != a);
+        REQUIRE(m.size() == 4);
       }
       SECTION("exact size")
       {
         auto b = m.set(7);
         REQUIRE(b != m.max_size());
         REQUIRE(b != a);
+        REQUIRE(m.size() == 0);
       }
       SECTION("greater than size")
       {
         auto b = m.set(8);
         REQUIRE(b == m.max_size());
+        REQUIRE(m.size() == 7);
       }
     }
   }
@@ -69,14 +76,17 @@ TEST_CASE("set", "[set]")
     SECTION("less than size")
     {
       REQUIRE(m.set(2) != m.max_size());
+      REQUIRE(m.size() == 5);
     }
     SECTION("exact size")
     {
       REQUIRE(m.set(4) != m.max_size());
+      REQUIRE(m.size() == 3);
     }
     SECTION("greater than size")
     {
       REQUIRE(m.set(5) == m.max_size());
+      REQUIRE(m.size() == 7);
     }
   }
 }
@@ -89,11 +99,13 @@ TEST_CASE("reset", "[reset]")
     auto b = m.set(1);
     REQUIRE(b == m.max_size());
     m.reset(b, 1);
+    REQUIRE(m.size() == 0);
   }
   SECTION("boundary, boundary")
   {
     auto a = m.set(10);
     m.reset(a, 10);
+    REQUIRE(m.size() == 10);
     REQUIRE(m.set(10) != m.max_size());
   }
   SECTION("boundary, occupied")
@@ -101,6 +113,7 @@ TEST_CASE("reset", "[reset]")
     auto a = m.set(5);
     [[maybe_unused]] auto b = m.set(5);
     m.reset(a, 5);
+    REQUIRE(m.size() == 5);
     REQUIRE(m.set(5) != m.max_size());
   }
   SECTION("occupied, boundary")
@@ -108,6 +121,7 @@ TEST_CASE("reset", "[reset]")
     [[maybe_unused]] auto a = m.set(5);
     auto b = m.set(5);
     m.reset(b, 5);
+    REQUIRE(m.size() == 5);
     REQUIRE(m.set(5) != m.max_size());
   }
   SECTION("boundary, vacant")
@@ -116,6 +130,7 @@ TEST_CASE("reset", "[reset]")
     auto b = m.set(5);
     m.reset(b, 5);
     m.reset(a, 5);
+    REQUIRE(m.size() == 10);
     REQUIRE(m.set(10) != m.max_size());
   }
   SECTION("vacant, boundary")
@@ -124,6 +139,7 @@ TEST_CASE("reset", "[reset]")
     auto b = m.set(5);
     m.reset(a, 5);
     m.reset(b, 5);
+    REQUIRE(m.size() == 10);
     REQUIRE(m.set(10) != m.max_size());
   }
   SECTION("occupied, occupied")
@@ -132,6 +148,7 @@ TEST_CASE("reset", "[reset]")
     auto b = m.set(4);
     [[maybe_unused]] auto c = m.set(3);
     m.reset(b, 4);
+    REQUIRE(m.size() == 4);
     REQUIRE(m.set(4) != m.max_size());
   }
   SECTION("vacant, vacant")
@@ -140,8 +157,11 @@ TEST_CASE("reset", "[reset]")
     auto b = m.set(4);
     auto c = m.set(3);
     m.reset(a, 3);
+    REQUIRE(m.size() == 3);
     m.reset(c, 3);
+    REQUIRE(m.size() == 6);
     m.reset(b, 4);
+    REQUIRE(m.size() == 10);
     REQUIRE(m.set(10) != m.max_size());
   }
   SECTION("occupied, vacant")
@@ -150,7 +170,9 @@ TEST_CASE("reset", "[reset]")
     auto b = m.set(4);
     auto c = m.set(3);
     m.reset(c, 3);
+    REQUIRE(m.size() == 3);
     m.reset(b, 4);
+    REQUIRE(m.size() == 7);
     REQUIRE(m.set(7) != m.max_size());
   }
   SECTION("vacant, occupied")
@@ -159,7 +181,9 @@ TEST_CASE("reset", "[reset]")
     auto b = m.set(4);
     [[maybe_unused]] auto c = m.set(3);
     m.reset(a, 3);
+    REQUIRE(m.size() == 3);
     m.reset(b, 4);
+    REQUIRE(m.size() == 7);
     REQUIRE(m.set(7) != m.max_size());
   }
 }

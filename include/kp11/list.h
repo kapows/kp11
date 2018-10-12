@@ -63,6 +63,11 @@ namespace kp11
     }
 
   public: // capacity
+    /// @returns Number of vacant spots.
+    size_type size() const noexcept
+    {
+      return num_vacant;
+    }
     /// @returns Total number of spots (`N`).
     static constexpr size_type max_size() noexcept
     {
@@ -86,6 +91,7 @@ namespace kp11
     ///
     /// @post (success) Spots [`(return value)`, `(return value) + n`) will not returned again from
     /// any subsequent call to `set` unless `reset` has been called on those parameters.
+    /// @post (success) `size() == (previous) size() - n`.
     size_type set(size_type n) noexcept
     {
       assert(n > 0);
@@ -128,6 +134,7 @@ namespace kp11
       {
         swap_node(0, replacement_biggest_node_index);
       }
+      num_vacant -= n;
       return index;
     }
     /// Checks to see if the node either sits at a boundary or has an adjacent node on either
@@ -142,6 +149,7 @@ namespace kp11
     /// @param n Corresponding parameter used in `set`.
     ///
     /// @post [`index`, `index + n`) may be returned by a call to `set` with appropriate parameters.
+    /// @post (success) `size() == (previous) size() + n`.
     void reset(size_type index, size_type n) noexcept
     {
       assert(index <= max_size());
@@ -151,7 +159,7 @@ namespace kp11
       }
       assert(n > 0);
       assert(index + n <= max_size());
-
+      num_vacant += n;
       size_type node_index;
       auto const previous_cache_index = index - 1;
       auto const previous_is_vacant = index > 0 && cache[previous_cache_index] != max_size();
@@ -221,6 +229,8 @@ namespace kp11
     }
 
   private: // variables
+    /// Number of vacant spots.
+    size_type num_vacant = N;
     /// Free list stores it's own size and index.
     /// `N / 2 + N % 2` because that is the maximum number of free list nodes we will ever have
     /// (this will happen when we have an alternating vacant, occupied, vacant, occupied pattern).

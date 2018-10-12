@@ -21,6 +21,11 @@ namespace kp11
     using size_type = std::size_t;
 
   public: // capacity
+    /// @returns Number of vacant spots.
+    size_type size() const noexcept
+    {
+      return max_size() - first;
+    }
     /// @returns Total number of spots (`N`).
     static constexpr size_type max_size() noexcept
     {
@@ -42,6 +47,7 @@ namespace kp11
     /// @post (success) Spots from the `(return value)` to `(return value) + n - 1` will not
     /// returned again from any subsequent call to `set` unless `reset` has been called on those
     /// parameters and this is the most recent call to `set`.
+    /// @post (success) `size() == (previous) size() - n`.
     size_type set(size_type n) noexcept
     {
       assert(n > 0);
@@ -61,6 +67,7 @@ namespace kp11
     ///
     /// @post `index` to `index + n - 1` may be returned by a call to `set` with appropriate
     /// parameters if these parameters are from the most recent call to `set`.
+    /// @post (success) `size() == (previous) size() + n`.
     void reset(size_type index, size_type n) noexcept
     {
       assert(index <= max_size());
