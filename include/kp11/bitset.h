@@ -45,6 +45,7 @@ namespace kp11
     /// @post (success) Spots from the `(return value)` to `(return value) + n - 1` will not
     /// returned again from any subsequent call to `set` unless `reset` has been called on those
     /// parameters.
+    /// @post (success) `size() == (previous) size() - n`.
     size_type set(size_type n) noexcept
     {
       assert(n > 0);
@@ -59,8 +60,9 @@ namespace kp11
     /// @pre `index <= max_size()`.
     /// @pre `index + n <= max_size()`.
     ///
-    /// @post `index` to `index + n - 1` may be returned by a call to `set` with appropriate
-    /// parameters.
+    /// @post (success) `index` to `index + n - 1` may be returned by a call to `set` with
+    /// appropriate parameters.
+    /// @post (success) `size() == (previous) size() + n`.
     void reset(size_type index, size_type n) noexcept
     {
       // max_size() can be returned by `set` so we'll have to deal with it.
