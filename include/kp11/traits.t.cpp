@@ -65,7 +65,7 @@ class test_marker
 {
 public:
   using size_type = std::size_t;
-  static constexpr size_type size() noexcept
+  static constexpr size_type max_size() noexcept
   {
     return N;
   }
