@@ -57,7 +57,7 @@ TEST_CASE("reset", "[reset]")
     REQUIRE(c != m.max_size());
     REQUIRE(c != a);
   }
-  SECTION("accepts size() in reset")
+  SECTION("accepts max_size() in reset")
   {
     auto b = m.set(16);
     REQUIRE(b == m.max_size());
