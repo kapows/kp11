@@ -23,6 +23,15 @@ TEST_CASE("constructor", "[constructor]")
       128, std::forward_as_tuple(128, 4), std::forward_as_tuple(256, 4));
   }
 }
+TEST_CASE("accessor", "[accessor]")
+{
+  segregator<local<128, 4>, local<256, 4>> m(128);
+  [[maybe_unused]] auto & a = m.get_small();
+  [[maybe_unused]] auto & b = m.get_large();
+  auto const & n = m;
+  [[maybe_unused]] auto & c = n.get_small();
+  [[maybe_unused]] auto & d = n.get_large();
+}
 TEST_CASE("allocate", "[allocate]")
 {
   segregator<small_t, large_t> m(128, std::forward_as_tuple(128, 4), std::forward_as_tuple(256, 4));
