@@ -33,10 +33,10 @@ namespace kp11
   /// @brief Unordered marker. Iterates through a free list.
   ///
   /// Free list is stored as a `size` and `index` inside of an array. A cache of the free list index
-  /// is kept for each index to make merges `O(1)`. Occupied spots will have `size()` as their value
-  /// in the cache. Vacancies will be merged on a `reset` if they are adjacent to each other. The
-  /// biggest size available is known, so a request that can't be met is `O(1)`. A request of 1 is
-  /// `O(1)`, all other request are `O(n)`.
+  /// is kept for each index to make merges `O(1)`. Occupied spots will have `max_size()` as their
+  /// value in the cache. Vacancies will be merged on a `reset` if they are adjacent to each other.
+  /// The biggest size available is known, so a request that can't be met is `O(1)`. A request of 1
+  /// is `O(1)`, all other request are `O(n)`.
   ///
   /// @tparam N Total number of spots.
   template<std::size_t N>
@@ -80,7 +80,7 @@ namespace kp11
     /// @param n Number of spots to mark as occupied.
     ///
     /// @returns (success) Index of the start of the `n` spots marked occupied.
-    /// @returns (failure) `size()`.
+    /// @returns (failure) `max_size()`.
     ///
     /// @pre `n > 0`.
     ///
