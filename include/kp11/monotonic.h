@@ -34,11 +34,20 @@ namespace kp11
     /// @param bytes Size in bytes of memory to request from `Upstream`.
     /// @param alignment Alignment in bytes of memory to request from `Upstream` and the size of
     /// each memory block.
+    /// @param initial_allocation Whther or not to try to allocate memory in the constructor.
     /// @param args Constructor arguments to `Upstream`.
     template<typename... Args>
-    monotonic(size_type bytes, size_type alignment, Args &&... args) noexcept :
-        bytes(bytes), alignment(alignment), upstream(std::forward<Args>(args)...)
+    monotonic(size_type bytes,
+      size_type alignment,
+      bool initial_allocation = false,
+      Args &&... args) noexcept :
+        bytes(bytes),
+        alignment(alignment), upstream(std::forward<Args>(args)...)
     {
+      if (initial_allocation)
+      {
+        push_back();
+      }
     }
     /// Deleted because a resource is being held and managed.
     monotonic(monotonic const &) = delete;
