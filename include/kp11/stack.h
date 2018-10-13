@@ -47,10 +47,10 @@ namespace kp11
     ///
     /// @param n Number of spots to mark as occupied.
     ///
-    /// @returns (success) Index of the start of the `n` spots marked occupied.
-    /// @returns (failure) `max_size()`.
+    /// @returns Index of the start of the `n` spots marked occupied.
     ///
     /// @pre `n > 0`.
+    /// @pre `n <= biggests()`
     ///
     /// @post (success) Spots from the `(return value)` to `(return value) + n - 1` will not
     /// returned again from any subsequent call to `set` unless `reset` has been called on those
@@ -59,11 +59,8 @@ namespace kp11
     size_type set(size_type n) noexcept
     {
       assert(n > 0);
-      if (max_size() - first >= n)
-      {
-        return std::exchange(first, first + n);
-      }
-      return max_size();
+      assert(n <= biggest());
+      return std::exchange(first, first + n);
     }
     /// The `index + n` is checked to see whether it is the most recent `set` call. If it is then
     /// our number becomes `index` and thus our first vacant index will start at `index`. If it is
@@ -79,10 +76,6 @@ namespace kp11
     void reset(size_type index, size_type n) noexcept
     {
       assert(index <= max_size());
-      if (index == max_size())
-      {
-        return;
-      }
       assert(index + n <= max_size());
       assert(index < first);
       if (index + n == first)
