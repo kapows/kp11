@@ -63,9 +63,11 @@ namespace kp11
     free_block(free_block const &) = delete;
     /// Defined because the destructor is defined.
     free_block(free_block && x) noexcept :
-        block_size(x.block_size), bytes(x.bytes), alignment(x.alignment), ptrs(std::move(x.ptrs)),
-        markers(std::move(x.markers)), upstream(std::move(x.upstream))
+        block_size(x.block_size), bytes(x.bytes), alignment(x.alignment),
+        biggests(std::move(x.biggests)), ptrs(std::move(x.ptrs)), markers(std::move(x.markers)),
+        upstream(std::move(x.upstream))
     {
+      x.biggests.clear();
       x.ptrs.clear();
       x.markers.clear();
     }
@@ -80,10 +82,12 @@ namespace kp11
         block_size = x.block_size;
         bytes = x.bytes;
         alignment = x.alignment;
+        biggests = std::move(x.biggests);
         ptrs = std::move(x.ptrs);
         markers = std::move(x.markers);
         upstream = std::move(x.upstream);
 
+        x.biggests.clear();
         x.ptrs.clear();
         x.markers.clear();
       }
@@ -96,9 +100,11 @@ namespace kp11
     }
 
   public: // modifiers
-    /// Tries to allocate from existing memory blocks using it's associated `Marker`, if that fails
-    /// tries to allocate a new memory block from `Upstream` and allocates from this memory using
-    /// it's associated `Marker`.
+    /// Tests to see whether an existing `Marker` is able to allocate the required blocks by
+    /// checking the corresponding cached `biggests` value. If there is enough consecutive vacant
+    /// spots to fulfil the request then allocates using the corresponding `Marker` and updates the
+    /// corresponding `biggests`. If that fails tries to allocate a new memory block from `Upstream`
+    /// and allocates from this memory using it's corresponding `Marker`.
     /// * Complexity `O(n)`.
     ///
     /// @param bytes Size in bytes of memory to allocate.
@@ -115,19 +121,18 @@ namespace kp11
     {
       assert(this->alignment % alignment == 0);
       auto const num_blocks = to_marker_size(bytes);
-      for (std::size_t i = 0, last = ptrs.size(); i < last; ++i)
+      for (std::size_t i = 0, last = biggests.size(); i < last; ++i)
       {
-        if (auto ptr = allocate_from(i, num_blocks))
+        if (num_blocks <= biggests[i])
         {
-          return ptr;
+          return allocate_from(i, num_blocks);
         }
       }
       if (push_back())
       {
         // Allocation here should not fail as a full buffer should be able to fulfil any request.
-        auto ptr = allocate_from(ptrs.size() - 1, num_blocks);
-        assert(ptr != nullptr);
-        return ptr;
+        assert(num_blocks <= biggests.back());
+        return allocate_from(ptrs.size() - 1, num_blocks);
       }
       else
       {
@@ -135,8 +140,9 @@ namespace kp11
       }
     }
     /// Finds the memory block that `ptr` points into and resets the associated indexes in it's
-    /// associated `Marker`. If `ptr` does not point to a memory block owned by us then we do
-    /// nothing. `nullptr` is determined to be a pointer to something that we do not own.
+    /// corresponding `Marker`, also updates the cached `biggests` value. If `ptr` does not point to
+    /// a memory block owned by us then we do nothing. `nullptr` is determined to be a pointer to
+    /// something that we do not own.
     /// * Complexity `O(n)`.
     ///
     /// @param ptr Pointer to the beginning of a memory block.
@@ -154,6 +160,7 @@ namespace kp11
       if (auto i = find(p); i != ptrs.max_size())
       {
         markers[i].reset(to_marker_index(i, p), to_marker_size(bytes));
+        biggests[i] = markers[i].biggest();
         return true;
       }
       return false;
@@ -165,19 +172,26 @@ namespace kp11
       {
         upstream.deallocate(static_cast<pointer>(p), bytes, alignment);
       }
+      biggests.clear();
       ptrs.clear();
       markers.clear();
     }
 
   private: // allocate helper
-    /// Helper function to make it easier to allocate from each `Marker`.
+    /// Helper function to make it easier to allocate from each `Marker` and update cached
+    /// `biggests`. Function does not return `nullptr`.
+    ///
+    /// @pre `num_blocks <= markers[index].biggest()`.
+    ///
+    /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
+    /// `alignment`.
     pointer allocate_from(std::size_t index, std::size_t num_blocks) noexcept
     {
-      if (auto i = markers[index].set(num_blocks); i != Marker::max_size())
-      {
-        return static_cast<pointer>(ptrs[index] + static_cast<size_type>(i) * block_size);
-      }
-      return nullptr;
+      assert(num_blocks <= markers[index].biggest());
+      auto const i = markers[index].set(num_blocks);
+      assert(i != Marker::max_size());
+      biggests[index] = markers[index].biggest();
+      return static_cast<pointer>(ptrs[index] + static_cast<size_type>(i) * block_size);
     }
 
   public: // observers
@@ -233,8 +247,9 @@ namespace kp11
     }
 
   private: // modifiers
-    /// Allocates a new block of memory from `Upstream` and constructs another `Marker` for it. Can
-    /// fail if max allocations has been reached or if `Upstream` fails allocation.
+    /// Allocates a new block of memory from `Upstream` and constructs another `Marker` for it and a
+    /// `biggest` cached value. Can fail if max allocations has been reached or if `Upstream` fails
+    /// allocation.
     ///
     /// @returns (success) `true`.
     /// @returns (failure) `false`.
@@ -248,6 +263,7 @@ namespace kp11
       {
         ptrs.emplace_back(static_cast<byte_pointer>(ptr));
         markers.emplace_back();
+        biggests.emplace_back(markers.back().biggest());
         return true;
       }
       return false;
@@ -276,6 +292,8 @@ namespace kp11
     size_type bytes;
     /// Size in bytes of alignment of memory blocks.
     size_type alignment;
+    /// Holds a biggest size corresponding to each `Marker`.
+    kp11::detail::static_vector<size_type, Allocations> biggests;
     /// Holds pointers to memory allocated by `Upstream`.
     kp11::detail::static_vector<byte_pointer, Allocations> ptrs;
     /// Holds a `Marker` corresponding to each allocation.
