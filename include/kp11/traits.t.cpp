@@ -70,6 +70,7 @@ public:
     return N;
   }
   size_type size() noexcept;
+  size_type biggest() const noexcept;
   size_type set(size_type n) noexcept;
   void reset(size_type index, size_type n) noexcept;
 };
