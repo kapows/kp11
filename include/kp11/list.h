@@ -73,6 +73,11 @@ namespace kp11
     {
       return static_cast<size_type>(N);
     }
+    /// @returns The largest number of consecutive vacant spots.
+    size_type biggest() const noexcept
+    {
+      return free_list.empty() ? static_cast<size_type>(0) : free_list.front().size;
+    }
 
   public: // modifiers
     /// Forward iterate through the free list to find an `n` sized vacant node. If the size of the
