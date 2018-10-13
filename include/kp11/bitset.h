@@ -70,6 +70,7 @@ namespace kp11
     /// @returns (failure) `max_size()`.
     ///
     /// @pre `n > 0`
+    /// @pre `n <= biggest()`
     ///
     /// @post (success) Spots from the `(return value)` to `(return value) + n - 1` will not
     /// returned again from any subsequent call to `set` unless `reset` has been called on those
@@ -78,6 +79,7 @@ namespace kp11
     size_type set(size_type n) noexcept
     {
       assert(n > 0);
+      assert(n <= biggest());
       return n == 1 ? set_one() : set_many(n);
     }
     /// Forward iterates through the bitset from `index` to `index + n` and marks them as vacant.
@@ -94,12 +96,8 @@ namespace kp11
     /// @post (success) `size() == (previous) size() + n`.
     void reset(size_type index, size_type n) noexcept
     {
-      // max_size() can be returned by `set` so we'll have to deal with it.
-      assert(index <= max_size());
-      if (index == max_size())
-      {
-        return;
-      }
+      assert(n <= max_size());
+      assert(index < max_size());
       assert(index + n <= max_size());
       num_vacant += n;
       for (auto first = index, last = index + n; first < last; ++first)
@@ -112,39 +110,35 @@ namespace kp11
     /// Setting one is a much simpler algorithm because we don't have to count adjacent bits.
     size_type set_one() noexcept
     {
-      for (size_type first = 0, last = max_size(); first < last; ++first)
+      size_type first = 0;
+      for (; bits[first]; ++first)
       {
-        if (!bits[first])
-        {
-          bits.set(first);
-          --num_vacant;
-          return first;
-        }
       }
-      return max_size();
+      --num_vacant;
+      bits.set(first);
+      return first;
     }
     /// Works for all `n` but inefficient if only setting one.
     size_type set_many(size_type n) noexcept
     {
-      for (size_type first = 0, last = max_size(), count = 0; first < last; ++first)
+      size_type first = 0;
+      for (size_type count = 0; count < n; ++first)
       {
         if (bits[first])
         {
           count = 0;
         }
-        else if (++count == n)
+        else
         {
-          // increment here so we can decrement first without going passed the end
-          ++first;
-          for (; count; --count)
-          {
-            bits.set(--first);
-          }
-          num_vacant -= n;
-          return first;
+          ++count;
         }
       }
-      return max_size();
+      num_vacant -= n;
+      for (auto count = n; count; --count)
+      {
+        bits.set(--first);
+      }
+      return first;
     }
 
   private: // variables

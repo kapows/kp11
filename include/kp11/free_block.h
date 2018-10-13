@@ -189,7 +189,6 @@ namespace kp11
     {
       assert(num_blocks <= markers[index].biggest());
       auto const i = markers[index].set(num_blocks);
-      assert(i != Marker::max_size());
       biggests[index] = markers[index].biggest();
       return static_cast<pointer>(ptrs[index] + static_cast<size_type>(i) * block_size);
     }

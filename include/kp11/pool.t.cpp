@@ -53,15 +53,6 @@ TEST_CASE("set", "[set]")
       REQUIRE(m.size() == 8);
     }
   }
-  SECTION("failure")
-  {
-    for (auto i = 0; i < m.max_size(); ++i)
-    {
-      m.set(1);
-    }
-    REQUIRE(m.set(1) == m.max_size());
-    REQUIRE(m.size() == 0);
-  }
 }
 TEST_CASE("reset", "[reset]")
 {
@@ -73,17 +64,6 @@ TEST_CASE("reset", "[reset]")
     REQUIRE(m.size() == 10);
     auto b = m.set(1);
     REQUIRE(b == a);
-  }
-  SECTION("accepts max_size() in reset")
-  {
-    for (auto i = 0; i < m.max_size(); ++i)
-    {
-      m.set(1);
-    }
-    auto b = m.set(1);
-    REQUIRE(b == m.max_size());
-    m.reset(b, 1);
-    REQUIRE(m.size() == 0);
   }
 }
 TEST_CASE("traits", "[traits]")

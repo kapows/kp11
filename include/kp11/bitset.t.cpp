@@ -63,7 +63,20 @@ TEST_CASE("biggest", "[biggest]")
 TEST_CASE("set", "[set]")
 {
   bitset<10> m;
-  SECTION("success")
+  SECTION("set 1")
+  {
+    auto a = m.set(1);
+    REQUIRE(a == 0);
+    REQUIRE(m.size() == 9);
+    SECTION("post condition")
+    {
+      auto b = m.set(1);
+      REQUIRE(b == 1);
+      REQUIRE(b != a);
+      REQUIRE(m.size() == 8);
+    }
+  }
+  SECTION("set many")
   {
     auto a = m.set(5);
     REQUIRE(a == 0);
@@ -76,11 +89,6 @@ TEST_CASE("set", "[set]")
       REQUIRE(m.size() == 0);
     }
   }
-  SECTION("failure")
-  {
-    REQUIRE(m.set(16) == m.max_size());
-    REQUIRE(m.size() == 10);
-  }
 }
 TEST_CASE("reset", "[reset]")
 {
@@ -92,13 +100,6 @@ TEST_CASE("reset", "[reset]")
     REQUIRE(m.size() == 10);
     auto b = m.set(10);
     REQUIRE(b == a);
-  }
-  SECTION("accepts size() in reset")
-  {
-    auto b = m.set(16);
-    REQUIRE(b == m.max_size());
-    m.reset(b, 16);
-    REQUIRE(m.size() == 5);
   }
 }
 TEST_CASE("traits", "[traits]")

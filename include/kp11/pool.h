@@ -68,6 +68,7 @@ namespace kp11
     /// @returns (failure) `max_size()`.
     ///
     /// @pre `n == 1`.
+    /// @pre `n <= biggest()`.
     ///
     /// @post (success) `(return value)` will not returned again from any subsequent call to `set`
     /// unless `reset` has been called on it.
@@ -75,12 +76,9 @@ namespace kp11
     size_type set(size_type n) noexcept
     {
       assert(n == 1);
-      if (head != max_size())
-      {
-        --num_vacant;
-        return std::exchange(head, next[head]);
-      }
-      return max_size();
+      assert(n <= biggest());
+      --num_vacant;
+      return std::exchange(head, next[head]);
     }
     /// The node at `index` becomes the new head node and the head node is pointed at the previous
     /// head node.
@@ -96,11 +94,7 @@ namespace kp11
     void reset(size_type index, size_type n) noexcept
     {
       assert(n == 1);
-      assert(index <= max_size());
-      if (index == max_size())
-      {
-        return;
-      }
+      assert(index < max_size());
       ++num_vacant;
       next[index] = head;
       head = index;
