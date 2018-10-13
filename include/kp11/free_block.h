@@ -292,7 +292,7 @@ namespace kp11
     /// Size in bytes of alignment of memory blocks.
     size_type alignment;
     /// Holds a biggest size corresponding to each `Marker`.
-    kp11::detail::static_vector<size_type, Allocations> biggests;
+    kp11::detail::static_vector<typename Marker::size_type, Allocations> biggests;
     /// Holds pointers to memory allocated by `Upstream`.
     kp11::detail::static_vector<byte_pointer, Allocations> ptrs;
     /// Holds a `Marker` corresponding to each allocation.
