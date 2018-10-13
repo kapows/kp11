@@ -93,10 +93,10 @@ namespace kp11
     ///
     /// @param n Number of spots to mark as occupied.
     ///
-    /// @returns (success) Index of the start of the `n` spots marked occupied.
-    /// @returns (failure) `max_size()`.
+    /// @returns Index of the start of the `n` spots marked occupied.
     ///
     /// @pre `n > 0`.
+    /// @pre `n <= biggest()`
     ///
     /// @post (success) Spots [`(return value)`, `(return value) + n`) will not returned again from
     /// any subsequent call to `set` unless `reset` has been called on those parameters.
@@ -104,10 +104,7 @@ namespace kp11
     size_type set(size_type n) noexcept
     {
       assert(n > 0);
-      if (free_list.empty() || free_list.front().size < n)
-      {
-        return max_size();
-      }
+      assert(n <= biggest());
       size_type node_index = free_list.size() - 1;
       size_type replacement_biggest_node_index = node_index;
       // Guaranteed to find a suitable size since n is at maximum, the biggest node size.
@@ -161,11 +158,7 @@ namespace kp11
     /// @post (success) `size() == (previous) size() + n`.
     void reset(size_type index, size_type n) noexcept
     {
-      assert(index <= max_size());
-      if (index == max_size())
-      {
-        return;
-      }
+      assert(index < max_size());
       assert(n > 0);
       assert(index + n <= max_size());
       num_vacant += n;
