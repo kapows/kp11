@@ -29,6 +29,9 @@ namespace kp11
     {
       return N;
     }
+    /// Iterates through the bitset and counts consecutive bits.
+    /// * Complexity `O(n)`
+    ///
     /// @returns The largest number of consecutive vacant spots.
     size_type biggest() const noexcept
     {
