@@ -51,7 +51,7 @@ namespace kp11
     {
       return static_cast<size_type>(N);
     }
-    /// @returns The largest number of consecutive vacant spots.
+    /// @returns `1` if there are vacant spots otherwise `0`.
     size_type biggest() const noexcept
     {
       return num_vacant ? static_cast<size_type>(1) : static_cast<size_type>(0);
