@@ -219,7 +219,7 @@ TEST_CASE("reset", "[reset]")
     REQUIRE(m.set(7) != m.max_size());
   }
 }
-TEST_CASE("biggest", "[biggest]")
+TEST_CASE("internal biggest", "[biggest]")
 {
   list<10> m;
   auto a = m.set(1);
