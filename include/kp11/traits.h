@@ -91,6 +91,8 @@ namespace kp11
     std::void_t<typename T::size_type,
       std::enable_if_t<std::is_same_v<typename T::size_type, decltype(T::max_size())>>,
       std::enable_if_t<std::is_same_v<typename T::size_type, decltype(std::declval<T>().size())>>,
+      std::enable_if_t<
+        std::is_same_v<typename T::size_type, decltype(std::declval<T>().biggest())>>,
       std::enable_if_t<std::is_same_v<typename T::size_type,
         decltype(std::declval<T>().set(std::declval<typename T::size_type>()))>>,
       decltype(std::declval<T>().reset(std::declval<typename T::size_type>(),

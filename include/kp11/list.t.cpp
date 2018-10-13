@@ -21,6 +21,38 @@ TEST_CASE("max_size", "[max_size]")
     REQUIRE(m.size() == m.max_size());
   }
 }
+TEST_CASE("biggest", "[biggest]")
+{
+  list<10> m;
+  SECTION("initial")
+  {
+    REQUIRE(m.biggest() == 10);
+  }
+  SECTION("out of spots")
+  {
+    [[maybe_unused]] auto a = m.set(10);
+    REQUIRE(m.biggest() == 0);
+  }
+  SECTION("set")
+  {
+    [[maybe_unused]] auto a = m.set(3);
+    auto b = m.set(4);
+    [[maybe_unused]] auto c = m.set(3);
+    m.reset(b, 4);
+    REQUIRE(m.biggest() == 4);
+  }
+  SECTION("merge")
+  {
+    auto a = m.set(3);
+    auto b = m.set(4);
+    auto c = m.set(3);
+    m.reset(b, 4);
+    m.reset(c, 3);
+    REQUIRE(m.biggest() == 7);
+    m.reset(a, 3);
+    REQUIRE(m.biggest() == 10);
+  }
+}
 TEST_CASE("set", "[set]")
 {
   list<10> m;
@@ -187,7 +219,7 @@ TEST_CASE("reset", "[reset]")
     REQUIRE(m.set(7) != m.max_size());
   }
 }
-TEST_CASE("biggest", "[biggest]")
+TEST_CASE("internal biggest", "[biggest]")
 {
   list<10> m;
   auto a = m.set(1);

@@ -21,6 +21,22 @@ TEST_CASE("max_size", "[max_size]")
     REQUIRE(m.size() == m.max_size());
   }
 }
+TEST_CASE("biggest", "[biggest]")
+{
+  pool<10> m;
+  SECTION("not empty")
+  {
+    REQUIRE(m.biggest() == 1);
+  }
+  SECTION("empty")
+  {
+    for (auto i = 0; i < 10; ++i)
+    {
+      m.set(1);
+    }
+    REQUIRE(m.biggest() == 0);
+  }
+}
 TEST_CASE("set", "[set]")
 {
   pool<10> m;

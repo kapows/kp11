@@ -29,6 +29,35 @@ namespace kp11
     {
       return N;
     }
+    /// Iterates through the bitset and counts consecutive bits.
+    /// * Complexity `O(n)`
+    ///
+    /// @returns The largest number of consecutive vacant spots.
+    size_type biggest() const noexcept
+    {
+      size_type biggest = 0;
+      size_type count = 0;
+      for (std::size_t i = 0; i < N; ++i)
+      {
+        if (bits[i])
+        {
+          if (biggest < count)
+          {
+            biggest = count;
+          }
+          count = 0;
+        }
+        else
+        {
+          ++count;
+        }
+      }
+      if (biggest < count)
+      {
+        biggest = count;
+      }
+      return biggest;
+    }
 
   public: // modifiers
     /// Forward iterates through the bitset to find `n` adjacent vacant spots and marks them as
