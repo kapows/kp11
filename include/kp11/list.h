@@ -73,6 +73,10 @@ namespace kp11
     {
       return static_cast<size_type>(N);
     }
+    /// The biggest is already known since it is stored at the front of the free list if our free
+    /// list is not empty.
+    /// * Complexity `O(1)`
+    ///
     /// @returns The largest number of consecutive vacant spots.
     size_type biggest() const noexcept
     {
