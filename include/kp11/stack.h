@@ -31,7 +31,7 @@ namespace kp11
     {
       return N;
     }
-    /// @returns The largest number of consecutive vacant spots.
+    /// @returns The largest number of consecutive vacant spots. `size()` for this structure.
     size_type biggest() const noexcept
     {
       return size();
