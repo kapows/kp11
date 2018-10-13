@@ -41,27 +41,9 @@ TEST_CASE("biggest", "[biggest]")
   SECTION("reset")
   {
     auto a = m.set(3);
-    [[maybe_unused]] auto b = m.set(7);
+    auto b = m.set(7);
+    m.reset(b, 7);
     m.reset(a, 3);
-    REQUIRE(m.biggest() == 10);
-  }
-  SECTION("middle unset")
-  {
-    [[maybe_unused]] auto a = m.set(3);
-    auto b = m.set(4);
-    [[maybe_unused]] auto c = m.set(3);
-    m.reset(b, 4);
-    REQUIRE(m.biggest() == 4);
-  }
-  SECTION("merges")
-  {
-    auto a = m.set(3);
-    auto b = m.set(4);
-    m.reset(a, 3);
-    m.reset(b, 4);
-    REQUIRE(m.biggest() == 7);
-    auto c = m.set(3);
-    m.reset(c, 3);
     REQUIRE(m.biggest() == 10);
   }
 }
