@@ -51,6 +51,11 @@ namespace kp11
     {
       return static_cast<size_type>(N);
     }
+    /// @returns The largest number of consecutive vacant spots.
+    size_type biggest() const noexcept
+    {
+      return num_vacant ? static_cast<size_type>(1) : static_cast<size_type>(0);
+    }
 
   public: // modifiers
     /// Checks to see if the head of the linked list is a valid index and marks it as occupied. The
