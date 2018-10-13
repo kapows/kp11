@@ -181,13 +181,13 @@ namespace kp11
     /// Helper function to make it easier to allocate from each `Marker` and update cached
     /// `biggests`. Function does not return `nullptr`.
     ///
-    /// @pre `num_blocks <= markers[index].biggest()`.
+    /// @pre `num_blocks <= biggests[index]`.
     ///
     /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
     /// `alignment`.
     pointer allocate_from(std::size_t index, std::size_t num_blocks) noexcept
     {
-      assert(num_blocks <= markers[index].biggest());
+      assert(num_blocks <= biggests[index]);
       auto const i = markers[index].set(num_blocks);
       biggests[index] = markers[index].biggest();
       return static_cast<pointer>(ptrs[index] + static_cast<size_type>(i) * block_size);
