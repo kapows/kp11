@@ -21,6 +21,50 @@ TEST_CASE("max_size", "[max_size]")
     REQUIRE(m.size() == 101581);
   }
 }
+TEST_CASE("biggest", "[biggest]")
+{
+  stack<10> m;
+  SECTION("initial")
+  {
+    REQUIRE(m.biggest() == 10);
+  }
+  SECTION("empty")
+  {
+    [[maybe_unused]] auto a = m.set(10);
+    REQUIRE(m.biggest() == 0);
+  }
+  SECTION("set")
+  {
+    [[maybe_unused]] auto a = m.set(3);
+    REQUIRE(m.biggest() == 7);
+  }
+  SECTION("reset")
+  {
+    auto a = m.set(3);
+    [[maybe_unused]] auto b = m.set(7);
+    m.reset(a, 3);
+    REQUIRE(m.biggest() == 10);
+  }
+  SECTION("middle unset")
+  {
+    [[maybe_unused]] auto a = m.set(3);
+    auto b = m.set(4);
+    [[maybe_unused]] auto c = m.set(3);
+    m.reset(b, 4);
+    REQUIRE(m.biggest() == 4);
+  }
+  SECTION("merges")
+  {
+    auto a = m.set(3);
+    auto b = m.set(4);
+    m.reset(a, 3);
+    m.reset(b, 4);
+    REQUIRE(m.biggest() == 7);
+    auto c = m.set(3);
+    m.reset(c, 3);
+    REQUIRE(m.biggest() == 10);
+  }
+}
 TEST_CASE("set", "[set]")
 {
   stack<10> m;
