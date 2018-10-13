@@ -48,6 +48,17 @@ TEST_CASE("biggest", "[biggest]")
     m.reset(b, 4);
     REQUIRE(m.biggest() == 4);
   }
+  SECTION("merges")
+  {
+    auto a = m.set(3);
+    auto b = m.set(4);
+    m.reset(a, 3);
+    m.reset(b, 4);
+    REQUIRE(m.biggest() == 7);
+    auto c = m.set(3);
+    m.reset(c, 3);
+    REQUIRE(m.biggest() == 10);
+  }
 }
 TEST_CASE("set", "[set]")
 {
