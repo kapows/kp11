@@ -62,19 +62,17 @@ namespace kp11
     }
     /// Deleted because a resource is being held and managed.
     free_block(free_block const &) = delete;
-    /// Defined because the destructor is defined.
+    /// Defined because the destructor is defined. `x` is left is a valid but unspecified state.
     free_block(free_block && x) noexcept :
         block_size(x.block_size), chunk_size(x.chunk_size), chunk_alignment(x.chunk_alignment),
         biggests(std::move(x.biggests)), ptrs(std::move(x.ptrs)), markers(std::move(x.markers)),
         upstream(std::move(x.upstream))
     {
-      x.biggests.clear();
       x.ptrs.clear();
-      x.markers.clear();
     }
     /// Deleted because a resource is being held and managed.
     free_block & operator=(free_block const &) = delete;
-    /// Defined because the destructor is defined.
+    /// Defined because the destructor is defined. `x` is left is a valid but unspecified state.
     free_block & operator=(free_block && x) noexcept
     {
       if (this != &x)
@@ -88,9 +86,7 @@ namespace kp11
         markers = std::move(x.markers);
         upstream = std::move(x.upstream);
 
-        x.biggests.clear();
         x.ptrs.clear();
-        x.markers.clear();
       }
       return *this;
     }
