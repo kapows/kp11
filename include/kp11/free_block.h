@@ -37,7 +37,7 @@ namespace kp11
 
   public: // constructors
     /// @param chunk_size Size in bytes of memory blocks.
-    /// @param chunk_alignment Alignment of memory blocks.
+    /// @param chunk_alignment Alignment in bytes of memory blocks.
     /// @param initial_allocations Number of initial allocations to try to make.
     /// @param args Constructor arguments to `Upstream`.
     ///
@@ -109,7 +109,7 @@ namespace kp11
     /// * Complexity `O(n)`.
     ///
     /// @param bytes Size in bytes of memory to allocate.
-    /// @param alignment Size in bytes of alignment of memory to allocate.
+    /// @param alignment Alignment in bytes of memory to allocate.
     ///
     /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
     /// `alignment`.
@@ -148,7 +148,7 @@ namespace kp11
     ///
     /// @param ptr Pointer to the beginning of a memory block.
     /// @param bytes Size in bytes of the memory block.
-    /// @param alignment Size in bytes of alignment of the memory block.
+    /// @param alignment Alignment in bytes of the memory block.
     ///
     /// @returns (success) `true`. `ptr` is owned.
     /// @returns (failure) `false`. `ptr` is not owned.
@@ -291,7 +291,7 @@ namespace kp11
     size_type block_size;
     /// Size in bytes of memory allocated from `Upstream`.
     size_type chunk_size;
-    /// Size in bytes of alignment of memory allocated from `Upstream` and of free blocks.
+    /// Alignment in bytes of memory allocated from `Upstream` and of free blocks.
     size_type chunk_alignment;
     /// Holds a biggest size corresponding to each `Marker`.
     kp11::detail::static_vector<typename Marker::size_type, Allocations> biggests;
