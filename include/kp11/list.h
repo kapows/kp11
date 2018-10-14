@@ -98,9 +98,9 @@ namespace kp11
     /// @pre `n > 0`.
     /// @pre `n <= biggest()`
     ///
-    /// @post (success) Spots [`(return value)`, `(return value) + n`) will not returned again from
+    /// @post Spots [`(return value)`, `(return value) + n`) will not returned again from
     /// any subsequent call to `set` unless `reset` has been called on those parameters.
-    /// @post (success) `size() == (previous) size() - n`.
+    /// @post `size() == (previous) size() + n`.
     size_type set(size_type n) noexcept
     {
       assert(n > 0);
@@ -143,8 +143,7 @@ namespace kp11
       num_occupied += n;
       return index;
     }
-    /// Checks to see if the node either sits at a boundary or has an adjacent node on either
-    /// side. If it has adjacent nodes then they are checked to see whether or not they are vacant.
+    /// If the node has adjacent nodes then they are checked to see whether or not they are vacant.
     /// If there are two vacant adjacent nodes then merge them into one node whilst removing the
     /// other. If there is one vacant adjacent node then merge with that node. If there are no
     /// vacant adjacent nodes then add a new node to the free list. If merging or adding a new node
@@ -155,7 +154,7 @@ namespace kp11
     /// @param n Corresponding parameter used in `set`.
     ///
     /// @post [`index`, `index + n`) may be returned by a call to `set` with appropriate parameters.
-    /// @post (success) `size() == (previous) size() + n`.
+    /// @post `size() == (previous) size() - n`.
     void reset(size_type index, size_type n) noexcept
     {
       assert(index < max_size());
@@ -209,8 +208,8 @@ namespace kp11
       assert(size > 0);
       cache[index + (size - 1)] = cache[index] = node_index;
     }
-    /// Node removal helper because we'll have to update the cache of the node that replaces the
-    /// removed node. Note the removed node does not get cache updating. Order is not guaranteed.
+    /// Node removal helper because the cache needs to be kept in sync.
+    /// Note the removed node does not get cache updating. Order is not guaranteed.
     void remove_node(size_type index) noexcept
     {
       assert(index < free_list.size());
@@ -222,7 +221,7 @@ namespace kp11
       }
       free_list.pop_back();
     }
-    /// Node swap helper because we'll have to update the cache of both nodes.
+    /// Node swap helper because the cache needs to be synced.
     void swap_node(size_type x, size_type y)
     {
       std::swap(free_list[x], free_list[y]);

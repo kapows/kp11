@@ -41,9 +41,8 @@ namespace kp11
     }
 
   public: // modifiers
-    /// Compares our number with `max_size()` to see if we have `n` vacant spots and increases our
-    /// number by `n`.
-    /// * Complexity `O(1)`.
+    /// Increases our index by `n` and returns the previous index.
+    /// * Complexity `O(1)`
     ///
     /// @param n Number of spots to mark as occupied.
     ///
@@ -52,10 +51,10 @@ namespace kp11
     /// @pre `n > 0`.
     /// @pre `n <= biggests()`
     ///
-    /// @post (success) Spots from the `(return value)` to `(return value) + n - 1` will not
+    /// @post Spots from the `(return value)` to `(return value) + n - 1` will not
     /// returned again from any subsequent call to `set` unless `reset` has been called on those
     /// parameters and this is the most recent call to `set`.
-    /// @post (success) `size() == (previous) size() - n`.
+    /// @post `size() == (previous) size() + n`
     size_type set(size_type n) noexcept
     {
       assert(n > 0);
@@ -70,9 +69,8 @@ namespace kp11
     /// @param index Returned by a call to `set`.
     /// @param n Corresponding parameter used in `set`.
     ///
-    /// @post `index` to `index + n - 1` may be returned by a call to `set` with appropriate
-    /// parameters if these parameters are from the most recent call to `set`.
-    /// @post (success) `size() == (previous) size() + n`.
+    /// @post (success) `index` to `index + n - 1` can be returned by a call to `set`.
+    /// @post (success) `size() == (previous) size() - n`
     void reset(size_type index, size_type n) noexcept
     {
       assert(index <= max_size());

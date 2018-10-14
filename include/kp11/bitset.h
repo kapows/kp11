@@ -29,7 +29,7 @@ namespace kp11
     {
       return N;
     }
-    /// Iterates through the bitset and counts consecutive bits.
+    /// Forward iterate through the bitset and count consecutive bits.
     /// * Complexity `O(n)`
     ///
     /// @returns The largest number of consecutive vacant spots.
@@ -60,40 +60,39 @@ namespace kp11
     }
 
   public: // modifiers
-    /// Forward iterates through the bitset to find `n` adjacent vacant spots and marks them as
+    /// Forward iterate through the bitset to find `n` adjacent vacant spots and mark them as
     /// occupied. The algorithm used is more efficient for `n==1`.
     /// * Complexity `O(n)`
     ///
     /// @param n Number of spots to mark as occupied.
     ///
-    /// @returns (success) Index of the start of the `n` spots marked occupied.
-    /// @returns (failure) `max_size()`.
+    /// @returns Index of the start of the `n` spots marked occupied.
     ///
     /// @pre `n > 0`
     /// @pre `n <= biggest()`
     ///
-    /// @post (success) Spots from the `(return value)` to `(return value) + n - 1` will not
+    /// @post Spots from the `(return value)` to `(return value) + n - 1` will not
     /// returned again from any subsequent call to `set` unless `reset` has been called on those
     /// parameters.
-    /// @post (success) `size() == (previous) size() - n`.
+    /// @post `size() == (previous) size() + n`.
     size_type set(size_type n) noexcept
     {
       assert(n > 0);
       assert(n <= biggest());
       return n == 1 ? set_one() : set_many(n);
     }
-    /// Forward iterates through the bitset from `index` to `index + n` and marks them as vacant.
+    /// Forward iterate through the bitset from `index` to `index + n` and mark them as vacant.
     /// * Complexity `O(n)`
     ///
     /// @param index Starting index of the spots to mark as vacant.
     /// @param n Number of spots to mark as vacant.
     ///
-    /// @pre `index <= max_size()`.
-    /// @pre `index + n <= max_size()`.
+    /// @pre `index <= max_size()`
+    /// @pre `index + n <= max_size()`
     ///
-    /// @post (success) `index` to `index + n - 1` may be returned by a call to `set` with
+    /// @post `index` to `index + n - 1` may be returned by a call to `set` with
     /// appropriate parameters.
-    /// @post (success) `size() == (previous) size() + n`.
+    /// @post `size() == (previous) size() - n`
     void reset(size_type index, size_type n) noexcept
     {
       assert(n <= max_size());
@@ -118,9 +117,9 @@ namespace kp11
       bits.set(first);
       return first;
     }
-    /// Works for all `n` but inefficient if only setting one.
     size_type set_many(size_type n) noexcept
     {
+      assert(n > 1);
       size_type first = 0;
       for (size_type count = 0; count < n; ++first)
       {

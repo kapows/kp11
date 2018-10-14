@@ -7,10 +7,10 @@
 
 namespace kp11
 {
-  /// @brief Allocates from `Secondary` if allocation from `Primary` returns `nullptr`.
+  /// @brief Allocate from `Primary`. On failure allocate from `Secondary`.
   ///
-  /// @tparam Primary Meets the `Owner` concept
-  /// @tparam Secondary Meets the `Resource` concept
+  /// @tparam Primary Meets the `Owner` concept.
+  /// @tparam Secondary Meets the `Resource` concept.
   template<typename Primary, typename Secondary>
   class fallback
   {
@@ -54,16 +54,14 @@ namespace kp11
     }
 
   public: // modifiers
-    /// Calls `Primary::allocate`, if that fails calls `Secondary::allocate`.
+    /// Call `Primary::allocate`. On failure call `Secondary::allocate`.
     ///
     /// @param bytes Size in bytes of memory to allocate.
     /// @param alignment Alignment of memory to allocate.
     ///
     /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
     /// `alignment`.
-    /// @returns (failure) `nullptr`.
-    ///
-    /// @post (success) (Return value) will not be returned again until it has been `deallocated`.
+    /// @returns (failure) `nullptr`
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
       if (auto ptr = primary.allocate(bytes, alignment))

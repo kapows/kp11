@@ -171,7 +171,7 @@ namespace kp11
     }
 
   public: // observers
-    /// Check whether or not `ptr` points in to memory owned by us.
+    /// Check whether or not `ptr` points into an allocation from `Upstream`.
     ///
     /// @param ptr Pointer to memory.
     ///
