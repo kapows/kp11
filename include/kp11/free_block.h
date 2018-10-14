@@ -36,6 +36,8 @@ namespace kp11
     using byte_pointer = typename std::pointer_traits<pointer>::template rebind<std::byte>;
 
   public: // constructors
+    /// The size of each free block will be `chunk_size / Marker::max_size()`.
+    ///
     /// @param chunk_size Size in bytes of request to `Upstream`.
     /// @param chunk_alignment Alignment in bytes of request to `Upstream` and free blocks.
     /// @param initial_allocations Number of initial allocations to try to make.
