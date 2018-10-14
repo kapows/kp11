@@ -69,9 +69,8 @@ namespace kp11
     /// @param index Returned by a call to `set`.
     /// @param n Corresponding parameter used in `set`.
     ///
-    /// @post `index` to `index + n - 1` may be returned by a call to `set` with appropriate
-    /// parameters if these parameters are from the most recent call to `set`.
-    /// @post `size() == (previous) size() - n`
+    /// @post (success) `index` to `index + n - 1` can be returned by a call to `set`.
+    /// @post (success) `size() == (previous) size() - n`
     void reset(size_type index, size_type n) noexcept
     {
       assert(index <= max_size());
