@@ -231,7 +231,7 @@ namespace kp11
     }
 
   private: // variables
-    /// Number of vacant spots.
+    /// Number of occupied spots.
     size_type num_occupied = 0;
     /// Free list stores it's own size and index.
     /// `N / 2 + N % 2` because that is the maximum number of free list nodes we will ever have
