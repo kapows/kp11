@@ -41,10 +41,10 @@ namespace kp11
     }
 
   public: // capacity
-    /// @returns Number of vacant spots.
+    /// @returns Number of occupied spots.
     size_type size() const noexcept
     {
-      return num_vacant;
+      return num_occupied;
     }
     /// @returns Total number of spots (`N`).
     static constexpr size_type max_size() noexcept
@@ -54,7 +54,7 @@ namespace kp11
     /// @returns `1` if there are vacant spots otherwise `0`.
     size_type biggest() const noexcept
     {
-      return num_vacant ? static_cast<size_type>(1) : static_cast<size_type>(0);
+      return num_occupied != max_size() ? static_cast<size_type>(1) : static_cast<size_type>(0);
     }
 
   public: // modifiers
@@ -77,7 +77,7 @@ namespace kp11
     {
       assert(n == 1);
       assert(n <= biggest());
-      --num_vacant;
+      ++num_occupied;
       return std::exchange(head, next[head]);
     }
     /// The node at `index` becomes the new head node and the head node is pointed at the previous
@@ -95,14 +95,14 @@ namespace kp11
     {
       assert(n == 1);
       assert(index < max_size());
-      ++num_vacant;
+      --num_occupied;
       next[index] = head;
       head = index;
     }
 
   private: // variables
-    /// Number of vacant spots.
-    size_type num_vacant = N;
+    /// Number of occupied spots.
+    size_type num_occupied = 0;
     /// First free index or `N`.
     size_type head = 0;
     /// Holds the index of the next free index.
