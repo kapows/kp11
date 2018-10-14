@@ -101,6 +101,16 @@ TEST_CASE("release", "[release]")
   auto c = m.allocate(128, 4);
   REQUIRE(c != nullptr);
 }
+TEST_CASE("shirnk_to_fit", "[shrink_to_fit]")
+{
+  free_block<2, stack<4>, heap> m(128, 4);
+  [[maybe_unused]] auto a = m.allocate(128, 4);
+  auto b = m.allocate(128, 4);
+  m.deallocate(b, 128, 4);
+  m.shrink_to_fit();
+  auto c = m.allocate(128, 4);
+  REQUIRE(c != nullptr);
+}
 TEST_CASE("traits", "[traits]")
 {
   REQUIRE(is_owner_v<free_block<1, stack<4>, heap>> == true);
