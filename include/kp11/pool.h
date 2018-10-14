@@ -58,21 +58,19 @@ namespace kp11
     }
 
   public: // modifiers
-    /// Checks to see if the head of the linked list is a valid index and marks it as occupied. The
-    /// next node becomes the head of the linked list.
+    /// The next node becomes the head of the linked list. Returns the previous head node.
     /// * Complexity `O(1)`
     ///
     /// @param n Number of spots to mark as occupied.
     ///
-    /// @returns (success) Index of the spot marked occupied.
-    /// @returns (failure) `max_size()`.
+    /// @returns Index of the spot marked occupied.
     ///
-    /// @pre `n == 1`.
-    /// @pre `n <= biggest()`.
+    /// @pre `n == 1`
+    /// @pre `n <= biggest()`
     ///
-    /// @post (success) `(return value)` will not returned again from any subsequent call to `set`
+    /// @post `(return value)` will not returned again from any subsequent call to `set`
     /// unless `reset` has been called on it.
-    /// @post (success) `size() == (previous) size() - n`.
+    /// @post `size() == (previous) size() + n`
     size_type set(size_type n) noexcept
     {
       assert(n == 1);
@@ -87,10 +85,10 @@ namespace kp11
     /// @param index Returned by a call to `set`.
     /// @param n Corresponding parameter used in `set`.
     ///
-    /// @pre `n == 1`.
+    /// @pre `n == 1`
     ///
     /// @post `index` may be returned by a call to `set`.
-    /// @post (success) `size() == (previous) size() + n`.
+    /// @post `size() == (previous) size() - n`
     void reset(size_type index, size_type n) noexcept
     {
       assert(n == 1);
