@@ -4,7 +4,7 @@
 
 namespace kp11
 {
-  /// Calls `new` on `allocate` and `delete` on `deallocate`.
+  /// Call `new` on `allocate` and `delete` on `deallocate`.
   class heap
   {
   public: // typedefs
@@ -21,7 +21,7 @@ namespace kp11
     ///
     /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
     /// `alignment`.
-    /// @returns (failure) `nullptr`.
+    /// @returns (failure) `nullptr`
     ///
     /// @post (success) (Return value) will not be returned again until it has been `deallocated`.
     pointer allocate(size_type bytes, size_type alignment) noexcept;
@@ -30,8 +30,6 @@ namespace kp11
     /// @param ptr Pointer return by a call to `allocate`.
     /// @param bytes Corresponding parameter used in `allocate`.
     /// @param alignment Corresponding parameter used in `allocate`.
-    ///
-    /// @pre A deallocate call with `ptr` can only be called once after a return from `allocate`.
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
   };
 }
