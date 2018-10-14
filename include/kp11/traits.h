@@ -73,8 +73,9 @@ namespace kp11
   {
   public:
     using size_type = std::size_t;
-    size_type max_size() noexcept;
     static constexpr size_type max_size() noexcept;
+    size_type size() const noexcept;
+    size_type biggest() const noexcept;
     size_type set(size_type n) noexcept;
     void reset(size_type index, size_type n) noexcept;
   };
