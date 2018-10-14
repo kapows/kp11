@@ -12,6 +12,7 @@
 
 using namespace kp11;
 
+/// @private
 class resource
 {
   free_block<2, stack<4>, heap> m;

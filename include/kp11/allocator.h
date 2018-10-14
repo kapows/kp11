@@ -38,6 +38,7 @@ namespace kp11
   public: // constructors
     /// Defined because of the rebind constructor.
     allocator() noexcept = default;
+    /// Rebind constructor.
     template<typename U>
     allocator(allocator<U, Resource> const & x) noexcept
     {
@@ -128,6 +129,7 @@ namespace kp11
     allocator(Resource * resource) noexcept : resource(resource)
     {
     }
+    /// Rebind constructor.
     template<typename U>
     allocator(allocator<U, Resource *> const & x) noexcept : resource(x.get_resource())
     {
