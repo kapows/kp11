@@ -13,8 +13,8 @@ namespace kp11
 {
   /// @brief Splits single allocations from `Upstream` into multiple blocks that can be allocated.
   ///
-  /// Each memory block allocated from `Upstream` has an associated `Marker` which is used to
-  /// determine allocated and unallocated blocks.
+  /// Each memory block allocated from `Upstream` has a `Marker` to manage blocks. The `Marker`s
+  /// biggest value is cached when it is modified so that allocations that can't be met are skipped.
   ///
   /// @tparam Allocations Maximum number of concurrent allocations from `Upstream`.
   /// @tparam Marker Meets the `Marker` concept.
@@ -36,8 +36,8 @@ namespace kp11
     using byte_pointer = typename std::pointer_traits<pointer>::template rebind<std::byte>;
 
   public: // constructors
-    /// @param chunk_size Size in bytes of memory blocks.
-    /// @param chunk_alignment Alignment in bytes of memory blocks.
+    /// @param chunk_size Size in bytes of request to `Upstream`.
+    /// @param chunk_alignment Alignment in bytes of request to `Upstream` and free blocks.
     /// @param initial_allocations Number of initial allocations to try to make.
     /// @param args Constructor arguments to `Upstream`.
     ///
@@ -101,14 +101,14 @@ namespace kp11
     /// cached `biggests` value. If any can meet the requirements then allocate using the `Marker`
     /// and update it's value in `biggests`. Otherwise try to allocate a new memory block
     /// from `Upstream` and allocate from the new `Marker`.
-    /// * Complexity `O(n)`.
+    /// * Complexity `O(n)`
     ///
     /// @param bytes Size in bytes of memory to allocate.
     /// @param alignment Alignment in bytes of memory to allocate.
     ///
     /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
     /// `alignment`.
-    /// @returns (failure) `nullptr`.
+    /// @returns (failure) `nullptr`
     ///
     /// @pre `chunk_alignment (from ctor) % alignment == 0`
     ///
@@ -136,17 +136,16 @@ namespace kp11
         return nullptr;
       }
     }
-    /// Finds the memory block that `ptr` points into and resets the associated indexes in its
-    /// corresponding `Marker`, also updates the corresponding `biggests` value. If `ptr` does not
-    /// point to a memory block owned here then do nothing. `nullptr` is determined to not be owned.
-    /// * Complexity `O(n)`.
+    /// Find the allocation that `ptr` points into and reset the its `Marker` values and its
+    /// `biggests` value. `nullptr` is determined to not be owned.
+    /// * Complexity `O(n)`
     ///
     /// @param ptr Pointer to the beginning of a memory block.
     /// @param bytes Size in bytes of the memory block.
     /// @param alignment Alignment in bytes of the memory block.
     ///
-    /// @returns (success) `true`. `ptr` is owned.
-    /// @returns (failure) `false`. `ptr` is not owned.
+    /// @returns (success) `true`
+    /// @returns (failure) `false`
     ///
     /// @pre If `ptr` points to memory owned here then `bytes` and `alignment` must be the
     /// corresponding arguments to `allocate`.
@@ -161,7 +160,7 @@ namespace kp11
       }
       return false;
     }
-    /// Deallocates allocated memory back to `Upstream` and resets the corresponding metadata.
+    /// Deallocate allocated memory back to `Upstream` and clear all metadata.
     void release() noexcept
     {
       for (auto && p : ptrs)
@@ -173,7 +172,7 @@ namespace kp11
       markers.clear();
     }
 
-    /// Deallocates the most recently allocated memory back to `Upstream` if their markers have all
+    /// Deallocate the most recently allocated memory back to `Upstream` if their markers have all
     /// vacant spots.
     void shrink_to_fit() noexcept
     {
@@ -193,10 +192,10 @@ namespace kp11
     }
 
   private: // allocate helper
-    /// Helper function to make it easier to allocate from each `Marker` and update the
-    /// corresponding `biggests` value. Function does not return `nullptr`.
+    /// Helper function to make it easier to allocate from each `Marker` and update its `biggests`
+    /// value. Does not return `nullptr`.
     ///
-    /// @pre `num_blocks <= biggests[index]`.
+    /// @pre `num_blocks <= biggests[index]`
     ///
     /// @returns Pointer to the beginning of a memory block of size `bytes` aligned to
     /// `alignment`.
@@ -209,12 +208,12 @@ namespace kp11
     }
 
   public: // observers
-    /// Checks whether or not `ptr` points in to memory owned here.
+    /// Check whether or not `ptr` points into an allocation from `Upstream`.
     ///
     /// @param ptr Pointer to memory.
     ///
     /// @returns (success) Pointer to the beginning of the memory block to which `ptr` points.
-    /// @returns (failure) `nullptr`.
+    /// @returns (failure) `nullptr`
     pointer operator[](pointer ptr) const noexcept
     {
       if (auto i = find(static_cast<byte_pointer>(ptr)); i != ptrs.max_size())
@@ -242,12 +241,12 @@ namespace kp11
     }
 
   private: // helper
-    /// Finds the index of the memory block to which `ptr` points. This function makes it easier to
+    /// Find the index of the allocation to which `ptr` points. This function makes it easier to
     /// deal with our split biggests/ptrs/markers structure since we'll need a common index to
     /// access the corresponding parts.
     ///
     /// @returns (success) Index of the memory block to which `ptr` points.
-    /// @returns (failure) `ptrs.max_size()`.
+    /// @returns (failure) `ptrs.max_size()`
     std::size_t find(byte_pointer ptr) const noexcept
     {
       for (std::size_t i = 0, last = ptrs.size(); i < last; ++i)
@@ -262,12 +261,11 @@ namespace kp11
     }
 
   private: // modifiers
-    /// Allocates a new block of memory from `Upstream` and constructs another `Marker` for it and a
-    /// `biggest` cached value. Will fail if max allocations has been reached or if `Upstream` fails
-    /// allocation.
+    /// Allocate from `Upstream` and construct another `Marker` and a `biggests` value. Fail if max
+    /// allocations has been reached or if `Upstream` fails allocation.
     ///
-    /// @returns (success) `true`.
-    /// @returns (failure) `false`.
+    /// @returns (success) `true`
+    /// @returns (failure) `false`
     bool push_back() noexcept
     {
       if (ptrs.size() == ptrs.capacity())
@@ -284,7 +282,7 @@ namespace kp11
       return false;
     }
 
-    /// Deallocates the most recently allocated block of memory back to `Upstream`.
+    /// Deallocate the most recent allocation to `Upstream`.
     ///
     /// @pre `ptrs.empty() == false`
     void pop_back() noexcept
