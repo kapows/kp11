@@ -174,6 +174,24 @@ namespace kp11
       markers.clear();
     }
 
+    /// Deallocates the most recently allocated memory back to `Upstream` if their markers have all
+    /// vacant spots.
+    void shrink_to_fit() noexcept
+    {
+      while (markers.size())
+      {
+        auto & m = markers.back();
+        if (m.size() == m.max_size())
+        {
+          pop_back();
+        }
+        else
+        {
+          break;
+        }
+      }
+    }
+
   private: // allocate helper
     /// Helper function to make it easier to allocate from each `Marker` and update the
     /// corresponding `biggests` value. Function does not return `nullptr`.
@@ -264,6 +282,18 @@ namespace kp11
         return true;
       }
       return false;
+    }
+
+    /// Deallocates the most recently allocated block of memory back to `Upstream`.
+    ///
+    /// @pre `ptrs.empty() == false`
+    void pop_back() noexcept
+    {
+      assert(!ptrs.empty());
+      upstream.deallocate(ptrs.back(), chunk_size, chunk_alignment);
+      ptrs.pop_back();
+      biggests.pop_back();
+      markers.pop_back();
     }
 
   private: // Marker helper functions
