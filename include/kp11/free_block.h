@@ -98,9 +98,9 @@ namespace kp11
 
   public: // modifiers
     /// Check if existing `Marker`s can allocate the required blocks by checking the corresponding
-    /// cached `biggests` value. If any can meet the requirements then allocate using the `Marker`
-    /// and update it's value in `biggests`. Otherwise try to allocate a new memory block
-    /// from `Upstream` and allocate from the new `Marker`.
+    /// cached `biggests` value. If any can, then allocate using its `Marker` and update its
+    /// `biggests` value. Otherwise try to allocate a new memory block from `Upstream` and allocate
+    /// from the new `Marker`.
     /// * Complexity `O(n)`
     ///
     /// @param bytes Size in bytes of memory to allocate.
