@@ -9,7 +9,7 @@
 
 namespace kp11
 {
-  /// @brief Allocates from a buffer of memory inside itself.
+  /// @brief Allocate from a buffer of memory inside itself.
   ///
   /// Only one address will ever be allocated and that is to the start of the buffer. A `bool` is
   /// used to track the whether the buffer has been allocated or not.
@@ -35,17 +35,17 @@ namespace kp11
   public: // modifiers
     /// If our memory has not already been allocated and we can fulfil the size request then a
     /// pointer to the beginning of our buffer is allocated.
-    /// * Complexity `O(1)`.
+    /// * Complexity `O(1)`
     ///
     /// @param bytes Size in bytes of memory to allocate.
     /// @param alignment Alignment of memory to allocate.
     ///
     /// @returns (success) Pointer to the beginning of our buffer.
-    /// @returns (failure) `nullptr`.
+    /// @returns (failure) `nullptr`
     ///
-    /// @pre `Alignment % alignment == 0`.
+    /// @pre `Alignment % alignment == 0`
     ///
-    /// @post (success) (Return value) will not be returned again until it has been `deallocated`.
+    /// @post (success) (return value) will not be returned again until it has been `deallocated`.
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
       assert(Alignment % alignment == 0);
@@ -57,14 +57,14 @@ namespace kp11
       return nullptr;
     }
     /// If `ptr` points to the beginning of our buffer then we can allocate our buffer again.
-    /// * Complexity `O(1)`.
+    /// * Complexity `O(1)`
     ///
     /// @param ptr Pointer to the beginning of a memory block.
     /// @param bytes Size in bytes of the memory block.
     /// @param alignment Alignment in bytes of the memory block.
     ///
-    /// @returns (success) `true`.
-    /// @returns (failure) `false`.
+    /// @returns (success) `true`
+    /// @returns (failure) `false`
     bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
       if (static_cast<byte_pointer>(ptr) == buffer_ptr())
@@ -81,7 +81,7 @@ namespace kp11
     /// @param ptr Pointer to memory.
     ///
     /// @returns (success) Pointer to the beginning of our buffer.
-    /// @returns (failure) `nullptr`.
+    /// @returns (failure) `nullptr`
     pointer operator[](pointer ptr) noexcept
     {
       if (has(static_cast<byte_pointer>(ptr)))
@@ -94,8 +94,8 @@ namespace kp11
   private: // helpers
     /// Check if `ptr` points inside our buffer.
     ///
-    /// @returns (success) `true`.
-    /// @returns (failure) `false`.
+    /// @returns (success) `true`
+    /// @returns (failure) `false`
     bool has(byte_pointer ptr) noexcept
     {
       if (auto const buf = buffer_ptr();
