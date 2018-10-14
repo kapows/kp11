@@ -11,7 +11,7 @@
 
 namespace kp11
 {
-  /// @brief Advances a pointer through single allocations from `Upstream`. Deallocation is a no-op.
+  /// @brief Advance a pointer through single allocations from `Upstream`. Deallocation is a no-op.
   ///
   /// @tparam Allocations Maximum number of concurrent allocations from `Upstream`.
   /// @tparam Upstream Meets the `Resource` concept.
@@ -31,18 +31,18 @@ namespace kp11
     using byte_pointer = typename std::pointer_traits<pointer>::template rebind<std::byte>;
 
   public: // constructors
-    /// @param bytes Size in bytes of memory to request from `Upstream`.
-    /// @param alignment Alignment in bytes of memory to request from `Upstream` and the size of
-    /// each memory block.
-    /// @param initial_allocation Whther or not to try to allocate memory in the constructor.
+    /// @param chunk_size Size in bytes of a request to `Upstream`.
+    /// @param chunk_alignment Alignment in bytes of a request to `Upstream` and of each memory
+    /// block.
+    /// @param initial_allocation Whether or not to try to allocate memory in the constructor.
     /// @param args Constructor arguments to `Upstream`.
     template<typename... Args>
-    monotonic(size_type bytes,
-      size_type alignment,
+    monotonic(size_type chunk_size,
+      size_type chunk_alignment,
       bool initial_allocation = false,
       Args &&... args) noexcept :
-        bytes(bytes),
-        alignment(alignment), upstream(std::forward<Args>(args)...)
+        chunk_size(chunk_size),
+        chunk_alignment(chunk_alignment), upstream(std::forward<Args>(args)...)
     {
       if (initial_allocation)
       {
@@ -51,31 +51,27 @@ namespace kp11
     }
     /// Deleted because a resource is being held and managed.
     monotonic(monotonic const &) = delete;
-    /// Defined because the destructor is defined.
+    /// Defined because the destructor is defined. `x` is left is a valid but unspecified state.
     monotonic(monotonic && x) noexcept :
-        bytes(x.bytes), alignment(x.alignment), first(x.first), last(x.last),
+        chunk_size(x.chunk_size), chunk_alignment(x.chunk_alignment), first(x.first), last(x.last),
         ptrs(std::move(x.ptrs)), upstream(std::move(x.upstream))
     {
-      x.first = nullptr;
-      x.last = nullptr;
       x.ptrs.clear();
     }
     /// Deleted because a resource is being held and managed.
     monotonic & operator=(monotonic const &) = delete;
-    /// Defined because the destructor is defined.
+    /// Defined because the destructor is defined. `x` is left is a valid but unspecified state.
     monotonic & operator=(monotonic && x) noexcept
     {
       if (this != &x)
       {
-        bytes = x.bytes;
-        alignment = x.alignment;
+        chunk_size = x.chunk_size;
+        chunk_alignment = x.chunk_alignment;
         first = x.first;
         last = x.last;
         ptrs = std::move(x.ptrs);
         upstream = std::move(x.upstream);
 
-        x.first = nullptr;
-        x.last = nullptr;
         x.ptrs.clear();
       }
       return *this;
@@ -87,8 +83,8 @@ namespace kp11
     }
 
   public: // modifiers
-    /// Tries to allocate from the latest memory block. If that fails then tries to allocate a new
-    /// memory block from `Upstream` and allocates from this new memory block.
+    /// Try to allocate from the latest memory block. Otherwise try to allocate a new memory block
+    /// from `Upstream` and allocates from this new memory block.
     /// * Complexity `O(1)`
     ///
     /// @param bytes Size in bytes of memory to allocate.
@@ -96,12 +92,12 @@ namespace kp11
     ///
     /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
     /// `alignment`.
-    /// @returns (failure) `nullptr`.
+    /// @returns (failure) `nullptr`
     ///
-    /// @pre `alignment (from ctor) % alignment == 0`
+    /// @pre `chunk_alignment (from ctor) % alignment == 0`
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
-      assert(this->alignment % alignment == 0);
+      assert(chunk_alignment % alignment == 0);
       bytes = round_up_to_our_alignment(bytes);
       if (auto ptr = allocate_from_back(bytes))
       {
@@ -120,20 +116,16 @@ namespace kp11
       }
     }
     /// No-op.
-    /// * Complexity `O(0)`.
-    ///
-    /// @param ptr Pointer to the beginning of a memory block.
-    /// @param bytes Size in bytes of the memory block.
-    /// @param alignment Alignment in bytes of the memory block.
+    /// * Complexity `O(0)`
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
     }
-    /// Deallocates allocated memory back to `Upstream`.
+    /// Deallocate allocated memory back to `Upstream` and clear all metadata.
     void release() noexcept
     {
       for (auto && p : ptrs)
       {
-        upstream.deallocate(static_cast<pointer>(p), bytes, alignment);
+        upstream.deallocate(static_cast<pointer>(p), chunk_size, chunk_alignment);
       }
       ptrs.clear();
       last = first = nullptr;
@@ -142,12 +134,14 @@ namespace kp11
   private: // allocate helpers
     size_type round_up_to_our_alignment(size_type bytes) const noexcept
     {
-      return bytes == 0 ? alignment : (bytes / alignment + (bytes % alignment != 0)) * alignment;
+      return bytes == 0 ?
+               chunk_alignment :
+               (bytes / chunk_alignment + (bytes % chunk_alignment != 0)) * chunk_alignment;
     }
     /// @pre `bytes % alignment == 0`.
     pointer allocate_from_back(size_type bytes) noexcept
     {
-      assert(bytes % alignment == 0);
+      assert(bytes % chunk_alignment == 0);
       if (auto space = static_cast<size_type>(last - first); bytes <= space)
       {
         return static_cast<pointer>(std::exchange(first, first + bytes));
@@ -156,39 +150,39 @@ namespace kp11
     }
 
   private: // modifiers
-    /// Allocates a new block of memory from `Upstream`. Can fail if max allocations has been
+    /// Allocate a new block of memory from `Upstream`. Can fail if max allocations has been
     /// reached or if `Upstream` fails allocation.
     ///
-    /// @returns (success) `true`.
-    /// @returns (failure) `false`.
+    /// @returns (success) `true`
+    /// @returns (failure) `false`
     bool push_back() noexcept
     {
       if (ptrs.size() == ptrs.capacity())
       {
         return false;
       }
-      if (auto ptr = upstream.allocate(bytes, alignment))
+      if (auto ptr = upstream.allocate(chunk_size, chunk_alignment))
       {
         first = ptrs.emplace_back(static_cast<byte_pointer>(ptr));
-        last = first + bytes;
+        last = first + chunk_size;
         return true;
       }
       return false;
     }
 
   public: // observers
-    /// Checks whether or not `ptr` points in to memory owned by us.
+    /// Check whether or not `ptr` points in to memory owned by us.
     ///
     /// @param ptr Pointer to memory.
     ///
     /// @returns (success) Pointer to the beginning of the memory block to which `ptr` points.
-    /// @returns (failure) `nullptr`.
+    /// @returns (failure) `nullptr`
     pointer operator[](pointer ptr) const noexcept
     {
       for (auto && p : ptrs)
       {
         if (std::less_equal<pointer>()(static_cast<pointer>(p), ptr) &&
-            std::less<pointer>()(ptr, static_cast<pointer>(p + bytes)))
+            std::less<pointer>()(ptr, static_cast<pointer>(p + chunk_size)))
         {
           return static_cast<pointer>(p);
         }
@@ -210,9 +204,9 @@ namespace kp11
 
   private: // variables
     /// Size in bytes of memory to allocate from `Upstream`.
-    size_type bytes;
-    /// Size in bytes of alignment of memory to allocate from `Upstream`.
-    size_type alignment;
+    size_type chunk_size;
+    /// Size in bytes of alignment of memory to allocate from `Upstream` and our block size.
+    size_type chunk_alignment;
     /// Current position of beginning of allocatable memory.
     byte_pointer first = nullptr;
     /// End of allocatable memory.
