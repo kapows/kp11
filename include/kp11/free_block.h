@@ -97,11 +97,10 @@ namespace kp11
     }
 
   public: // modifiers
-    /// Tests to see whether an existing `Marker` is able to allocate the required blocks by
-    /// checking the corresponding cached `biggests` value. If there is enough consecutive vacant
-    /// spots to fulfil the request then allocates using the corresponding `Marker` and updates the
-    /// corresponding `biggests`. If that fails, tries to allocate a new memory block from
-    /// `Upstream` and allocates from this memory using it's corresponding `Marker`.
+    /// Check if existing `Marker`s can allocate the required blocks by checking the corresponding
+    /// cached `biggests` value. If any can meet the requirements then allocate using the `Marker`
+    /// and update it's value in `biggests`. Otherwise try to allocate a new memory block
+    /// from `Upstream` and allocate from the new `Marker`.
     /// * Complexity `O(n)`.
     ///
     /// @param bytes Size in bytes of memory to allocate.
@@ -114,7 +113,7 @@ namespace kp11
     /// @pre `chunk_alignment (from ctor) % alignment == 0`
     ///
     /// @post (success) (return value) will not be returned again until it has been `deallocated`.
-    /// This is dependent on `Marker`.
+    /// Depends on `Marker`.
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
       assert(chunk_alignment % alignment == 0);
