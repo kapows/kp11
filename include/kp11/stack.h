@@ -21,10 +21,10 @@ namespace kp11
     using size_type = std::size_t;
 
   public: // capacity
-    /// @returns Number of vacant spots.
+    /// @returns Number of occupied spots.
     size_type size() const noexcept
     {
-      return max_size() - first;
+      return first;
     }
     /// @returns Total number of spots (`N`).
     static constexpr size_type max_size() noexcept
@@ -37,7 +37,7 @@ namespace kp11
     /// @returns The largest number of consecutive vacant spots.
     size_type biggest() const noexcept
     {
-      return size();
+      return max_size() - size();
     }
 
   public: // modifiers

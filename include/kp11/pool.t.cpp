@@ -12,13 +12,13 @@ TEST_CASE("max_size", "[max_size]")
   {
     pool<10> m;
     REQUIRE(m.max_size() == 10);
-    REQUIRE(m.size() == m.max_size());
+    REQUIRE(m.size() == 0);
   }
   SECTION("2")
   {
     pool<101581> m;
     REQUIRE(m.max_size() == 101581);
-    REQUIRE(m.size() == m.max_size());
+    REQUIRE(m.size() == 0);
   }
 }
 TEST_CASE("biggest", "[biggest]")
@@ -44,13 +44,13 @@ TEST_CASE("set", "[set]")
   {
     auto a = m.set(1);
     REQUIRE(a == 0);
-    REQUIRE(m.size() == 9);
+    REQUIRE(m.size() == 1);
     SECTION("post condition")
     {
       auto b = m.set(1);
       REQUIRE(b == 1);
       REQUIRE(b != a);
-      REQUIRE(m.size() == 8);
+      REQUIRE(m.size() == 2);
     }
   }
 }
@@ -61,7 +61,7 @@ TEST_CASE("reset", "[reset]")
   {
     auto a = m.set(1);
     m.reset(a, 1);
-    REQUIRE(m.size() == 10);
+    REQUIRE(m.size() == 0);
     auto b = m.set(1);
     REQUIRE(b == a);
   }

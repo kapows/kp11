@@ -12,13 +12,13 @@ TEST_CASE("size", "[size]")
   {
     bitset<10> m;
     REQUIRE(m.max_size() == 10);
-    REQUIRE(m.size() == m.max_size());
+    REQUIRE(m.size() == 0);
   }
   SECTION("2")
   {
     bitset<101581> m;
     REQUIRE(m.max_size() == 101581);
-    REQUIRE(m.size() == m.max_size());
+    REQUIRE(m.size() == 0);
   }
 }
 TEST_CASE("biggest", "[biggest]")
@@ -67,13 +67,13 @@ TEST_CASE("set", "[set]")
   {
     auto a = m.set(1);
     REQUIRE(a == 0);
-    REQUIRE(m.size() == 9);
+    REQUIRE(m.size() == 1);
     SECTION("post condition")
     {
       auto b = m.set(1);
       REQUIRE(b == 1);
       REQUIRE(b != a);
-      REQUIRE(m.size() == 8);
+      REQUIRE(m.size() == 2);
     }
   }
   SECTION("set many")
@@ -86,7 +86,7 @@ TEST_CASE("set", "[set]")
       auto b = m.set(5);
       REQUIRE(b == 5);
       REQUIRE(b != a);
-      REQUIRE(m.size() == 0);
+      REQUIRE(m.size() == 10);
     }
   }
 }
@@ -97,7 +97,7 @@ TEST_CASE("reset", "[reset]")
   SECTION("recovers indexes")
   {
     m.reset(a, 5);
-    REQUIRE(m.size() == 10);
+    REQUIRE(m.size() == 0);
     auto b = m.set(10);
     REQUIRE(b == a);
   }
