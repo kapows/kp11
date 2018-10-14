@@ -178,7 +178,8 @@ namespace kp11
     /// vacant spots.
     void shrink_to_fit() noexcept
     {
-      while (markers.size())
+      // Use `ptrs` here instead of `markers` so that it works with "moved from" objects.
+      while (ptrs.size())
       {
         auto & m = markers.back();
         if (m.size() == m.max_size())
