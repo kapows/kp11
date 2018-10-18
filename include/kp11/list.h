@@ -111,6 +111,7 @@ namespace kp11
       assert(n <= biggest());
       size_type node_index = 0;
       // Find first fit
+      // Have to find first fit first so that our best fit can have something to compare against.
       for (; free_list[node_index].size < n; ++node_index)
       {
       }
