@@ -116,12 +116,21 @@ namespace kp11
       {
       }
       // Find best fit
-      for (size_type i = node_index + 1, last = static_cast<size_type>(free_list.size()); i != last;
-           ++i)
+      // Exact fit is best fit, so quit asap.
+      if (free_list[node_index].size != n)
       {
-        if (n <= free_list[i].size && free_list[i].size < free_list[node_index].size)
+        for (size_type i = node_index + 1, last = static_cast<size_type>(free_list.size());
+             i != last;
+             ++i)
         {
-          node_index = i;
+          if (n <= free_list[i].size && free_list[i].size < free_list[node_index].size)
+          {
+            node_index = i;
+            if (free_list[node_index].size == n)
+            {
+              break;
+            }
+          }
         }
       }
       auto & node = free_list[node_index];
