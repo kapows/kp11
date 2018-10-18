@@ -109,27 +109,18 @@ namespace kp11
     {
       assert(n > 0);
       assert(n <= biggest());
-      size_type node_index = 0;
-      // Find first fit
-      // Have to find first fit first so that our best fit can have something to compare against.
-      for (; free_list[node_index].size < n; ++node_index)
-      {
-      }
+      size_type node_index = max_size();
       // Find best fit
-      // Exact fit is best fit, so quit asap.
-      if (free_list[node_index].size != n)
+      for (size_type i = 0, last = static_cast<size_type>(free_list.size()); i != last; ++i)
       {
-        for (size_type i = node_index + 1, last = static_cast<size_type>(free_list.size());
-             i != last;
-             ++i)
+        if (n <= free_list[i].size &&
+            (node_index == max_size() || free_list[i].size < free_list[node_index].size))
         {
-          if (n <= free_list[i].size && free_list[i].size < free_list[node_index].size)
+          node_index = i;
+          // Exact fit is best fit
+          if (free_list[node_index].size == n)
           {
-            node_index = i;
-            if (free_list[node_index].size == n)
-            {
-              break;
-            }
+            break;
           }
         }
       }
