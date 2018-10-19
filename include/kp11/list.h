@@ -109,21 +109,9 @@ namespace kp11
     {
       assert(n > 0);
       assert(n <= biggest());
-      auto node_index = find_best_fit(n);
-      auto & node = free_list[node_index];
-      node.size -= n;
-      auto const index = node.index + node.size;
-      set_cache(index, n, max_size());
-      if (node.size > 0)
-      {
-        set_cache(node.index, node.size, node_index);
-      }
-      else
-      {
-        remove_node(node_index);
-      }
       num_occupied += n;
-      return index;
+      auto node_index = find_best_fit(n);
+      return take_back(node_index, n);
     }
     /// If the node has adjacent nodes then they are checked to see whether or not they are vacant.
     /// If there are two vacant adjacent nodes then merge them into one node whilst removing the
@@ -217,6 +205,31 @@ namespace kp11
         }
       }
       return node_index;
+    }
+    /// Takes `size` spots out of the free list node at index `node_index`.
+    ///
+    /// @param node_index Index of the free list node.
+    /// @param size Number of spots to take.
+    ///
+    /// @pre `free_list[node_index].size >= size`
+    ///
+    /// @returns Index to the taken spot of size `size`.
+    size_type take_back(size_type node_index, size_type size) noexcept
+    {
+      assert(free_list[node_index].size >= size);
+      auto & node = free_list[node_index];
+      node.size -= size;
+      auto const index = node.index + node.size;
+      set_cache(index, size, max_size());
+      if (node.size > 0)
+      {
+        set_cache(node.index, node.size, node_index);
+      }
+      else
+      {
+        remove_node(node_index);
+      }
+      return index;
     }
 
   private: // variables
