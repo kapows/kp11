@@ -109,21 +109,7 @@ namespace kp11
     {
       assert(n > 0);
       assert(n <= biggest());
-      size_type node_index = max_size();
-      // Find best fit
-      for (size_type i = 0, last = static_cast<size_type>(free_list.size()); i != last; ++i)
-      {
-        if (n <= free_list[i].size &&
-            (node_index == max_size() || free_list[i].size < free_list[node_index].size))
-        {
-          node_index = i;
-          // Exact fit is best fit
-          if (free_list[node_index].size == n)
-          {
-            break;
-          }
-        }
-      }
+      auto node_index = find_best_fit(n);
       auto & node = free_list[node_index];
       node.size -= n;
       auto const index = node.index + node.size;
@@ -212,6 +198,25 @@ namespace kp11
         set_cache(free_list[node_index].index, free_list[node_index].size, node_index);
       }
       free_list.pop_back();
+    }
+    /// @returns The index to the free list node that is the best fit for `n`.
+    size_type find_best_fit(size_type n) const noexcept
+    {
+      size_type node_index = max_size();
+      for (size_type i = 0, last = static_cast<size_type>(free_list.size()); i != last; ++i)
+      {
+        if (n <= free_list[i].size &&
+            (node_index == max_size() || free_list[i].size < free_list[node_index].size))
+        {
+          node_index = i;
+          // Exact fit is best fit
+          if (free_list[node_index].size == n)
+          {
+            break;
+          }
+        }
+      }
+      return node_index;
     }
 
   private: // variables
