@@ -137,7 +137,8 @@ namespace kp11
         add_back(previous_index, n);
         if (next_is_vacant)
         {
-          auto next = free_list[cache[index + n]];
+          // Need to know the size of next.
+          auto const next = free_list[cache[index + n]];
           take_back(next.index, next.size);
           add_back(previous_index, next.size);
         }
