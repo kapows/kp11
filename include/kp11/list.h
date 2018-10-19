@@ -209,6 +209,7 @@ namespace kp11
     size_type take_back(size_type index, size_type size) noexcept
     {
       assert(index < max_size());
+      assert(size > 0);
       auto node_index = cache[index];
       auto & node = free_list[node_index];
       assert(node.size >= size);
