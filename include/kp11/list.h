@@ -180,11 +180,13 @@ namespace kp11
     }
     /// Forward iterate through the free list to find the best fit spot for `n`.
     ///
+    /// @pre `n > 0`
     /// @pre `n <= biggest()`
     ///
     /// @returns The index to the spot that is the best fit for `n`.
     size_type find_best_fit(size_type n) const noexcept
     {
+      assert(n > 0);
       assert(n <= biggest());
       size_type node_index = max_size();
       for (size_type i = 0, last = static_cast<size_type>(free_list.size()); i != last; ++i)
