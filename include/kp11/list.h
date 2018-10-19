@@ -108,9 +108,8 @@ namespace kp11
       assert(n > 0);
       assert(n <= biggest());
       num_occupied += n;
-      auto node_index = find_best_fit(n);
-      assert(cache[free_list[node_index].index] == node_index);
-      return take_back(free_list[node_index].index, n);
+      auto const index = find_best_fit(n);
+      return take_back(index, n);
     }
     /// If the node has adjacent nodes then they are checked to see whether or not they are vacant.
     /// If there are two vacant adjacent nodes then merge them into one node whilst removing the
@@ -177,7 +176,7 @@ namespace kp11
       }
       free_list.pop_back();
     }
-    /// @returns The index to the free list node that is the best fit for `n`.
+    /// @returns The index to the spot that is the best fit for `n`.
     size_type find_best_fit(size_type n) const noexcept
     {
       size_type node_index = max_size();
@@ -194,7 +193,7 @@ namespace kp11
           }
         }
       }
-      return node_index;
+      return free_list[node_index].index;
     }
     /// Takes `size` spots out of the free list node belonging to `index`. If the number of spots
     /// in the free list node is zero, the node is removed.
