@@ -55,9 +55,7 @@ namespace kp11
     {
       if constexpr (max_size() > 0)
       {
-        auto & node = free_list.emplace_back(max_size(), 0);
-        auto node_index = static_cast<size_type>(free_list.size() - 1);
-        set_cache(node.index, node.size, node_index);
+        push_back(0, max_size());
       }
     }
 
@@ -147,20 +145,21 @@ namespace kp11
           remove_node(next_node_index);
           node_index = cache[previous_cache_index];
         }
+        auto & node = free_list[node_index];
+        set_cache(node.index, node.size, node_index);
       }
       else if (next_is_vacant)
       {
         node_index = cache[index + n];
         free_list[node_index].size += n;
         free_list[node_index].index = index;
+        auto & node = free_list[node_index];
+        set_cache(node.index, node.size, node_index);
       }
       else
       {
-        free_list.emplace_back(n, index);
-        node_index = static_cast<size_type>(free_list.size() - 1);
+        push_back(index, n);
       }
-      auto & node = free_list[node_index];
-      set_cache(node.index, node.size, node_index);
     }
 
   private: // helpers
@@ -230,6 +229,13 @@ namespace kp11
         remove_node(node_index);
       }
       return index;
+    }
+    /// Add a node to the back of the free list. Updates the cache for the new node.
+    void push_back(size_type index, size_type size) noexcept
+    {
+      free_list.emplace_back(size, index);
+      auto const node_index = static_cast<size_type>(free_list.size() - 1);
+      set_cache(free_list[node_index].index, free_list[node_index].size, node_index);
     }
 
   private: // variables
