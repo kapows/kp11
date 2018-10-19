@@ -221,7 +221,7 @@ namespace kp11
       assert(size > 0);
       assert(cache[index] != max_size());
       auto node_index = cache[index];
-      auto & node = free_list[node_index];
+      auto && node = free_list[node_index];
       assert(node.size >= size);
       node.size -= size;
       auto const taken_index = std::exchange(node.index, node.index + size);
