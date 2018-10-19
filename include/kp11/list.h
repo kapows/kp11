@@ -110,7 +110,7 @@ namespace kp11
       num_occupied += n;
       auto node_index = find_best_fit(n);
       assert(cache[free_list[node_index].index] == node_index);
-      return take_back(node_index, n);
+      return take_back(free_list[node_index].index, n);
     }
     /// If the node has adjacent nodes then they are checked to see whether or not they are vacant.
     /// If there are two vacant adjacent nodes then merge them into one node whilst removing the
@@ -139,7 +139,7 @@ namespace kp11
         {
           auto const next_node_index = cache[index + n];
           auto next = free_list[next_node_index];
-          take_back(next_node_index, next.size);
+          take_back(index + n, next.size);
           add_back(previous_cache_index, next.size);
         }
       }
@@ -196,22 +196,20 @@ namespace kp11
       }
       return node_index;
     }
-    /// Takes `size` spots out of the free list node at index `node_index`. If the number of spots
+    /// Takes `size` spots out of the free list node belonging to `index`. If the number of spots
     /// in the free list node is zero, the node is removed.
     ///
-    /// @param node_index Index of the free list node.
+    /// @param index Index of the beginning of the vacant spots to take from.
     /// @param size Number of spots to take.
     ///
-    /// @pre `free_list[node_index].size >= size`
-    ///
     /// @returns Index to the taken spot of size `size`.
-    size_type take_back(size_type node_index, size_type size) noexcept
+    size_type take_back(size_type index, size_type size) noexcept
     {
-      assert(free_list[node_index].size >= size);
+      auto node_index = cache[index];
       auto & node = free_list[node_index];
       node.size -= size;
-      auto const index = node.index + node.size;
-      set_cache(index, size, max_size());
+      auto const taken_index = node.index + node.size;
+      set_cache(taken_index, size, max_size());
       if (node.size > 0)
       {
         set_cache(node.index, node.size, node_index);
@@ -220,7 +218,7 @@ namespace kp11
       {
         remove_node(node_index);
       }
-      return index;
+      return taken_index;
     }
     /// Adds `size` vacant spots to the back of the free list node belonging to `index`.
     ///
