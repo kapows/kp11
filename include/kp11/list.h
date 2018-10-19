@@ -78,7 +78,8 @@ namespace kp11
     {
       return static_cast<size_type>(N);
     }
-    /// Forward iterates through the free list to find the largest number of consecutive spots.
+    /// Forward iterates through the free list to find the largest number of consecutive vacant
+    /// spots.
     /// * Complexity `O(n)`
     ///
     /// @returns The largest number of consecutive vacant spots.
