@@ -129,13 +129,12 @@ namespace kp11
       assert(n > 0);
       assert(index + n <= max_size());
       num_occupied -= n;
-      size_type node_index;
       auto const previous_is_vacant = index > 0 && cache[index - 1] != max_size();
       auto const next_is_vacant = index + n < max_size() && cache[index + n] != max_size();
       if (previous_is_vacant)
       {
         auto const previous_cache_index = free_list[cache[index - 1]].index;
-        node_index = cache[previous_cache_index];
+        auto node_index = cache[previous_cache_index];
         add_back(node_index, n);
         if (next_is_vacant)
         {
@@ -150,11 +149,8 @@ namespace kp11
       }
       else if (next_is_vacant)
       {
-        node_index = cache[index + n];
-        free_list[node_index].size += n;
-        free_list[node_index].index = index;
-        auto & node = free_list[node_index];
-        set_cache(node.index, node.size, node_index);
+        auto node_index = cache[index + n];
+        add_front(node_index, n);
       }
       else
       {
@@ -237,6 +233,16 @@ namespace kp11
     void add_back(size_type node_index, size_type size) noexcept
     {
       free_list[node_index].size += size;
+      set_cache(free_list[node_index].index, free_list[node_index].size, node_index);
+    }
+    /// Adds `size` vacant spots to the front of the free list node at `node_index`.
+    ///
+    /// @param node_index Index of the free list node.
+    /// @param size Number of spots to add.
+    void add_front(size_type node_index, size_type size) noexcept
+    {
+      free_list[node_index].size += size;
+      free_list[node_index].index -= size;
       set_cache(free_list[node_index].index, free_list[node_index].size, node_index);
     }
     /// Add a node to the back of the free list. Updates the cache for the new node.
