@@ -201,7 +201,8 @@ namespace kp11
       }
       return node_index;
     }
-    /// Takes `size` spots out of the free list node at index `node_index`.
+    /// Takes `size` spots out of the free list node at index `node_index`. If the number of spots
+    /// in the free list node is zero, the node is removed.
     ///
     /// @param node_index Index of the free list node.
     /// @param size Number of spots to take.
