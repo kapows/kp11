@@ -174,16 +174,17 @@ namespace kp11
       cache[index + (size - 1)] = cache[index] = node_index;
     }
     /// Node removal helper because the cache needs to be kept in sync.
+    /// Move and pop with back.
     /// Note the removed node does not get cache updating. Order is not guaranteed.
     void remove_node(size_type node_index) noexcept
     {
       assert(node_index < free_list.size());
       assert(free_list[node_index].size == 0);
-      if (auto const back_node_index = static_cast<size_type>(free_list.size() - 1);
-          node_index != back_node_index)
+      auto && node = free_list[node_index];
+      node = free_list.back();
+      if (node.size)
       {
-        free_list[node_index] = free_list[back_node_index];
-        set_cache(free_list[node_index].index, free_list[node_index].size, node_index);
+        set_cache(node.index, node.size, node_index);
       }
       free_list.pop_back();
     }
