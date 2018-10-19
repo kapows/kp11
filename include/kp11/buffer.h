@@ -49,6 +49,12 @@ namespace kp11
     /// @post (success) (return value) will not be returned again until it has been `deallocated`.
     pointer allocate(size_type bytes, size_type alignment) noexcept
     {
+      assert(this->alignment % alignment == 0);
+      if (!allocated && bytes <= this->bytes)
+      {
+        allocated = true;
+        return static_cast<pointer>(ptr);
+      }
       return nullptr;
     }
     /// If `ptr` points to the beginning of our buffer then we can allocate our buffer again.
@@ -62,6 +68,11 @@ namespace kp11
     /// @returns (failure) `false`
     bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
+      if (static_cast<byte_pointer>(ptr) == this->ptr)
+      {
+        allocated = false;
+        return true;
+      }
       return false;
     }
 
@@ -74,6 +85,10 @@ namespace kp11
     /// @returns (failure) `nullptr`
     pointer operator[](pointer ptr) noexcept
     {
+      if (has(static_cast<byte_pointer>(ptr)))
+      {
+        return static_cast<pointer>(this->ptr);
+      }
       return nullptr;
     }
 
