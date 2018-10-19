@@ -178,6 +178,10 @@ namespace kp11
       }
       free_list.pop_back();
     }
+    /// Forward iterate through the free list to find the best fit spot for `n`.
+    ///
+    /// @pre `n <= biggest()`
+    ///
     /// @returns The index to the spot that is the best fit for `n`.
     size_type find_best_fit(size_type n) const noexcept
     {
