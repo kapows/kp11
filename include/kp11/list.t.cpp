@@ -202,7 +202,7 @@ TEST_CASE("reset", "[reset]")
     REQUIRE(m.biggest() == 7);
   }
 }
-TEST_CASE("internal biggest", "[biggest]")
+TEST_CASE("best fit", "[bestfit]")
 {
   list<10> m;
   auto a = m.set(1);
@@ -217,20 +217,15 @@ TEST_CASE("internal biggest", "[biggest]")
   [[maybe_unused]] auto j = m.set(1);
   // empty
   REQUIRE(m.size() == 10);
-  // make biggest is 2
+
+  m.reset(a, 1);
+  m.reset(b, 1);
+  m.reset(c, 1);
+
   m.reset(e, 1);
   m.reset(f, 1);
 
-  // make biggest is 3
-  m.reset(a, 1);
-  m.reset(c, 1);
-  m.reset(b, 1);
-
-  SECTION("set the biggest")
-  {
-    [[maybe_unused]] auto k = m.set(3);
-  }
-  SECTION("set the 2nd biggest")
+  SECTION("set the best fit")
   {
     [[maybe_unused]] auto k = m.set(2);
   }
