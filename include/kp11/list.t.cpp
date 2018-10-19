@@ -230,6 +230,28 @@ TEST_CASE("best fit", "[bestfit]")
     [[maybe_unused]] auto k = m.set(2);
   }
 }
+TEST_CASE("max free list", "[max_free_list]")
+{
+  list<11> m;
+  auto a = m.set(1);
+  [[maybe_unused]] auto b = m.set(1);
+  auto c = m.set(1);
+  [[maybe_unused]] auto d = m.set(1);
+  auto e = m.set(1);
+  [[maybe_unused]] auto f = m.set(1);
+  auto g = m.set(1);
+  [[maybe_unused]] auto h = m.set(1);
+  auto i = m.set(1);
+  [[maybe_unused]] auto j = m.set(1);
+  auto k = m.set(1);
+  m.reset(a, 1);
+  m.reset(c, 1);
+  m.reset(e, 1);
+  m.reset(g, 1);
+  m.reset(i, 1);
+  m.reset(k, 1);
+  REQUIRE(m.size() == 5);
+}
 TEST_CASE("traits", "[traits]")
 {
   REQUIRE(is_marker_v<list<10>> == true);
