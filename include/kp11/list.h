@@ -6,7 +6,7 @@
 #include <cassert> // assert
 #include <cstddef> // size_t
 #include <cstdint> // uint_least8_t, UINT_LEAST8_MAX
-#include <utility> // swap
+#include <utility> // swap, exchange
 
 namespace kp11
 {
@@ -117,7 +117,7 @@ namespace kp11
       assert(n > 0);
       assert(n <= biggest());
       auto const index = find_best_fit(n);
-      return take_back(index, n);
+      return take_front(index, n);
     }
     /// If the node has adjacent nodes then they are checked to see whether or not they are vacant.
     /// If there are two vacant adjacent nodes then merge them into one node whilst removing the
@@ -145,9 +145,9 @@ namespace kp11
         add_back(previous_index, n);
         if (next_is_vacant)
         {
-          // Need to know the size of next. This must be a copy, as take_back will remove the node.
+          // Need to know the size of next. This must be a copy, as take_front will remove the node.
           auto const next = free_list[cache[index + n]];
-          take_back(next.index, next.size);
+          take_front(next.index, next.size);
           add_back(previous_index, next.size);
         }
       }
@@ -212,10 +212,10 @@ namespace kp11
       assert(node_index != max_size());
       return free_list[node_index].index;
     }
-    /// Takes `size` spots out of the free list node belonging to `index` and sets the cache to
-    /// max_size(). If the number of spots in the free list node not zero, the cache for `index` is
-    /// updated, otherwise, the node is removed.
-    size_type take_back(size_type index, size_type size) noexcept
+    /// Takes `size` spots out of the front of the free list node belonging to `index` and sets the
+    /// cache to max_size(). If the number of spots in the free list node not zero, the cache for
+    /// `index` is updated, otherwise, the node is removed.
+    size_type take_front(size_type index, size_type size) noexcept
     {
       assert(index < max_size());
       assert(size > 0);
@@ -224,7 +224,7 @@ namespace kp11
       auto & node = free_list[node_index];
       assert(node.size >= size);
       node.size -= size;
-      auto const taken_index = node.index + node.size;
+      auto const taken_index = std::exchange(node.index, node.index + size);
       set_cache(taken_index, size, max_size());
       if (node.size)
       {
