@@ -149,8 +149,7 @@ namespace kp11
       }
       else if (next_is_vacant)
       {
-        auto node_index = cache[index + n];
-        add_front(node_index, n);
+        add_front(index + n, n);
       }
       else
       {
@@ -236,15 +235,17 @@ namespace kp11
       free_list[node_index].size += size;
       set_cache(free_list[node_index].index, free_list[node_index].size, node_index);
     }
-    /// Adds `size` vacant spots to the front of the free list node at `node_index`.
+    /// Adds `size` vacant spots to the front of the free list node belonging to `index`.
     ///
-    /// @param node_index Index of the free list node.
+    /// @param index Index of the beginning of the vacant spots to add to.
     /// @param size Number of spots to add.
-    void add_front(size_type node_index, size_type size) noexcept
+    void add_front(size_type index, size_type size) noexcept
     {
-      free_list[node_index].size += size;
-      free_list[node_index].index -= size;
-      set_cache(free_list[node_index].index, free_list[node_index].size, node_index);
+      auto node_index = cache[index];
+      auto && node = free_list[node_index];
+      node.size += size;
+      node.index -= size;
+      set_cache(node.index, node.size, node_index);
     }
     /// Add a node to the back of the free list. Updates the cache for the new node.
     ///
