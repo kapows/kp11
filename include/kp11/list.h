@@ -132,29 +132,25 @@ namespace kp11
       assert(index + n <= max_size());
       num_occupied -= n;
       size_type node_index;
-      auto previous_cache_index = index - 1;
-      auto const previous_is_vacant = index > 0 && cache[previous_cache_index] != max_size();
-      auto const next_cache_index = index + n;
-      auto const next_is_vacant = index + n < max_size() && cache[next_cache_index] != max_size();
-      if (previous_is_vacant && next_is_vacant)
+      auto const previous_is_vacant = index > 0 && cache[index - 1] != max_size();
+      auto const next_is_vacant = index + n < max_size() && cache[index + n] != max_size();
+      if (previous_is_vacant)
       {
-        previous_cache_index = free_list[cache[previous_cache_index]].index;
-        // There will be 2 active nodes. Keep previous and remove next.
-        node_index = cache[previous_cache_index];
-        auto const next_node_index = cache[next_cache_index];
-        free_list[node_index].size += n + free_list[next_node_index].size;
-        free_list[next_node_index].size = 0;
-        remove_node(next_node_index);
-        node_index = cache[previous_cache_index];
-      }
-      else if (previous_is_vacant)
-      {
+        auto const previous_cache_index = free_list[cache[index - 1]].index;
         node_index = cache[previous_cache_index];
         free_list[node_index].size += n;
+        if (next_is_vacant)
+        {
+          auto const next_node_index = cache[index + n];
+          free_list[node_index].size += free_list[next_node_index].size;
+          free_list[next_node_index].size = 0;
+          remove_node(next_node_index);
+          node_index = cache[previous_cache_index];
+        }
       }
       else if (next_is_vacant)
       {
-        node_index = cache[next_cache_index];
+        node_index = cache[index + n];
         free_list[node_index].size += n;
         free_list[node_index].index = index;
       }
