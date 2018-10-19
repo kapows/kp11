@@ -132,7 +132,8 @@ namespace kp11
       auto const next_is_vacant = index + n < max_size() && cache[index + n] != max_size();
       if (previous_is_vacant)
       {
-        // Need the beginning of the vacant spots, not the immediate previous.
+        // Need the beginning of the vacant spots, not the immediate previous, as add_back will
+        // invalidate the immediate previous.
         auto const previous_index = free_list[cache[index - 1]].index;
         add_back(previous_index, n);
         if (next_is_vacant)
@@ -196,9 +197,9 @@ namespace kp11
       }
       return free_list[node_index].index;
     }
-    /// Takes `size` spots out of the free list node belonging to `index`. If the number of spots
-    /// in the free list node not zero, the cache for `index` is updated, otherwise, the node is
-    /// removed.
+    /// Takes `size` spots out of the free list node belonging to `index` and sets the cache to
+    /// max_size(). If the number of spots in the free list node not zero, the cache for `index` is
+    /// updated, otherwise, the node is removed.
     size_type take_back(size_type index, size_type size) noexcept
     {
       auto node_index = cache[index];
@@ -216,7 +217,8 @@ namespace kp11
       }
       return taken_index;
     }
-    /// Adds `size` vacant spots to the back of the free list node belonging to `index`.
+    /// Adds `size` vacant spots to the back of the free list node belonging to `index` and sets the
+    /// cache.
     void add_back(size_type index, size_type size) noexcept
     {
       auto node_index = cache[index];
@@ -224,7 +226,8 @@ namespace kp11
       node.size += size;
       set_cache(node.index, node.size, node_index);
     }
-    /// Adds `size` vacant spots to the front of the free list node belonging to `index`.
+    /// Adds `size` vacant spots to the front of the free list node belonging to `index` and sets
+    /// the cache.
     void add_front(size_type index, size_type size) noexcept
     {
       auto node_index = cache[index];
@@ -233,7 +236,7 @@ namespace kp11
       node.index -= size;
       set_cache(node.index, node.size, node_index);
     }
-    /// Add a node to the back of the free list. Updates the cache for the new node.
+    /// Add a node to the back of the free list and sets the cache for the new node.
     void push_back(size_type index, size_type size) noexcept
     {
       free_list.emplace_back(size, index);
