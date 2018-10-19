@@ -197,12 +197,8 @@ namespace kp11
       return free_list[node_index].index;
     }
     /// Takes `size` spots out of the free list node belonging to `index`. If the number of spots
-    /// in the free list node is zero, the node is removed.
-    ///
-    /// @param index Index of the beginning of the vacant spots to take from.
-    /// @param size Number of spots to take.
-    ///
-    /// @returns Index to the taken spot of size `size`.
+    /// in the free list node not zero, the cache for `index` is updated, otherwise, the node is
+    /// removed.
     size_type take_back(size_type index, size_type size) noexcept
     {
       auto node_index = cache[index];
@@ -210,7 +206,7 @@ namespace kp11
       node.size -= size;
       auto const taken_index = node.index + node.size;
       set_cache(taken_index, size, max_size());
-      if (node.size > 0)
+      if (node.size)
       {
         set_cache(node.index, node.size, node_index);
       }
@@ -221,9 +217,6 @@ namespace kp11
       return taken_index;
     }
     /// Adds `size` vacant spots to the back of the free list node belonging to `index`.
-    ///
-    /// @param index Index of the beginning of the vacant spots to add to.
-    /// @param size Number of spots to add.
     void add_back(size_type index, size_type size) noexcept
     {
       auto node_index = cache[index];
@@ -232,9 +225,6 @@ namespace kp11
       set_cache(node.index, node.size, node_index);
     }
     /// Adds `size` vacant spots to the front of the free list node belonging to `index`.
-    ///
-    /// @param index Index of the beginning of the vacant spots to add to.
-    /// @param size Number of spots to add.
     void add_front(size_type index, size_type size) noexcept
     {
       auto node_index = cache[index];
@@ -244,9 +234,6 @@ namespace kp11
       set_cache(node.index, node.size, node_index);
     }
     /// Add a node to the back of the free list. Updates the cache for the new node.
-    ///
-    /// @param index Index of beginning of vacant spot.
-    /// @param size Number of vacant spots.
     void push_back(size_type index, size_type size) noexcept
     {
       free_list.emplace_back(size, index);
