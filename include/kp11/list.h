@@ -111,6 +111,7 @@ namespace kp11
       assert(n <= biggest());
       num_occupied += n;
       auto node_index = find_best_fit(n);
+      assert(cache[free_list[node_index].index] == node_index);
       return take_back(node_index, n);
     }
     /// If the node has adjacent nodes then they are checked to see whether or not they are vacant.
