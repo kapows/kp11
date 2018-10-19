@@ -249,6 +249,8 @@ namespace kp11
     /// Add a node to the back of the free list and sets the cache for the new node.
     void push_back(size_type index, size_type size) noexcept
     {
+      assert(index < max_size());
+      assert(size > 0);
       free_list.emplace_back(size, index);
       auto const node_index = static_cast<size_type>(free_list.size() - 1);
       set_cache(free_list[node_index].index, free_list[node_index].size, node_index);
