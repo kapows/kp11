@@ -212,6 +212,7 @@ namespace kp11
     {
       assert(index < max_size());
       assert(size > 0);
+      assert(cache[index] != max_size());
       auto node_index = cache[index];
       auto & node = free_list[node_index];
       assert(node.size >= size);
@@ -233,6 +234,7 @@ namespace kp11
     void add_back(size_type index, size_type size) noexcept
     {
       assert(index < max_size());
+      assert(cache[index] != max_size());
       auto node_index = cache[index];
       auto && node = free_list[node_index];
       node.size += size;
@@ -243,6 +245,7 @@ namespace kp11
     void add_front(size_type index, size_type size) noexcept
     {
       assert(index < max_size());
+      assert(cache[index] != max_size());
       auto node_index = cache[index];
       auto && node = free_list[node_index];
       node.size += size;
