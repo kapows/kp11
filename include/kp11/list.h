@@ -132,14 +132,15 @@ namespace kp11
       auto const next_is_vacant = index + n < max_size() && cache[index + n] != max_size();
       if (previous_is_vacant)
       {
-        auto const previous_cache_index = free_list[cache[index - 1]].index;
-        add_back(previous_cache_index, n);
+        // Need the beginning of the vacant spots, not the immediate previous.
+        auto const previous_index = free_list[cache[index - 1]].index;
+        add_back(previous_index, n);
         if (next_is_vacant)
         {
-          auto const next_node_index = cache[index + n];
-          auto next = free_list[next_node_index];
-          take_back(index + n, next.size);
-          add_back(previous_cache_index, next.size);
+          auto const next_index = index + n;
+          auto next = free_list[cache[next_index]];
+          take_back(next_index, next.size);
+          add_back(previous_index, next.size);
         }
       }
       else if (next_is_vacant)
