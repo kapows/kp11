@@ -137,7 +137,7 @@ namespace kp11
         add_back(previous_index, n);
         if (next_is_vacant)
         {
-          // Need to know the size of next.
+          // Need to know the size of next. This must be a copy, as take_back will remove the node.
           auto const next = free_list[cache[index + n]];
           take_back(next.index, next.size);
           add_back(previous_index, next.size);
