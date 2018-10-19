@@ -60,9 +60,17 @@ namespace kp11
     }
 
   public: // capacity
+    /// Forward iterates through the free list to determine the number of occupied spots.
+    /// * Complexity `O(n)`
+    ///
     /// @returns Number of occupied spots.
     size_type size() const noexcept
     {
+      auto num_occupied = max_size();
+      for (auto && node : free_list)
+      {
+        num_occupied -= node.size;
+      }
       return num_occupied;
     }
     /// @returns Total number of spots (`N`).
@@ -107,7 +115,6 @@ namespace kp11
     {
       assert(n > 0);
       assert(n <= biggest());
-      num_occupied += n;
       auto const index = find_best_fit(n);
       return take_back(index, n);
     }
@@ -127,7 +134,6 @@ namespace kp11
       assert(index < max_size());
       assert(n > 0);
       assert(index + n <= max_size());
-      num_occupied -= n;
       auto const previous_is_vacant = index > 0 && cache[index - 1] != max_size();
       auto const next_is_vacant = index + n < max_size() && cache[index + n] != max_size();
       if (previous_is_vacant)
@@ -263,8 +269,6 @@ namespace kp11
     }
 
   private: // variables
-    /// Number of occupied spots.
-    size_type num_occupied = 0;
     /// Free list stores it's own size and index.
     /// `N / 2 + N % 2` because that is the maximum number of free list nodes we will ever have
     /// (this will happen when we have an alternating vacant, occupied, vacant, occupied pattern).
