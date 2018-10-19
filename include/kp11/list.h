@@ -181,6 +181,7 @@ namespace kp11
     /// @returns The index to the spot that is the best fit for `n`.
     size_type find_best_fit(size_type n) const noexcept
     {
+      assert(n <= biggest());
       size_type node_index = max_size();
       for (size_type i = 0, last = static_cast<size_type>(free_list.size()); i != last; ++i)
       {
@@ -195,6 +196,7 @@ namespace kp11
           }
         }
       }
+      assert(node_index != max_size());
       return free_list[node_index].index;
     }
     /// Takes `size` spots out of the free list node belonging to `index` and sets the cache to
@@ -202,8 +204,10 @@ namespace kp11
     /// updated, otherwise, the node is removed.
     size_type take_back(size_type index, size_type size) noexcept
     {
+      assert(index < max_size());
       auto node_index = cache[index];
       auto & node = free_list[node_index];
+      assert(node.size >= size);
       node.size -= size;
       auto const taken_index = node.index + node.size;
       set_cache(taken_index, size, max_size());
@@ -221,6 +225,7 @@ namespace kp11
     /// cache.
     void add_back(size_type index, size_type size) noexcept
     {
+      assert(index < max_size());
       auto node_index = cache[index];
       auto && node = free_list[node_index];
       node.size += size;
@@ -230,6 +235,7 @@ namespace kp11
     /// the cache.
     void add_front(size_type index, size_type size) noexcept
     {
+      assert(index < max_size());
       auto node_index = cache[index];
       auto && node = free_list[node_index];
       node.size += size;
