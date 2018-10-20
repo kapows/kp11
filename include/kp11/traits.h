@@ -96,6 +96,7 @@ namespace kp11
       }
     }
   };
+
   /* Marker Exemplar
   class marker
   {
