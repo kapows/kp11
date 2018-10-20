@@ -98,12 +98,12 @@ namespace kp11::detail
   public: // element access
     reference operator[](size_type n)
     {
-      assert(n <= size());
+      assert(n < size());
       return values[n];
     }
     const_reference operator[](size_type n) const
     {
-      assert(n <= size());
+      assert(n < size());
       return values[n];
     }
     reference front()
