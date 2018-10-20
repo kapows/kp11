@@ -85,26 +85,12 @@ namespace kp11
     /// @returns (failure) `nullptr`
     pointer operator[](pointer ptr) noexcept
     {
-      if (has(static_cast<byte_pointer>(ptr)))
+      if (std::less_equal<pointer>()(static_cast<pointer>(this->ptr), ptr) &&
+          std::less<pointer>()(ptr, static_cast<pointer>(this->ptr + bytes)))
       {
         return static_cast<pointer>(this->ptr);
       }
       return nullptr;
-    }
-
-  private: // helpers
-    /// Check if `ptr` points inside our buffer.
-    ///
-    /// @returns (success) `true`
-    /// @returns (failure) `false`
-    bool has(byte_pointer ptr) noexcept
-    {
-      if (std::less_equal<byte_pointer>()(this->ptr, ptr) &&
-          std::less<byte_pointer>()(ptr, this->ptr + bytes))
-      {
-        return true;
-      }
-      return false;
     }
 
   private: // variables
