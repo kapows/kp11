@@ -39,9 +39,36 @@ class test_owner
 public:
   using pointer = void *;
   using size_type = std::size_t;
-  pointer allocate(size_type bytes, size_type alignment) noexcept;
-  bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
-  pointer operator[](pointer ptr) const noexcept;
+  pointer allocate(size_type bytes, size_type alignment) noexcept
+  {
+    return nullptr;
+  }
+  bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+  {
+    return false;
+  }
+  pointer operator[](pointer ptr) const noexcept
+  {
+    return nullptr;
+  }
+};
+/// @private
+class another_test_owner
+{
+public:
+  using pointer = void *;
+  using size_type = std::size_t;
+  pointer allocate(size_type bytes, size_type alignment) noexcept
+  {
+    return nullptr;
+  }
+  void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+  {
+  }
+  pointer operator[](pointer ptr) const noexcept
+  {
+    return nullptr;
+  }
 };
 /// @private
 class test_not_an_owner
@@ -57,6 +84,21 @@ TEST_CASE("is_owner", "[traits]")
   REQUIRE(is_owner_v<test_owner> == true);
   REQUIRE(is_owner_v<test_not_an_owner> == false);
   REQUIRE(is_owner_v<int> == false);
+}
+TEST_CASE("owner_traits", "[traits]")
+{
+  SECTION("deallocate returns bool")
+  {
+    test_owner m;
+    auto ptr = m.allocate(32, 4);
+    owner_traits<test_owner>::deallocate(m, ptr, 32, 4);
+  }
+  SECTION("deallocate does not return bool")
+  {
+    another_test_owner m;
+    auto ptr = m.allocate(32, 4);
+    owner_traits<another_test_owner>::deallocate(m, ptr, 32, 4);
+  }
 }
 
 /// @private
