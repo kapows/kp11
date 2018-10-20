@@ -47,7 +47,7 @@ namespace kp11
     /// @returns Number of occupied spots.
     size_type size() const noexcept
     {
-      size_type num_occupied = max_size();
+      auto num_occupied = max_size();
       for (auto x = head; x != max_size(); x = next[x])
       {
         --num_occupied;
