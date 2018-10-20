@@ -67,6 +67,7 @@ namespace kp11
   template<typename T>
   constexpr bool is_owner_v = is_owner<T>::value;
 
+  /// Provides a way to deallocate owned memory from `owner`s.
   template<typename T, bool Enable = is_owner_v<T>>
   struct owner_traits;
   /// Provides a way to deallocate owned memory from `owner`s.
