@@ -53,7 +53,6 @@ namespace kp11
   struct is_owner : std::false_type
   {
   };
-
   /// Checks if `T` meets the `Owner` concept.
   /// @private
   template<typename T>
