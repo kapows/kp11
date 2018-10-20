@@ -74,8 +74,20 @@ namespace kp11
   template<typename T>
   struct owner_traits<T, true>
   {
+    /// Pointer type.
     using pointer = typename T::pointer;
+    /// Size type.
     using size_type = typename T::size_type;
+    /// If `owner` has a convertible to `bool` deallocate function then uses that. Otherwise checks
+    /// to see if ptr is owned by using `operator[]` before deallocating.
+    ///
+    /// @param owner Meets the `Owner` concept.
+    /// @param ptr Pointer to deallocate if owned by `owner`.
+    /// @param bytes Size in bytes of the memory pointed to by `ptr`.
+    /// @param alignment Alignment in bytes of the memory pointed to by `ptr`.
+    ///
+    /// @returns (success) `true`, owned by `owner`.
+    /// @returns (failure) `false`
     static bool deallocate(T & owner, pointer ptr, size_type bytes, size_type alignment) noexcept
     {
       // It may be trivial for a type to return success or failure in it's deallocate function, if
