@@ -41,6 +41,9 @@ namespace kp11
     }
 
   public: // capacity
+    /// Iterate through the linked list to find the number of occupied spots.
+    /// * Complexity `O(n)`
+    ///
     /// @returns Number of occupied spots.
     size_type size() const noexcept
     {
