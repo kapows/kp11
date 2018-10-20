@@ -6,7 +6,7 @@
 #include <cassert> // assert
 #include <cstddef> // size_t
 #include <cstdint> // uint_least8_t, UINT_LEAST8_MAX
-#include <utility> // swap
+#include <utility> // swap, exchange
 
 namespace kp11
 {
@@ -55,16 +55,22 @@ namespace kp11
     {
       if constexpr (max_size() > 0)
       {
-        auto & node = free_list.emplace_back(max_size(), 0);
-        auto node_index = static_cast<size_type>(free_list.size() - 1);
-        set_cache(node.index, node.size, node_index);
+        push_back(0, max_size());
       }
     }
 
   public: // capacity
+    /// Forward iterates through the free list to determine the number of occupied spots.
+    /// * Complexity `O(n)`
+    ///
     /// @returns Number of occupied spots.
     size_type size() const noexcept
     {
+      auto num_occupied = max_size();
+      for (auto && node : free_list)
+      {
+        num_occupied -= node.size;
+      }
       return num_occupied;
     }
     /// @returns Total number of spots (`N`).
@@ -72,7 +78,8 @@ namespace kp11
     {
       return static_cast<size_type>(N);
     }
-    /// Forward iterates through the free list to find the largest number of consecutive spots.
+    /// Forward iterates through the free list to find the largest number of consecutive vacant
+    /// spots.
     /// * Complexity `O(n)`
     ///
     /// @returns The largest number of consecutive vacant spots.
@@ -109,35 +116,8 @@ namespace kp11
     {
       assert(n > 0);
       assert(n <= biggest());
-      size_type node_index = max_size();
-      // Find best fit
-      for (size_type i = 0, last = static_cast<size_type>(free_list.size()); i != last; ++i)
-      {
-        if (n <= free_list[i].size &&
-            (node_index == max_size() || free_list[i].size < free_list[node_index].size))
-        {
-          node_index = i;
-          // Exact fit is best fit
-          if (free_list[node_index].size == n)
-          {
-            break;
-          }
-        }
-      }
-      auto & node = free_list[node_index];
-      node.size -= n;
-      auto const index = node.index + node.size;
-      set_cache(index, n, max_size());
-      if (node.size > 0)
-      {
-        set_cache(node.index, node.size, node_index);
-      }
-      else
-      {
-        remove_node(node_index);
-      }
-      num_occupied += n;
-      return index;
+      auto const index = find_best_fit(n);
+      return take_front(index, n);
     }
     /// If the node has adjacent nodes then they are checked to see whether or not they are vacant.
     /// If there are two vacant adjacent nodes then merge them into one node whilst removing the
@@ -155,39 +135,30 @@ namespace kp11
       assert(index < max_size());
       assert(n > 0);
       assert(index + n <= max_size());
-      num_occupied -= n;
-      size_type node_index;
-      auto const previous_cache_index = index - 1;
-      auto const previous_is_vacant = index > 0 && cache[previous_cache_index] != max_size();
-      auto const next_cache_index = index + n;
-      auto const next_is_vacant = index + n < max_size() && cache[next_cache_index] != max_size();
-      if (previous_is_vacant && next_is_vacant)
+      auto const previous_is_vacant = index > 0 && cache[index - 1] != max_size();
+      auto const next_is_vacant = index + n < max_size() && cache[index + n] != max_size();
+      if (previous_is_vacant)
       {
-        // There will be 2 active nodes. Keep previous and remove next.
-        node_index = cache[previous_cache_index];
-        auto const next_node_index = cache[next_cache_index];
-        free_list[node_index].size += n + free_list[next_node_index].size;
-        free_list[next_node_index].size = 0;
-        remove_node(next_node_index);
-      }
-      else if (previous_is_vacant)
-      {
-        node_index = cache[previous_cache_index];
-        free_list[node_index].size += n;
+        // Need the beginning of the vacant spots, not the immediate previous, as add_back will
+        // invalidate the immediate previous.
+        auto const previous_index = free_list[cache[index - 1]].index;
+        add_back(previous_index, n);
+        if (next_is_vacant)
+        {
+          // Need to know the size of next. This must be a copy, as take_front will remove the node.
+          auto const next = free_list[cache[index + n]];
+          take_front(next.index, next.size);
+          add_back(previous_index, next.size);
+        }
       }
       else if (next_is_vacant)
       {
-        node_index = cache[next_cache_index];
-        free_list[node_index].size += n;
-        free_list[node_index].index = index;
+        add_front(index + n, n);
       }
       else
       {
-        free_list.emplace_back(n, index);
-        node_index = static_cast<size_type>(free_list.size() - 1);
+        push_back(index, n);
       }
-      auto & node = free_list[node_index];
-      set_cache(node.index, node.size, node_index);
     }
 
   private: // helpers
@@ -200,23 +171,107 @@ namespace kp11
       cache[index + (size - 1)] = cache[index] = node_index;
     }
     /// Node removal helper because the cache needs to be kept in sync.
-    /// Note the removed node does not get cache updating. Order is not guaranteed.
+    /// Move and pop with back.
+    /// Note the removed node does not get cache updating.
+    /// Invalidates all free list indexes.
     void remove_node(size_type node_index) noexcept
     {
       assert(node_index < free_list.size());
       assert(free_list[node_index].size == 0);
-      if (auto const back_node_index = static_cast<size_type>(free_list.size() - 1);
-          node_index != back_node_index)
+      auto && node = free_list[node_index];
+      node = free_list.back();
+      if (node.size)
       {
-        free_list[node_index] = free_list[back_node_index];
-        set_cache(free_list[node_index].index, free_list[node_index].size, node_index);
+        set_cache(node.index, node.size, node_index);
       }
       free_list.pop_back();
     }
+    /// Forward iterate through the free list to find the best fit spot for `n`.
+    ///
+    /// @pre `n > 0`
+    /// @pre `n <= biggest()`
+    ///
+    /// @returns The index to the spot that is the best fit for `n`.
+    size_type find_best_fit(size_type n) const noexcept
+    {
+      assert(n > 0);
+      assert(n <= biggest());
+      size_type node_index = max_size();
+      for (size_type i = 0, last = static_cast<size_type>(free_list.size()); i != last; ++i)
+      {
+        if (n <= free_list[i].size &&
+            (node_index == max_size() || free_list[i].size < free_list[node_index].size))
+        {
+          node_index = i;
+          // Exact fit is best fit
+          if (free_list[node_index].size == n)
+          {
+            break;
+          }
+        }
+      }
+      assert(node_index != max_size());
+      return free_list[node_index].index;
+    }
+    /// Takes `size` spots out of the front of the free list node belonging to `index` and sets the
+    /// cache to max_size(). If the number of spots in the free list node not zero, the cache for
+    /// the new `index` is updated, otherwise, the node is removed. Invalidates the beginning index
+    /// in the cache.
+    size_type take_front(size_type index, size_type size) noexcept
+    {
+      assert(index < max_size());
+      assert(size > 0);
+      assert(cache[index] != max_size());
+      auto node_index = cache[index];
+      auto && node = free_list[node_index];
+      assert(node.size >= size);
+      node.size -= size;
+      auto const taken_index = std::exchange(node.index, node.index + size);
+      set_cache(taken_index, size, max_size());
+      if (node.size)
+      {
+        set_cache(node.index, node.size, node_index);
+      }
+      else
+      {
+        remove_node(node_index);
+      }
+      return taken_index;
+    }
+    /// Adds `size` vacant spots to the back of the free list node belonging to `index` and sets the
+    /// cache. Invalidates the end index in the cache.
+    void add_back(size_type index, size_type size) noexcept
+    {
+      assert(index < max_size());
+      assert(cache[index] != max_size());
+      auto node_index = cache[index];
+      auto && node = free_list[node_index];
+      node.size += size;
+      set_cache(node.index, node.size, node_index);
+    }
+    /// Adds `size` vacant spots to the front of the free list node belonging to `index` and sets
+    /// the cache. Invalidates the beginning index in the cache.
+    void add_front(size_type index, size_type size) noexcept
+    {
+      assert(index < max_size());
+      assert(cache[index] != max_size());
+      auto node_index = cache[index];
+      auto && node = free_list[node_index];
+      node.size += size;
+      node.index -= size;
+      set_cache(node.index, node.size, node_index);
+    }
+    /// Add a node to the back of the free list and sets the cache for the new node.
+    void push_back(size_type index, size_type size) noexcept
+    {
+      assert(index < max_size());
+      assert(size > 0);
+      free_list.emplace_back(size, index);
+      auto const node_index = static_cast<size_type>(free_list.size() - 1);
+      set_cache(free_list[node_index].index, free_list[node_index].size, node_index);
+    }
 
   private: // variables
-    /// Number of occupied spots.
-    size_type num_occupied = 0;
     /// Free list stores it's own size and index.
     /// `N / 2 + N % 2` because that is the maximum number of free list nodes we will ever have
     /// (this will happen when we have an alternating vacant, occupied, vacant, occupied pattern).
@@ -229,8 +284,9 @@ namespace kp11
     /// If the run is not in the free list (it's been occupied) then `size()` is used as its index.
     /// Cache enables merges in to be `O(1)`.
     ///
-    /// Example: Assume size() == 11, then
+    /// Example: Assume size() == 11, b refers the the beginning index and e refers to the end, then
     /// [11, 11, 1, X, 1, 11, X, X, 11, 0, 0, 11]
+    ///          b     e                b  e
     /// X is just a placeholder here for garbage indexes.
     std::array<size_type, N> cache;
   };
