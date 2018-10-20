@@ -53,6 +53,7 @@ namespace kp11
   struct is_owner : std::false_type
   {
   };
+
   /// Checks if `T` meets the `Owner` concept.
   /// @private
   template<typename T>
@@ -66,49 +67,6 @@ namespace kp11
   /// Checks if `T` meets the `Owner` concept.
   template<typename T>
   constexpr bool is_owner_v = is_owner<T>::value;
-
-  /// Provides a way to deallocate owned memory from `owner`s.
-  /// @private
-  template<typename T, bool Enable = is_owner_v<T>>
-  struct owner_traits;
-  /// Provides a way to deallocate owned memory from `owner`s.
-  template<typename T>
-  struct owner_traits<T, true>
-  {
-    /// Pointer type.
-    using pointer = typename T::pointer;
-    /// Size type.
-    using size_type = typename T::size_type;
-    /// If `owner` has a convertible to `bool` deallocate function then uses that. Otherwise checks
-    /// to see if ptr is owned by using `operator[]` before deallocating.
-    ///
-    /// @param owner Meets the `Owner` concept.
-    /// @param ptr Pointer to deallocate if owned by `owner`.
-    /// @param bytes Size in bytes of the memory pointed to by `ptr`.
-    /// @param alignment Alignment in bytes of the memory pointed to by `ptr`.
-    ///
-    /// @returns (success) `true`, owned by `owner`.
-    /// @returns (failure) `false`
-    static bool deallocate(T & owner, pointer ptr, size_type bytes, size_type alignment) noexcept
-    {
-      // It may be trivial for a type to return success or failure in it's deallocate function, if
-      // if is then it should do so.
-      if constexpr (std::is_convertible_v<bool, decltype(owner.deallocate(ptr, bytes, alignment))>)
-      {
-        return owner.deallocate(ptr, bytes, alignment);
-      }
-      // If it is not trivial then we can still determine ownership through operator[].
-      else
-      {
-        if (owner[ptr])
-        {
-          owner.deallocate(ptr, bytes, alignment);
-          return true;
-        }
-        return false;
-      }
-    }
-  };
 
   /* Marker Exemplar
   class marker

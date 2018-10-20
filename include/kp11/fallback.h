@@ -71,16 +71,37 @@ namespace kp11
       return secondary.allocate(bytes, alignment);
     }
     /// If `ptr` is owned by `Primary` then calls `Primary:deallocate` else calls
-    /// `Secondary::deallocate`.
+    /// `Secondary::deallocate`. If `Primary` supplies a `deallocate` that returns a value
+    /// convertible to `bool` then that function will be used to determine if `Primary` owns `ptr`.
     ///
     /// @param ptr Pointer to the beginning of memory returned by a call to `allocate`.
     /// @param bytes Corresposing argument to call to `allocate`.
     /// @param alignment Corresposing argument to call to `allocate`.
     void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
     {
-      if (!owner_traits<Primary>::deallocate(primary, ptr, bytes, alignment))
+      // It may be trivial for a type to return success or failure in it's deallocate function, if
+      // if is then it should do so.
+      if constexpr (std::is_convertible_v<bool,
+                      decltype(std::declval<Primary>().deallocate(std::declval<pointer>(),
+                        std::declval<size_type>(),
+                        std::declval<size_type>()))>)
       {
-        secondary.deallocate(ptr, bytes, alignment);
+        if (!primary.deallocate(ptr, bytes, alignment))
+        {
+          secondary.deallocate(ptr, bytes, alignment);
+        }
+      }
+      // If it is not trivial then we can still determine ownership through operator[].
+      else
+      {
+        if (primary[ptr])
+        {
+          primary.deallocate(ptr, bytes, alignment);
+        }
+        else
+        {
+          secondary.deallocate(ptr, bytes, alignment);
+        }
       }
     }
 
