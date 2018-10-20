@@ -215,8 +215,8 @@ namespace kp11
     }
     /// Takes `size` spots out of the front of the free list node belonging to `index` and sets the
     /// cache to max_size(). If the number of spots in the free list node not zero, the cache for
-    /// `index` is updated, otherwise, the node is removed. Invalidates the beginning index in the
-    /// cache.
+    /// the new `index` is updated, otherwise, the node is removed. Invalidates the beginning index
+    /// in the cache.
     size_type take_front(size_type index, size_type size) noexcept
     {
       assert(index < max_size());
