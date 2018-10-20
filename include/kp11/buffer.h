@@ -35,13 +35,13 @@ namespace kp11
 
   public: // modifiers
     /// If our buffer has not already been allocated and we can fulfil the size request then a
-    /// pointer to the beginning of our buffer is allocated.
+    /// pointer to our buffer is allocated.
     /// * Complexity `O(1)`
     ///
     /// @param bytes Size in bytes of memory to allocate.
     /// @param alignment Alignment of memory to allocate.
     ///
-    /// @returns (success) Pointer to the beginning of our buffer.
+    /// @returns (success) Pointer to the our buffer.
     /// @returns (failure) `nullptr`
     ///
     /// @pre `alignment (from ctor) % alignment == 0`
@@ -57,7 +57,7 @@ namespace kp11
       }
       return nullptr;
     }
-    /// If `ptr` points to the beginning of our buffer then we can allocate our buffer again.
+    /// If `ptr` points to the our buffer then we can allocate our buffer again.
     /// * Complexity `O(1)`
     ///
     /// @param ptr Pointer to the beginning of a memory block.
@@ -77,11 +77,11 @@ namespace kp11
     }
 
   public: // observers
-    /// Checks whether or not `ptr` points in to memory owned by us.
+    /// Checks whether or not `ptr` points in to our buffer.
     ///
     /// @param ptr Pointer to memory.
     ///
-    /// @returns (success) Pointer to the beginning of our buffer.
+    /// @returns (success) Pointer to our buffer.
     /// @returns (failure) `nullptr`
     pointer operator[](pointer ptr) noexcept
     {
