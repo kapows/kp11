@@ -172,7 +172,8 @@ namespace kp11
     }
     /// Node removal helper because the cache needs to be kept in sync.
     /// Move and pop with back.
-    /// Note the removed node does not get cache updating. Order is not guaranteed.
+    /// Note the removed node does not get cache updating.
+    /// Invalidates all free list indexes.
     void remove_node(size_type node_index) noexcept
     {
       assert(node_index < free_list.size());
@@ -214,7 +215,8 @@ namespace kp11
     }
     /// Takes `size` spots out of the front of the free list node belonging to `index` and sets the
     /// cache to max_size(). If the number of spots in the free list node not zero, the cache for
-    /// `index` is updated, otherwise, the node is removed.
+    /// `index` is updated, otherwise, the node is removed. Invalidates the beginning index in the
+    /// cache.
     size_type take_front(size_type index, size_type size) noexcept
     {
       assert(index < max_size());
@@ -237,7 +239,7 @@ namespace kp11
       return taken_index;
     }
     /// Adds `size` vacant spots to the back of the free list node belonging to `index` and sets the
-    /// cache.
+    /// cache. Invalidates the end index in the cache.
     void add_back(size_type index, size_type size) noexcept
     {
       assert(index < max_size());
@@ -248,7 +250,7 @@ namespace kp11
       set_cache(node.index, node.size, node_index);
     }
     /// Adds `size` vacant spots to the front of the free list node belonging to `index` and sets
-    /// the cache.
+    /// the cache. Invalidates the beginning index in the cache.
     void add_front(size_type index, size_type size) noexcept
     {
       assert(index < max_size());
@@ -282,8 +284,9 @@ namespace kp11
     /// If the run is not in the free list (it's been occupied) then `size()` is used as its index.
     /// Cache enables merges in to be `O(1)`.
     ///
-    /// Example: Assume size() == 11, then
+    /// Example: Assume size() == 11, b refers the the beginning index and e refers to the end, then
     /// [11, 11, 1, X, 1, 11, X, X, 11, 0, 0, 11]
+    ///          b     e                b  e
     /// X is just a placeholder here for garbage indexes.
     std::array<size_type, N> cache;
   };
