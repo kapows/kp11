@@ -8,6 +8,13 @@
 
 namespace kp11
 {
+  /// Resource that `allocator<T,Resource>` uses.
+  template<typename Resource>
+  static Resource & allocator_singleton()
+  {
+    static Resource resource;
+    return resource;
+  }
   /// @brief Adaptor that wraps a `Resource` so that it can be used as an allocator.
   ///
   /// Makes `Resource` a static variable and uses that to allocate/deallocate. Use this when you
@@ -54,7 +61,7 @@ namespace kp11
     /// @throws (failure) std::bad_alloc
     pointer allocate(size_type n)
     {
-      auto ptr = resource.allocate(static_cast<size_type>(sizeof(T) * n), alignof(T));
+      auto ptr = get_resource().allocate(static_cast<size_type>(sizeof(T) * n), alignof(T));
       if (!ptr)
       {
         throw std::bad_alloc();
@@ -67,7 +74,7 @@ namespace kp11
     /// @param n Corresponding parameter in the call to `allocate`.
     void deallocate(pointer ptr, size_type n) noexcept
     {
-      resource.deallocate(
+      get_resource().deallocate(
         static_cast<void_pointer>(ptr), static_cast<size_type>(sizeof(T) * n), alignof(T));
     }
 
@@ -75,11 +82,8 @@ namespace kp11
     /// @returns Pointer to the `Resource` which was passed into the constructor.
     static Resource & get_resource() noexcept
     {
-      return resource;
+      return allocator_singleton<Resource>();
     }
-
-  private: // variables
-    inline static Resource resource;
   };
   template<typename T, typename U, typename R>
   bool operator==(allocator<T, R> const & lhs, allocator<U, R> const & rhs) noexcept
