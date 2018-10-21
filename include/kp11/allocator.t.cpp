@@ -7,6 +7,7 @@
 
 #include <catch.hpp>
 
+#include <cstddef> // max_align_t
 #include <list> // list
 #include <vector> // vector
 
@@ -15,20 +16,23 @@ using namespace kp11;
 /// @private
 class resource
 {
-  free_block<2, stack<4>, heap> m;
-
 public:
+  free_block<2, stack<4>, heap> m;
+  int allocations = 0;
+
   using pointer = typename decltype(m)::pointer;
   using size_type = typename decltype(m)::size_type;
-  resource() noexcept : m(256, 4)
+  resource() noexcept : m(256, alignof(std::max_align_t)) // 64 byte blocks
   {
   }
   pointer allocate(size_type bytes, size_type alignment) noexcept
   {
+    ++allocations;
     return m.allocate(bytes, alignment);
   }
   void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
   {
+    --allocations;
     m.deallocate(ptr, bytes, alignment);
   }
 };
@@ -61,6 +65,14 @@ TEST_CASE("global rebinding", "[rebinding][global]")
   REQUIRE(l.size() == 3);
   REQUIRE(l.front() == 5);
   REQUIRE(l.back() == 15);
+}
+TEST_CASE("global using the same allocator", "[global]")
+{
+  allocator<int, resource> x;
+  allocator<double, resource> y;
+  x.allocate(1);
+  y.allocate(1);
+  REQUIRE(allocator<char, resource>::get_resource().allocations == 2);
 }
 TEST_CASE("local relation", "[relation][local]")
 {
