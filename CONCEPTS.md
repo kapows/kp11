@@ -14,12 +14,12 @@ Given:
 * `alignment` a value of type `R::size_type`
 
 The following expressions must be valid and have their specified effects:
-| Expression | Requirements | Return Type |
-| -----------| ------------ | ----------- | 
-| ```R::pointer``` |  Satisfies `NullablePointer` and `RandomAccessIterator` | | 
-| ```R::size_type``` | Can represent the size of the largest object `r` can allocate. | |
-| ```ptr = r.allocate(bytes, alignment)``` | Allocates memory of at least size `bytes` aligned to `alignment` |```R::pointer``` |
-| ```r.deallocate(ptr, bytes, alignment)``` | Deallocates memory allocated by `r.allocate(bytes,alignment)` | unspecified |
+| Expression | Effect | Return Type |
+| -----------| ------ | ----------- | 
+| `R::pointer` |  Satisfies `NullablePointer` and `RandomAccessIterator` | | 
+| `R::size_type` | Can represent the size of the largest object `r` can allocate. | |
+| `ptr = r.allocate(bytes, alignment)` | Allocates memory of at least size `bytes` aligned to `alignment` |`R::pointer` |
+| `r.deallocate(ptr, bytes, alignment)` | Deallocates memory allocated by `r.allocate(bytes, alignment)` | unspecified |
 
 ### Exemplar
 ```cpp
@@ -48,12 +48,13 @@ Given:
 * `ptr` a pointer of type `R::pointer`
 * `bytes` a value of type `R::size_type`
 * `alignment` a value of type `R::size_type`
+* `b` a value of type `bool`
 
 The following expressions must be valid and have their specified effects:
-| Expression | Requirements | Return Type |
-| -----------| ------------ | ----------- | 
-| ```ptr = r[ptr]``` | Returns a pointer to the beginning of the memory pointed to by `ptr` | ```R::pointer``` |
-| ```r.deallocate(ptr, bytes, alignment)``` | Deallocates memory allocated by `r.allocate(bytes, alignment)` | convertible to `bool`, otherwise unspecified |
+| Expression | Effect | Return Type |
+| -----------| ------ | ----------- | 
+| `ptr = r[ptr]` | Returns a pointer to the beginning of the memory pointed to by `ptr` | `R::pointer` |
+| `b = r.deallocate(ptr, bytes, alignment)` | Deallocates memory allocated by `r.allocate(bytes, alignment)` | convertible to `bool`, otherwise unspecified |
 
 ### Exemplar
 ```cpp
@@ -81,8 +82,8 @@ Given:
 
 The following expressions must be valid and have their specified effects:
 
-| Expression | Requirements | Return Type |
-| -----------| ------------ | ----------- | 
+| Expression | Effect | Return Type |
+| -----------| ------ | ----------- | 
 | `R::size_type` | Can represent the maximum number of indexes `r` can allocate. | | 
 | `n = R::max_size()` | Returns the maximum number of indexes. |`R::size_type` | 
 | `n = r.size()` | Returns the number of indexes that have been allocated |`R::size_type` | 
