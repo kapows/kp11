@@ -20,6 +20,49 @@ The allocated memory from the upstream is never touched by any of these classes.
 
 [C++Now 2018: Arthur O'Dwyer “An Allocator is a Handle to a Heap”](https://www.youtube.com/watch?v=0MdSJsCTRkY)
 
+## Design
+The library is broken up into a few pieces.
+There is the upstream, the markers, the free blocks, control structures, and allocators.
+
+Upstream refers to the `heap`, `local`, etc., style resources where the memory originates from.
+Upstream resources are free to use their own "fancy pointers" and size type. This will be propagated downstream. This should allow the control structures and free blocks to be used for any memory.
+
+Markers refers to `list`, `pool`, etc., and are policies used in the `free_block` resource.
+
+Free blocks refers to `free_block`, `monotonic`, etc., which break up allocated memory into blocks to allocate. 
+All memory from free block resources including `monotonic` allocate in blocks. In `monotonic` the block size is the alignment. This is done so that no alignment needs to take place at all.
+
+Control structures refer to `fallback`, `segregator`, etc., these are classes that combine other resources with a control structure.
+These should not be deeply nested. 
+Deep nesting is incredibly complicated here as it would be a nightmare to pass in constructor arguments.
+Making a new class with regular control structures is favorable to deep nesting.
+
+Allocators refers to `allocator`, this is used to wrap the resource for standard use.
+`allocator<T,Resource>` and it's specialization `allocator<T,Resource*>` look very similar, but they are for different purposes.
+The former should be used globally similar to how `std::allocator` is used.
+The latter should be used locally, say inside of a function.
+`allocator<T,Resource*>` works like `std::pmr::memory_resource` and could probably just be that.
+
+```cpp
+//               control  free block    marker    upstream        resource (also upstream)
+//               |        |             |         |               |
+using resource = fallback<free_block<1, list<10>, local<320, 4>>, heap>; // stack allocate 10 32 byte blocks, fallback to the heap when those blocks run out.
+//            allocator    resource
+//            |            |
+template<typename T> //    |
+using alloc = allocator<T, resource>; // stateless allocator, resource is a static singleton.
+```
+
+These classes are all static.
+Thus, the size of these classes can get very big in size (large `sizeof()`). They are similar to arrays.
+This is done so that they do not need to store any state in any memory that they have aquired, so they don't have to modify that memory in any way to maintain state. 
+
+Allocations from any resources must be allocatable from that resource, it is an error otherwise.
+That is, if a resource has been created and no allocations have been requested, the maximum size of all allocations is the maximum size the resource can fulfil.
+This is to stop free blocks from allocating new memory if they cannot fulfil the request anyway.
+Proper usage requires segregating requests to resources.
+Therefore, the only way a resource allocation returns a `nullptr` is if it has run out of memory.
+
 ## Usage
 Memory resource should be made and wrapped up inside one of the `allocator` classes.
 Stateless allocators should be long lived and used globally, whereas stateful allocators should really be contained to local scope and should only use simple memory resources.
