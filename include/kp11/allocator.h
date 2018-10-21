@@ -8,15 +8,12 @@
 
 namespace kp11
 {
-  namespace allocator_detail
+  /// Resource that `allocator<T,Resource>` uses.
+  template<typename Resource>
+  static Resource & allocator_singleton()
   {
-    /// @private
-    template<typename Resource>
-    class shared_resource
-    {
-    protected: // variables
-      inline static Resource resource;
-    };
+    static Resource resource;
+    return resource;
   }
   /// @brief Adaptor that wraps a `Resource` so that it can be used as an allocator.
   ///
@@ -26,7 +23,7 @@ namespace kp11
   /// @tparam T Value type.
   /// @tparam Resource Meets the `Resource` concept.
   template<typename T, typename Resource>
-  class allocator : private allocator_detail::shared_resource<Resource>
+  class allocator
   {
   public: // typedefs
     /// Value type.
@@ -85,7 +82,7 @@ namespace kp11
     /// @returns Pointer to the `Resource` which was passed into the constructor.
     static Resource & get_resource() noexcept
     {
-      return allocator_detail::shared_resource<Resource>::resource;
+      return allocator_singleton<Resource>();
     }
   };
   template<typename T, typename U, typename R>
