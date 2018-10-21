@@ -63,6 +63,16 @@ This is to stop free blocks from allocating new memory if they cannot fulfil the
 Proper usage requires segregating requests to resources.
 Therefore, the only way a resource allocation returns a `nullptr` is if it has run out of memory.
 
+## Considerations
+Hardcoded block or allocation size in `free_block` and `monotonic`.
+This could help by removing the need for constructor some constructor
+
+Dynamic max allocations in `free_block` and `monotonic`.
+Internally, all that needs to be done is to change some variables to be `std::vector` and to add some other compile time conditionals. But this would ruin the vibe of the library (static classes). It is worth considering for ease of use.
+
+Use `memory_resource` instead of `allocator<T,Resource*>`.
+Probably should, but my CI isn't able to use this in a standard way yet (not present in libstdc++).
+
 ## Usage
 Memory resource should be made and wrapped up inside one of the `allocator` classes.
 Stateless allocators should be long lived and used globally, whereas stateful allocators should really be contained to local scope and should only use simple memory resources.
