@@ -66,7 +66,7 @@ TEST_CASE("global rebinding", "[rebinding][global]")
   REQUIRE(l.front() == 5);
   REQUIRE(l.back() == 15);
 }
-TEST_CASE("global using the same allocator", "[global]")
+TEST_CASE("global using the same resource", "[global]")
 {
   allocator<int, resource> x;
   allocator<double, resource> y;
