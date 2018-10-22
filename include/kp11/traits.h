@@ -118,8 +118,8 @@ namespace kp11
     static constexpr size_type max_size() noexcept;
     size_type size() const noexcept;
     size_type biggest() const noexcept;
-    size_type set(size_type n) noexcept;
-    void reset(size_type index, size_type n) noexcept;
+    size_type allocate(size_type n) noexcept;
+    void deallocate(size_type index, size_type n) noexcept;
   };
   */
   /// Checks if `T` meets the `Marker` concept.
@@ -137,8 +137,8 @@ namespace kp11
       std::enable_if_t<
         std::is_same_v<typename T::size_type, decltype(std::declval<T>().biggest())>>,
       std::enable_if_t<std::is_same_v<typename T::size_type,
-        decltype(std::declval<T>().set(std::declval<typename T::size_type>()))>>,
-      decltype(std::declval<T>().reset(std::declval<typename T::size_type>(),
+        decltype(std::declval<T>().allocate(std::declval<typename T::size_type>()))>>,
+      decltype(std::declval<T>().deallocate(std::declval<typename T::size_type>(),
         std::declval<typename T::size_type>()))>> : std::true_type
   {
   };
