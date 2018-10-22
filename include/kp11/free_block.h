@@ -138,7 +138,7 @@ namespace kp11
         return nullptr;
       }
     }
-    /// Find the allocation that `ptr` points into and reset the its `Marker` values and its
+    /// Find the allocation that `ptr` points into, deallocate to its `Marker`, and update its
     /// `biggests` value. `nullptr` is determined to not be owned.
     /// * Complexity `O(n)`
     ///
@@ -156,7 +156,7 @@ namespace kp11
       auto p = static_cast<byte_pointer>(ptr);
       if (auto i = find(p); i != ptrs.max_size())
       {
-        markers[i].reset(to_marker_index(i, p), to_marker_size(bytes));
+        markers[i].deallocate(to_marker_index(i, p), to_marker_size(bytes));
         biggests[i] = markers[i].biggest();
         return true;
       }
@@ -204,7 +204,7 @@ namespace kp11
     pointer allocate_from(std::size_t index, std::size_t num_blocks) noexcept
     {
       assert(num_blocks <= biggests[index]);
-      auto const i = markers[index].set(num_blocks);
+      auto const i = markers[index].allocate(num_blocks);
       biggests[index] = markers[index].biggest();
       return static_cast<pointer>(ptrs[index] + static_cast<size_type>(i) * block_size);
     }
