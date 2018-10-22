@@ -30,58 +30,58 @@ TEST_CASE("biggest", "[biggest]")
   }
   SECTION("empty")
   {
-    [[maybe_unused]] auto a = m.set(10);
+    [[maybe_unused]] auto a = m.allocate(10);
     REQUIRE(m.biggest() == 0);
   }
   SECTION("set")
   {
-    [[maybe_unused]] auto a = m.set(3);
+    [[maybe_unused]] auto a = m.allocate(3);
     REQUIRE(m.biggest() == 7);
   }
   SECTION("reset")
   {
-    auto a = m.set(3);
-    auto b = m.set(7);
-    m.reset(b, 7);
-    m.reset(a, 3);
+    auto a = m.allocate(3);
+    auto b = m.allocate(7);
+    m.deallocate(b, 7);
+    m.deallocate(a, 3);
     REQUIRE(m.biggest() == 10);
   }
 }
-TEST_CASE("set", "[set]")
+TEST_CASE("allocate", "[allocate]")
 {
   stack<10> m;
   SECTION("success")
   {
-    auto a = m.set(5);
+    auto a = m.allocate(5);
     REQUIRE(a == 0);
     REQUIRE(m.size() == 5);
     SECTION("post condition")
     {
-      auto b = m.set(5);
+      auto b = m.allocate(5);
       REQUIRE(b == 5);
       REQUIRE(b != a);
       REQUIRE(m.size() == 10);
     }
   }
 }
-TEST_CASE("reset", "[reset]")
+TEST_CASE("deallocate", "[deallocate]")
 {
   stack<10> m;
   SECTION("recovers indexes")
   {
-    auto a = m.set(5);
-    m.reset(a, 5);
+    auto a = m.allocate(5);
+    m.deallocate(a, 5);
     REQUIRE(m.size() == 0);
-    auto b = m.set(10);
+    auto b = m.allocate(10);
     REQUIRE(b == a);
   }
   SECTION("doesn't recover indexes")
   {
-    auto a = m.set(3);
-    m.set(4);
-    m.reset(a, 3);
+    auto a = m.allocate(3);
+    m.allocate(4);
+    m.deallocate(a, 3);
     REQUIRE(m.size() == 7);
-    auto c = m.set(3);
+    auto c = m.allocate(3);
     REQUIRE(c != a);
   }
 }
