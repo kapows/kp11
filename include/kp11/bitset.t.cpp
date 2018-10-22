@@ -30,75 +30,75 @@ TEST_CASE("biggest", "[biggest]")
   }
   SECTION("end unset")
   {
-    [[maybe_unused]] auto a = m.set(3);
+    [[maybe_unused]] auto a = m.allocate(3);
     REQUIRE(m.biggest() == 7);
   }
   SECTION("start unset")
   {
-    auto a = m.set(3);
-    [[maybe_unused]] auto b = m.set(7);
-    m.reset(a, 3);
+    auto a = m.allocate(3);
+    [[maybe_unused]] auto b = m.allocate(7);
+    m.deallocate(a, 3);
     REQUIRE(m.biggest() == 3);
   }
   SECTION("middle unset")
   {
-    [[maybe_unused]] auto a = m.set(3);
-    auto b = m.set(4);
-    [[maybe_unused]] auto c = m.set(3);
-    m.reset(b, 4);
+    [[maybe_unused]] auto a = m.allocate(3);
+    auto b = m.allocate(4);
+    [[maybe_unused]] auto c = m.allocate(3);
+    m.deallocate(b, 4);
     REQUIRE(m.biggest() == 4);
   }
   SECTION("merges")
   {
-    auto a = m.set(3);
-    auto b = m.set(4);
-    auto c = m.set(3);
-    m.reset(a, 3);
-    m.reset(b, 4);
+    auto a = m.allocate(3);
+    auto b = m.allocate(4);
+    auto c = m.allocate(3);
+    m.deallocate(a, 3);
+    m.deallocate(b, 4);
     REQUIRE(m.biggest() == 7);
-    m.reset(c, 3);
+    m.deallocate(c, 3);
     REQUIRE(m.biggest() == 10);
   }
 }
-TEST_CASE("set", "[set]")
+TEST_CASE("allocate", "[allocate]")
 {
   bitset<10> m;
-  SECTION("set 1")
+  SECTION("allocate 1")
   {
-    auto a = m.set(1);
+    auto a = m.allocate(1);
     REQUIRE(a == 0);
     REQUIRE(m.size() == 1);
     SECTION("post condition")
     {
-      auto b = m.set(1);
+      auto b = m.allocate(1);
       REQUIRE(b == 1);
       REQUIRE(b != a);
       REQUIRE(m.size() == 2);
     }
   }
-  SECTION("set many")
+  SECTION("allocate many")
   {
-    auto a = m.set(5);
+    auto a = m.allocate(5);
     REQUIRE(a == 0);
     REQUIRE(m.size() == 5);
     SECTION("post condition")
     {
-      auto b = m.set(5);
+      auto b = m.allocate(5);
       REQUIRE(b == 5);
       REQUIRE(b != a);
       REQUIRE(m.size() == 10);
     }
   }
 }
-TEST_CASE("reset", "[reset]")
+TEST_CASE("deallocate", "[deallocate]")
 {
   bitset<10> m;
-  auto a = m.set(5);
+  auto a = m.allocate(5);
   SECTION("recovers indexes")
   {
-    m.reset(a, 5);
+    m.deallocate(a, 5);
     REQUIRE(m.size() == 0);
-    auto b = m.set(10);
+    auto b = m.allocate(10);
     REQUIRE(b == a);
   }
 }
