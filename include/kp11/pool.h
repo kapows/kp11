@@ -9,13 +9,13 @@
 
 namespace kp11
 {
-  /// @brief Fixed size LIFO marker. Only supports `set` and `reset` with `n == 1`.
+  /// @brief Fixed size LIFO marker. Only supports `allocate` and `deallocate` with `n == 1`.
   ///
-  /// Spots are stored as a singly linked list inside of an array with each element being a node.
-  /// The node points to the next node by using an index. `set` and `reset` calls are each limited
-  /// to 1 spot.
+  /// Indexes are stored as a singly linked list inside of an array with each element being a node.
+  /// The node points to the next node by using an index. `allocate` and `deallocate` calls are each
+  /// limited to 1 index.
   ///
-  /// @tparam N Total number of spots.
+  /// @tparam N Total number of indexes.
   template<std::size_t N>
   class pool
   {
@@ -41,37 +41,38 @@ namespace kp11
     }
 
   public: // capacity
-    /// @returns Number of occupied spots.
+    /// @returns Number of allocated indexes.
     size_type size() const noexcept
     {
       return num_occupied;
     }
-    /// @returns Total number of spots (`N`).
+    /// @returns Total number of indexes (`N`).
     static constexpr size_type max_size() noexcept
     {
       return static_cast<size_type>(N);
     }
-    /// @returns `1` if there are vacant spots otherwise `0`.
+    /// @returns `1` if there are unallocated indexes otherwise `0`.
     size_type biggest() const noexcept
     {
       return head != max_size() ? static_cast<size_type>(1) : static_cast<size_type>(0);
     }
 
   public: // modifiers
-    /// The next node becomes the head of the linked list. Returns the previous head node.
+    /// The next node becomes the head of the linked list. Returns the index of the previous head
+    /// node.
     /// * Complexity `O(1)`
     ///
-    /// @param n Number of spots to mark as occupied.
+    /// @param n Number of indexes to allocate.
     ///
-    /// @returns Index of the spot marked occupied.
+    /// @returns Index of the start of the `n` indexes to allocate.
     ///
     /// @pre `n == 1`
     /// @pre `n <= biggest()`
     ///
-    /// @post `(return value)` will not returned again from any subsequent call to `set`
-    /// unless `reset` has been called on it.
+    /// @post `(return value)` will not returned again from any subsequent call to `allocate`
+    /// unless `deallocate` has been called on it.
     /// @post `size() == (previous) size() + n`
-    size_type set(size_type n) noexcept
+    size_type allocate(size_type n) noexcept
     {
       assert(n == 1);
       assert(n <= biggest());
@@ -82,14 +83,14 @@ namespace kp11
     /// head node.
     /// * Complexity `O(1)`
     ///
-    /// @param index Returned by a call to `set`.
-    /// @param n Corresponding parameter used in `set`.
+    /// @param index Returned by a call to `allocate`.
+    /// @param n Corresponding parameter in the call to `allocate`.
     ///
     /// @pre `n == 1`
     ///
-    /// @post `index` may be returned by a call to `set`.
+    /// @post `index` may be returned by a call to `allocate`.
     /// @post `size() == (previous) size() - n`
-    void reset(size_type index, size_type n) noexcept
+    void deallocate(size_type index, size_type n) noexcept
     {
       assert(n == 1);
       assert(index < max_size());
