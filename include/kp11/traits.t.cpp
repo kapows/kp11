@@ -113,8 +113,8 @@ public:
   }
   size_type size() noexcept;
   size_type biggest() const noexcept;
-  size_type set(size_type n) noexcept;
-  void reset(size_type index, size_type n) noexcept;
+  size_type allocate(size_type n) noexcept;
+  void deallocate(size_type index, size_type n) noexcept;
 };
 
 /// @private
@@ -123,8 +123,8 @@ class test_not_a_marker
 {
 public:
   using size_type = std::size_t;
-  size_type set(size_type n) noexcept;
-  void reset(size_type index, size_type n) noexcept;
+  size_type allocate(size_type n) noexcept;
+  void deallocate(size_type index, size_type n) noexcept;
 };
 TEST_CASE("is_marker", "[traits]")
 {
