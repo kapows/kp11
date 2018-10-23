@@ -11,17 +11,6 @@
 
 using namespace kp11;
 
-TEST_CASE("constructor", "[constructor]")
-{
-  SECTION("default")
-  {
-    fallback<local<128, 4>, local<128, 4>> m;
-  }
-  SECTION("forwarding")
-  {
-    fallback<free_block<128, 4, 1, stack<4>, local<128, 4>>, local<128, 4>> m;
-  }
-}
 TEST_CASE("accessor", "[accessor]")
 {
   fallback<local<128, 4>, local<128, 4>> m;
