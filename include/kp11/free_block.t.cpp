@@ -10,35 +10,31 @@ using namespace kp11;
 
 TEST_CASE("constructor", "[constructor]")
 {
-  free_block<2, stack<4>, heap> m(128, 4);
-  REQUIRE(m.get_block_size() == 32);
-  SECTION("initial allocation")
-  {
-    decltype(m) n(128, 4, 2);
-  }
+  free_block<128, 4, 2, stack<4>, heap> m;
+  REQUIRE(m.chunk_size == 128);
+  REQUIRE(m.chunk_alignment == 4);
+  REQUIRE(m.max_chunks == 2);
+  REQUIRE(m.block_size == 32);
   SECTION("move")
   {
     auto n = std::move(m);
-    REQUIRE(n.get_block_size() == 32);
   }
   SECTION("move assignment")
   {
-    free_block<2, stack<4>, heap> n(32, 4);
-    REQUIRE(n.get_block_size() == 8);
+    free_block<128, 4, 2, stack<4>, heap> n;
     n = std::move(m);
-    REQUIRE(n.get_block_size() == 32);
   }
 }
 TEST_CASE("accessor", "[accessor]")
 {
-  free_block<2, stack<4>, heap> m(128, 4);
+  free_block<128, 4, 2, stack<4>, heap> m;
   [[maybe_unused]] auto & a = m.get_upstream();
   auto const & n = m;
   [[maybe_unused]] auto & b = n.get_upstream();
 }
 TEST_CASE("operator[]", "[operator[]]")
 {
-  free_block<2, stack<4>, heap> m(128, 4);
+  free_block<128, 4, 2, stack<4>, heap> m;
   SECTION("failure")
   {
     REQUIRE(m[&m] == nullptr);
@@ -51,7 +47,7 @@ TEST_CASE("operator[]", "[operator[]]")
 }
 TEST_CASE("allocate", "[allocate]")
 {
-  free_block<2, stack<4>, heap> m(128, 4);
+  free_block<128, 4, 2, stack<4>, heap> m;
   auto a = m.allocate(128, 4);
   REQUIRE(a != nullptr);
   SECTION("allocate a new memory block")
@@ -68,7 +64,7 @@ TEST_CASE("allocate", "[allocate]")
 }
 TEST_CASE("deallocate", "[deallocate]")
 {
-  free_block<2, stack<4>, heap> m(128, 4);
+  free_block<128, 4, 2, stack<4>, heap> m;
   auto a = m.allocate(128, 4);
   auto b = m.allocate(128, 4);
   SECTION("success")
@@ -92,7 +88,7 @@ TEST_CASE("deallocate", "[deallocate]")
 }
 TEST_CASE("release", "[release]")
 {
-  free_block<2, stack<4>, heap> m(128, 4);
+  free_block<128, 4, 2, stack<4>, heap> m;
   auto a = m.allocate(128, 4);
   auto b = m.allocate(128, 4);
   REQUIRE(a != nullptr);
@@ -103,7 +99,7 @@ TEST_CASE("release", "[release]")
 }
 TEST_CASE("shirnk_to_fit", "[shrink_to_fit]")
 {
-  free_block<2, stack<4>, heap> m(128, 4);
+  free_block<128, 4, 2, stack<4>, heap> m;
   [[maybe_unused]] auto a = m.allocate(128, 4);
   auto b = m.allocate(128, 4);
   m.deallocate(b, 128, 4);
@@ -113,5 +109,5 @@ TEST_CASE("shirnk_to_fit", "[shrink_to_fit]")
 }
 TEST_CASE("traits", "[traits]")
 {
-  REQUIRE(is_owner_v<free_block<1, stack<4>, heap>> == true);
+  REQUIRE(is_owner_v<free_block<128, 4, 2, stack<4>, heap>> == true);
 }
