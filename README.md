@@ -57,7 +57,7 @@ using alloc = allocator<T, resource>; // stateless allocator, resource is a stat
 ```
 
 These classes are all static.
-Thus, their size can get very big in (large `sizeof()`).
+Thus, their size can get very big (large `sizeof()`).
 They are similar to arrays.
 This is done so that they do not need to store any state in any memory that they have aquired, so they don't have to modify that memory in any way to maintain state. 
 
