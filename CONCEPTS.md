@@ -10,7 +10,7 @@ The type `R` satisfies `Resource` if
 Given:
 * `r` is an lvalue of type `R`
 * `ptr` a pointer of type `R::pointer`
-* `bytes` a value of type `R::size_type`
+* `size` a value of type `R::size_type`
 * `alignment` a value of type `R::size_type`
 
 The following expressions must be valid and have their specified effects:
@@ -18,8 +18,8 @@ The following expressions must be valid and have their specified effects:
 | -----------| ------ | ----------- | 
 | `R::pointer` |  Satisfies `NullablePointer` and `RandomAccessIterator` | | 
 | `R::size_type` | Can represent the size of the largest object `r` can allocate. | |
-| `ptr = r.allocate(bytes, alignment)` | Allocates memory of at least size `bytes` aligned to `alignment` |`R::pointer` |
-| `r.deallocate(ptr, bytes, alignment)` | Deallocates memory allocated by `r.allocate(bytes, alignment)` | unspecified |
+| `ptr = r.allocate(size, alignment)` | Allocates memory of at least size `size` aligned to `alignment` |`R::pointer` |
+| `r.deallocate(ptr, size, alignment)` | Deallocates memory allocated by `r.allocate(size, alignment)` | unspecified |
 
 ### Exemplar
 ```cpp
@@ -28,8 +28,8 @@ class resource
 public:
   using pointer = void *;
   using size_type = std::size_t;
-  pointer allocate(size_type bytes, size_type alignment) noexcept;
-  void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
+  pointer allocate(size_type size, size_type alignment) noexcept;
+  void deallocate(pointer ptr, size_type size, size_type alignment) noexcept;
 };
 ```
 
@@ -46,7 +46,7 @@ The type `R` satisfies `Owner` if:
 Given:
 * `r` is an lvalue of type `R`
 * `ptr` a pointer of type `R::pointer`
-* `bytes` a value of type `R::size_type`
+* `size` a value of type `R::size_type`
 * `alignment` a value of type `R::size_type`
 * `b` a value of type `bool`
 
@@ -54,7 +54,7 @@ The following expressions must be valid and have their specified effects:
 | Expression | Effect | Return Type |
 | -----------| ------ | ----------- | 
 | `ptr = r[ptr]` | Returns a pointer to the beginning of the memory pointed to by `ptr` | `R::pointer` |
-| `b = r.deallocate(ptr, bytes, alignment)` | Deallocates memory allocated by `r.allocate(bytes, alignment)` | convertible to `bool`, otherwise unspecified |
+| `b = r.deallocate(ptr, size, alignment)` | Deallocates memory allocated by `r.allocate(size, alignment)` | convertible to `bool`, otherwise unspecified |
 
 ### Exemplar
 ```cpp
@@ -63,8 +63,8 @@ class owner
 public:
   using pointer = void *;
   using size_type = std::size_t;
-  pointer allocate(size_type bytes, size_type alignment) noexcept;
-  bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
+  pointer allocate(size_type size, size_type alignment) noexcept;
+  bool deallocate(pointer ptr, size_type size, size_type alignment) noexcept;
   pointer operator[](pointer ptr) const noexcept;
 };
 ```
