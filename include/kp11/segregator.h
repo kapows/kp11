@@ -25,6 +25,7 @@ namespace kp11
     using size_type = typename Small::size_type;
 
   public: // constants
+    /// Threshold size in bytes.
     static constexpr auto threshold = Threshold;
 
   public: // modifier
