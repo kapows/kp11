@@ -147,7 +147,7 @@ namespace kp11
     }
 
   private: // modifiers
-    /// Allocate a new block of memory from `Upstream`. Can fail if max allocations has been
+    /// Allocate a new block of memory from `Upstream`. Can fail if max chunks has been
     /// reached or if `Upstream` fails allocation.
     ///
     /// @returns (success) `true`
