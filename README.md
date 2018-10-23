@@ -97,6 +97,13 @@ using resource = segregator<32, free_block<320, 4, 10, pool<10>, heap>, nullocat
 // segregator is required here as the small allocator can only allocate upto 320 bytes.
 using resource = segregator<320, free_block<320, 4, 10, list<10>, fallback<local<320,4>, heap>,heap>; 
 ```
+```cpp
+// requires two phase initialization
+using resource = free_block<320, 4, 1, list<10>, buffer>;
+alignas(4) char buf[320];
+resource r;
+r.get_upstream() = {buf, 320, 4};
+```
 
 ##### Making a resource
 ```cpp
