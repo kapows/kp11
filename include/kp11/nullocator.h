@@ -25,7 +25,7 @@ namespace kp11
       return nullptr;
     }
     /// @pre `ptr == nullptr`
-    void deallocate(pointer ptr, size_type, size_type) noexcept
+    void deallocate([[maybe_unused]] pointer ptr, size_type, size_type) noexcept
     {
       assert(ptr == nullptr);
     }
