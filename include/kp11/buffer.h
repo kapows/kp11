@@ -28,8 +28,13 @@ namespace kp11
     using byte_pointer = typename std::pointer_traits<pointer>::template rebind<std::byte>;
 
   public: // constructors
-    basic_buffer(pointer ptr, size_type bytes, size_type alignment) noexcept :
-        ptr(static_cast<byte_pointer>(ptr)), bytes(bytes), alignment(alignment)
+    /// Default is defined because other constructor is defined.
+    basic_buffer() = default;
+    /// @param ptr Pointer to a memory block.
+    /// @param size Size in bytes of memory block.
+    /// @param alignment Alignment in bytes of memory block.
+    basic_buffer(pointer ptr, size_type size, size_type alignment) noexcept :
+        ptr(static_cast<byte_pointer>(ptr)), size(size), alignment(alignment)
     {
     }
 
@@ -38,7 +43,7 @@ namespace kp11
     /// pointer to our buffer is allocated.
     /// * Complexity `O(1)`
     ///
-    /// @param bytes Size in bytes of memory to allocate.
+    /// @param size Size in bytes of memory to allocate.
     /// @param alignment Alignment of memory to allocate.
     ///
     /// @returns (success) Pointer to the our buffer.
@@ -46,11 +51,11 @@ namespace kp11
     ///
     /// @pre `alignment (from ctor) % alignment == 0`
     ///
-    /// @post (success) (return value) will not be returned again until it has been `deallocated`.
-    pointer allocate(size_type bytes, size_type alignment) noexcept
+    /// @post (success) `(return value)` will not be returned again until it has been `deallocated`.
+    pointer allocate(size_type size, [[maybe_unused]] size_type alignment) noexcept
     {
       assert(this->alignment % alignment == 0);
-      if (!allocated && bytes <= this->bytes)
+      if (!allocated && size <= this->size)
       {
         allocated = true;
         return static_cast<pointer>(ptr);
@@ -61,12 +66,13 @@ namespace kp11
     /// * Complexity `O(1)`
     ///
     /// @param ptr Pointer to the beginning of a memory block.
-    /// @param bytes Size in bytes of the memory block.
+    /// @param size Size in bytes of the memory block.
     /// @param alignment Alignment in bytes of the memory block.
     ///
     /// @returns (success) `true`
     /// @returns (failure) `false`
-    bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+    bool deallocate(
+      pointer ptr, [[maybe_unused]] size_type size, [[maybe_unused]] size_type alignment) noexcept
     {
       if (static_cast<byte_pointer>(ptr) == this->ptr)
       {
@@ -86,7 +92,7 @@ namespace kp11
     pointer operator[](pointer ptr) noexcept
     {
       if (std::less_equal<pointer>()(static_cast<pointer>(this->ptr), ptr) &&
-          std::less<pointer>()(ptr, static_cast<pointer>(this->ptr + bytes)))
+          std::less<pointer>()(ptr, static_cast<pointer>(this->ptr + size)))
       {
         return static_cast<pointer>(this->ptr);
       }
@@ -97,7 +103,7 @@ namespace kp11
     /// Flag whether or not we have allocated our buffer.
     bool allocated = false;
     byte_pointer ptr;
-    size_type bytes;
+    size_type size;
     size_type alignment;
   };
 
