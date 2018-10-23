@@ -1,6 +1,6 @@
 #pragma once
 
-#include "traits.h" // is_resource_v
+#include "traits.h" // is_resource_v, is_owner_v
 
 namespace kp11
 {
@@ -11,7 +11,7 @@ namespace kp11
   template<typename Primary, typename Secondary>
   class fallback
   {
-    static_assert(is_resource_v<Primary>);
+    static_assert(is_owner_v<Primary>);
     static_assert(is_resource_v<Secondary>);
 
   public: // typedefs
