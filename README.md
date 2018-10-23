@@ -95,7 +95,7 @@ using resource = segregator<32, free_block<320, 4, 10, pool<10>, heap>, nullocat
 ```cpp
 // the free block will allocate from the local buffer once only. Once these have all been allocated, allocate from the heap
 // segregator is required here as the small allocator can only allocate upto 320 bytes.
-using resource = segregator<320, fallback<free_block<320, 4, 1, list<10>, local<320,4>>, heap>,heap>; 
+using resource = segregator<320, free_block<320, 4, 10, list<10>, fallback<local<320,4>, heap>,heap>; 
 ```
 
 ##### Making a resource
