@@ -13,13 +13,14 @@ Given:
 * `size` a value of type `R::size_type`
 * `alignment` a value of type `R::size_type`
 
-The following expressions must be valid and have their specified effects:
-| Expression | Effect | Return Type |
-| -----------| ------ | ----------- | 
+The following expressions must be valid and meet their specified requirements:
+| Expression | Requirements | Return Type |
+| -----------| ------------ | ----------- | 
 | `R::pointer` |  Satisfies `NullablePointer` and `RandomAccessIterator` | | 
 | `R::size_type` | Can represent the size of the largest object `r` can allocate. | |
-| `ptr = r.allocate(size, alignment)` | Allocates memory of at least size `size` aligned to `alignment` |`R::pointer` |
-| `r.deallocate(ptr, size, alignment)` | Deallocates memory allocated by `r.allocate(size, alignment)` | unspecified |
+| `R r` | The object `r` is default-constructible | |
+| `ptr = r.allocate(size, alignment)` | Unless `ptr` is `nullptr` it is not returned again unless it has been passed to `r.deallocate(ptr, size, alignment)`. |`R::pointer` |
+| `r.deallocate(ptr, size, alignment)` | | unspecified |
 
 ### Exemplar
 ```cpp
@@ -50,11 +51,11 @@ Given:
 * `alignment` a value of type `R::size_type`
 * `b` a value of type `bool`
 
-The following expressions must be valid and have their specified effects:
-| Expression | Effect | Return Type |
-| -----------| ------ | ----------- | 
-| `ptr = r[ptr]` | Returns a pointer to the beginning of the memory pointed to by `ptr` | `R::pointer` |
-| `b = r.deallocate(ptr, size, alignment)` | Deallocates memory allocated by `r.allocate(size, alignment)` | convertible to `bool`, otherwise unspecified |
+The following expressions must be valid and meet their specified requirements:
+| Expression | Requirements | Return Type |
+| -----------| ------------ | ----------- | 
+| `ptr = r[ptr]` | | `R::pointer` |
+| `b = r.deallocate(ptr, size, alignment)` or `r.deallocate(ptr, size, alignment)` | | convertible to `bool`, otherwise unspecified |
 
 ### Exemplar
 ```cpp
@@ -80,16 +81,16 @@ Given:
 * `i` a value of type `R::size_type`
 * `n` a value of type `R::size_type`
 
-The following expressions must be valid and have their specified effects:
+The following expressions must be valid and meet their specified requirements:
 
-| Expression | Effect | Return Type |
-| -----------| ------ | ----------- | 
+| Expression | Requirements | Return Type |
+| -----------| ------------ | ----------- | 
 | `R::size_type` | Can represent the maximum number of indexes `r` can allocate. | | 
-| `n = R::max_size()` | Returns the maximum number of indexes. |`R::size_type` | 
-| `n = r.size()` | Returns the number of indexes that have been allocated |`R::size_type` | 
-| `n = r.biggest()` | Returns the largest number allocatable continuous indexes |`R::size_type` | 
-| `i = r.allocate(n)` | Allocates a range of continuous `n` indexes | `R::size_type` | 
-| `r.deallocate(i, n)` | Deallocates `n` continuous indexes starting from `i` | unused | 
+| `n = R::max_size()` | |`R::size_type` | 
+| `n = r.size()` | `n <= R::max_size()` |`R::size_type` | 
+| `n = r.biggest()` | `n <= R::max_size() - r.size()` |`R::size_type` | 
+| `i = r.allocate(n)` | `n <= r.biggest`. `i < R::max_size()`. `[i,i+n)` is not returned until a call to `r.deallocate(i, n)`. | `R::size_type` | 
+| `r.deallocate(i, n)` | | unused | 
 
 ### Exemplar
 ```cpp
