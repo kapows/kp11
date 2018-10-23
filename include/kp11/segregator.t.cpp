@@ -11,13 +11,6 @@ using namespace kp11;
 using small_t = free_block<128, 4, 1, stack<4>, local<128, 4>>;
 using large_t = free_block<256, 4, 1, stack<4>, local<256, 4>>;
 
-TEST_CASE("constructor", "[constructor]")
-{
-  SECTION("default")
-  {
-    segregator<128, local<128, 4>, local<256, 4>> m;
-  }
-}
 TEST_CASE("accessor", "[accessor]")
 {
   segregator<128, local<128, 4>, local<256, 4>> m;
