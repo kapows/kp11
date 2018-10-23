@@ -21,20 +21,23 @@ The allocated memory from the upstream is never touched by any of these classes.
 [C++Now 2018: Arthur O'Dwyer “An Allocator is a Handle to a Heap”](https://www.youtube.com/watch?v=0MdSJsCTRkY)
 
 ## Design
+First and foremost the library is made to be easy to use. Since it is using a policy based design this basically means that everything is default constructed. If something more complicated is required then that will have to be done with an ugly two phase initialization style.
+
 The library is broken up into a few pieces.
 There is the upstream, the markers, the free blocks, control structures, and allocators.
 
 Upstream refers to the `heap`, `local`, etc., style resources where the memory originates from.
-Upstream resources are free to use their own "fancy pointers" and size type. This will be propagated downstream. This should allow the control structures and free blocks to be used for any memory.
+Upstream resources are free to use their own "fancy pointers" and size type. This will be propagated downstream.
+This should allow the control structures and free blocks to be used for any memory.
 
 Markers refers to `list`, `pool`, etc., and are policies used in the `free_block` resource.
 
 Free blocks refers to `free_block`, `monotonic`, etc., which break up allocated memory into blocks to allocate. 
-All memory from free block resources including `monotonic` allocate in blocks. In `monotonic` the block size is the alignment. This is done so that no alignment needs to take place at all.
+All memory from free block resources including `monotonic` allocate in blocks.
+In `monotonic` the block size is the alignment.
+This is done so that no alignment needs to take place at all.
 
 Control structures refer to `fallback`, `segregator`, etc., these are classes that combine other resources with a control structure.
-These should not be deeply nested. 
-Deep nesting is incredibly complicated here as it would be a nightmare to pass in constructor arguments.
 Making a new class with regular control structures is favorable to deep nesting.
 
 Allocators refers to `allocator`, this is used to wrap the resource for standard use.
@@ -44,9 +47,9 @@ The latter should be used locally, say inside of a function.
 `allocator<T,Resource*>` works like `std::pmr::memory_resource` and could probably just be that.
 
 ```cpp
-//               control  free block    marker    upstream        resource (also upstream)
-//               |        |             |         |               |
-using resource = fallback<free_block<1, list<10>, local<320, 4>>, heap>; // stack allocate 10 32 byte blocks, fallback to the heap when those blocks run out.
+//               control  free block            marker    upstream        resource (also upstream)
+//               |        |                     |         |               |
+using resource = fallback<free_block<320, 4, 1, list<10>, local<320, 4>>, heap>; // stack allocate 10 32 byte blocks, fallback to the heap when those blocks run out.
 //            allocator    resource
 //            |            |
 template<typename T> //    |
@@ -54,83 +57,83 @@ using alloc = allocator<T, resource>; // stateless allocator, resource is a stat
 ```
 
 These classes are all static.
-Thus, the size of these classes can get very big in size (large `sizeof()`). They are similar to arrays.
+Thus, their size can get very big in (large `sizeof()`).
+They are similar to arrays.
 This is done so that they do not need to store any state in any memory that they have aquired, so they don't have to modify that memory in any way to maintain state. 
 
 Allocations from any resources must be allocatable from that resource, it is an error otherwise.
-That is, if a resource has been created and no allocations have been requested, the maximum size of all allocations is the maximum size the resource can fulfil.
+That is, if a resource has been created and no allocations have been requested, the maximum size of all allocations is the maximum size that resource can fulfil.
 This is to stop free blocks from allocating new memory if they cannot fulfil the request anyway.
-Proper usage requires segregating requests to resources.
-Therefore, the only way a resource allocation returns a `nullptr` is if it has run out of memory.
-
-## Considerations
-Hardcoded block or allocation size in `free_block` and `monotonic`.
-This could help by removing the need for constructor some constructor
-
-Dynamic max allocations in `free_block` and `monotonic`.
-Internally, all that needs to be done is to change some variables to be `std::vector` and to add some other compile time conditionals. But this would ruin the vibe of the library (static classes). It is worth considering for ease of use.
-
-Use `memory_resource` instead of `allocator<T,Resource*>`.
-Probably should, but my CI isn't able to use this in a standard way yet (not present in libstdc++).
+Proper usage requires segregating those requests.
+This means that the only way a resource allocation returns a `nullptr` is if it has run out of memory.
+i.e. No ordering a big mac from KFC.
 
 ## Usage
-Memory resource should be made and wrapped up inside one of the `allocator` classes.
-Stateless allocators should be long lived and used globally, whereas stateful allocators should really be contained to local scope and should only use simple memory resources.
+Memory resources should be made and wrapped up inside one of the `allocator` classes.
+Stateless allocators should be long lived and used globally, whereas stateful allocators should really be contained to local scope and should only use simple memory resources. 
+You should only really consider those two types of allocators, this should ease use.
 
 ### Making memory resources
 An upstream resource is picked and that is used with a `free_block` and a `marker` or a `monotonic`.
 
 #### Examples
 
-##### Simple
 ```cpp
-using resource = free_block<10, pool<250>, heap>; // 10 allocations from upstream maximum
-                                                  // has 250 blocks per allocation, uses the pool marker (only able to allocate a single block)
-                                                  // upstream is the heap
-resource r(250*40, 4); // allocates 250*40 bytes from upstream, that is each pool block is 40 bytes.
+// 1024 byte sized, 8 byte aligned request to the upstream
+// 100 allocations from upstream maximum
+// upstream is the heap
+using resource = monotonic<1024, 8, 100, heap>; 
 ```
 ```cpp
-using resource = monotonic<100, heap>; // 100 allocations from upstream maximum
-                                       // upstream is the heap
-resource r(250*40, 4); // allocates 250*40 bytes from upstream
+// 10 allocations from upstream maximum
+// 10 blocks per allocation, uses the pool marker (only able to allocate a single block)
+// upstream is the heap (calls new and delete)
+// segregator should be used, unless it is guaranteed no request over 32 bytes is ever made.
+// all requests above 32 bytes returns nullptr as the nullocator always returns nullptr
+using resource = segregator<33, free_block<320, 4, 10, pool<10>, heap>, nullocator>; 
 ```
 ```cpp
-using resource = fallback<free_block<1, pool<100>, local<32*100,4>>, heap>; // the free block will allocate from the local buffer once only. Once these have all been allocated, allocate from the heap
+// the free block will allocate from the local buffer once only. Once these have all been allocated, allocate from the heap
+// segregator is required here as the small allocator can only allocate upto 320 bytes.
+using resource = segregator<321, fallback<free_block<320, 4, 1, list<10>, local<320,4>>, heap>,heap>; 
 ```
-```cpp
-using resource = segregator<32, free_block<10, pool<100>, heap>, heap>; // anything bigger than 32 bytes will be allocated from the heap
-```
-Try not to use too many of these control structures together as their constructors get really complicated.
 
-##### Complicated
+##### Making a resource
 ```cpp
-using resource = segregator<32, free_block<10,pool<100>,heap>, segragator<64, free_block<10,pool<100>, heap>, heap>>>; // don't do this
-// Instead just make your own resource
 class resource
 {
+  using 32_pool = free_block<32*10,8,10,pool<10>,heap>;
+  using 64_pool = free_block<64*10,8,10,pool<10>,heap>;
+  using 96_pool = free_block<96*10,8,10,pool<10>,heap>;
+  using 128_pool = free_block<128*5,8,5,pool<5>,heap>;
+  std::variant<std::monostate, 32_pool,64_pool,96_pool,128_pool> pools[4];
+  heap other;
 public:
   using pointer = void *;
   using size_type = std::size_t;
-  resource() {
-    p.emplace_back(32*100, 4); 
-    p.emplace_back(64*100, 4);
-  }
-  pointer allocate(size_type bytes, size_type alignment)
+  resource() noexcept
   {
-    auto i = bytes / 32;
-    if(i < m.size())
+    pools[0].emplace<1>();
+    pools[1].emplace<2>();
+    pools[2].emplace<3>();
+    pools[3].emplace<4>();
+  }
+  pointer allocate(size_type size, size_type alignment) noexcept
+  {
+    auto i = size / 32;
+    if(i < 4)
     {
-      return m[i].allocate(bytes,alignment);
+      return std::visit([size, alignment](auto && pool) { return pool.allocate(size,alignment);}, pools[i]);
     }
     else
     {
-      return other.allocate(bytes,alignment);
+      return other.allocate(size,alignment);
     }
   }
-  void deallocate(pointer ptr, size_type bytes, size_type alignment)
+  void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
   {
     auto i = bytes / 32;
-    if(i < m.size())
+    if(i < 4)
     {
       m[i].deallocate(ptr, bytes,alignment);
     }
@@ -139,9 +142,6 @@ public:
       other.deallocate(ptr, bytes,alignment);
     }
   }
-private:
-  std::vector<free_block<10, pool<100>, heap>> m;
-  heap other;
 };
 ```
 ### Making allocators
