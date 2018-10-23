@@ -14,6 +14,7 @@ Given:
 * `alignment` a value of type `R::size_type`
 
 The following expressions must be valid and meet their specified requirements:
+
 | Expression | Requirements | Return Type |
 | ---------- | ------------ | ----------- | 
 | `R::pointer` |  Satisfies `NullablePointer` and `RandomAccessIterator` | | 
@@ -52,6 +53,7 @@ Given:
 * `b` a value of type `bool`
 
 The following expressions must be valid and meet their specified requirements:
+
 | Expression | Requirements | Return Type |
 | ---------- | ------------ | ----------- | 
 | `ptr = r[ptr]` | | `R::pointer` |
