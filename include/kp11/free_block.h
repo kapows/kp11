@@ -216,11 +216,6 @@ namespace kp11
       }
       return nullptr;
     }
-    /// @returns Size of each free block.
-    size_type get_block_size() const noexcept
-    {
-      return block_size;
-    }
 
   public: // accessors
     /// @returns Reference to `Upstream`.
