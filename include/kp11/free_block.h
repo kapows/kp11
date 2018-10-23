@@ -32,7 +32,7 @@ namespace kp11
     static_assert(is_resource_v<Upstream>);
     static_assert(ChunkSize % ChunkAlignment == 0);
     static_assert(ChunkSize % Marker::max_size() == 0);
-    /// Block size should match the chunk alignment.
+    /// Block size must be aligned to chunk alignment.
     static_assert(ChunkSize / Marker::max_size() % ChunkAlignment == 0);
 
   public: // typedefs
