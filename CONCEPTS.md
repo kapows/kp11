@@ -15,7 +15,7 @@ Given:
 
 The following expressions must be valid and meet their specified requirements:
 | Expression | Requirements | Return Type |
-| -----------| ------------ | ----------- | 
+| ---------- | ------------ | ----------- | 
 | `R::pointer` |  Satisfies `NullablePointer` and `RandomAccessIterator` | | 
 | `R::size_type` | Can represent the size of the largest object `r` can allocate. | |
 | `R r` | The object `r` is default-constructible | |
@@ -53,7 +53,7 @@ Given:
 
 The following expressions must be valid and meet their specified requirements:
 | Expression | Requirements | Return Type |
-| -----------| ------------ | ----------- | 
+| ---------- | ------------ | ----------- | 
 | `ptr = r[ptr]` | | `R::pointer` |
 | `b = r.deallocate(ptr, size, alignment)` or `r.deallocate(ptr, size, alignment)` | | convertible to `bool`, otherwise unspecified |
 
@@ -84,7 +84,7 @@ Given:
 The following expressions must be valid and meet their specified requirements:
 
 | Expression | Requirements | Return Type |
-| -----------| ------------ | ----------- | 
+| ---------- | ------------ | ----------- | 
 | `R::size_type` | Can represent the maximum number of indexes `r` can allocate. | | 
 | `n = R::max_size()` | |`R::size_type` | 
 | `n = r.size()` | `n <= R::max_size()` |`R::size_type` | 
