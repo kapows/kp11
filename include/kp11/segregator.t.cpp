@@ -8,8 +8,8 @@
 
 using namespace kp11;
 
-using small_t = free_block<128, 4, 1, stack<4>, local<128, 4>>;
-using large_t = free_block<256, 4, 1, stack<4>, local<256, 4>>;
+using small_t = free_block<128 * 2, 4, 1, stack<4>, local<128 * 2, 4>>;
+using large_t = free_block<256 * 2, 4, 1, stack<4>, local<256 * 2, 4>>;
 
 TEST_CASE("accessor", "[accessor]")
 {
@@ -28,17 +28,17 @@ TEST_CASE("allocate", "[allocate]")
     auto a = m.allocate(64, 4);
     REQUIRE(a != nullptr);
     REQUIRE(m.get_small()[a] != nullptr);
-    auto b = m.allocate(64, 4);
+    auto b = m.allocate(128, 4);
     REQUIRE(b != nullptr);
     REQUIRE(b != a);
     REQUIRE(m.get_small()[a] == m.get_small()[b]);
   }
   SECTION("large")
   {
-    auto a = m.allocate(128, 4);
+    auto a = m.allocate(256, 4);
     REQUIRE(a != nullptr);
     REQUIRE(m.get_large()[a] != nullptr);
-    auto b = m.allocate(128, 4);
+    auto b = m.allocate(256, 4);
     REQUIRE(b != nullptr);
     REQUIRE(b != a);
     REQUIRE(m.get_large()[a] == m.get_large()[b]);

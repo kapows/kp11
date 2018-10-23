@@ -6,7 +6,7 @@
 
 namespace kp11
 {
-  /// @brief Sizes less than `Threshold` will be allocated by `Small`, greater or equal will be
+  /// @brief Sizes less than or equal to `Threshold` will be allocated by `Small`, greater will be
   /// allocated by `Large`.
   ///
   /// @tparam Threshold Threshold size in bytes.
@@ -29,7 +29,7 @@ namespace kp11
     static constexpr auto threshold = Threshold;
 
   public: // modifier
-    /// If `size < threshold` calls `Small::allocate` else calls `Large::allocate`.
+    /// If `size <= threshold` calls `Small::allocate` else calls `Large::allocate`.
     ///
     /// @param size Size in bytes of memory to allocate.
     /// @param alignment Alignment of memory to allocate.
@@ -38,7 +38,7 @@ namespace kp11
     /// @returns (failure) `nullptr`.
     pointer allocate(size_type size, size_type alignment) noexcept
     {
-      if (size < threshold)
+      if (size <= threshold)
       {
         return small.allocate(size, alignment);
       }
@@ -47,14 +47,14 @@ namespace kp11
         return large.allocate(size, alignment);
       }
     }
-    /// If `size < threshold` calls `Small::deallocate` else calls `Large::deallocate`.
+    /// If `size <= threshold` calls `Small::deallocate` else calls `Large::deallocate`.
     ///
     /// @param ptr Pointer to the beginning of memory returned by a call to `allocate`.
     /// @param size Corresposing argument to call to `allocate`.
     /// @param alignment Corresposing argument to call to `allocate`.
     void deallocate(pointer ptr, size_type size, size_type alignment) noexcept
     {
-      if (size < threshold)
+      if (size <= threshold)
       {
         small.deallocate(ptr, size, alignment);
       }
