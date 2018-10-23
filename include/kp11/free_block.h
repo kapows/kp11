@@ -7,7 +7,6 @@
 #include <cstddef> // size_t, byte
 #include <functional> // less, less_equal
 #include <memory> // pointer_traits
-#include <utility> // forward
 
 namespace kp11
 {
@@ -16,14 +15,24 @@ namespace kp11
   /// Each memory block allocated from `Upstream` has a `Marker` to manage blocks. The `Marker`s
   /// biggest value is cached when it is modified so that allocations that can't be met are skipped.
   ///
-  /// @tparam Allocations Maximum number of concurrent allocations from `Upstream`.
+  /// @tparam ChunkSize Size in bytes of request to `Upstream`.
+  /// @tparam ChunkAlignment Alignment in bytes of request to `Upstream` and alignment of blocks.
+  /// @tparam MaxChunks Maximum number of concurrent allocations from `Upstream`.
   /// @tparam Marker Meets the `Marker` concept.
   /// @tparam Upstream Meets the `Resource` concept.
-  template<std::size_t Allocations, typename Marker, typename Upstream>
+  template<std::size_t ChunkSize,
+    std::size_t ChunkAlignment,
+    std::size_t MaxChunks,
+    typename Marker,
+    typename Upstream>
   class free_block
   {
     static_assert(is_marker_v<Marker>);
     static_assert(is_resource_v<Upstream>);
+    static_assert(ChunkSize % ChunkAlignment == 0);
+    static_assert(ChunkSize % Marker::max_size() == 0);
+    /// Block size must be aligned to chunk alignment.
+    static_assert(ChunkSize / Marker::max_size() % ChunkAlignment == 0);
 
   public: // typedefs
     /// Pointer type.
@@ -31,42 +40,27 @@ namespace kp11
     /// Size type.
     using size_type = typename Upstream::size_type;
 
+  public: // constants
+    /// Size in bytes of request to `Upstream`.
+    static constexpr auto chunk_size = ChunkSize;
+    /// Alignment in bytes of request to `Upstream` and alignment of blocks.
+    static constexpr auto chunk_alignment = ChunkAlignment;
+    /// Maximum number of concurrent allocations from `Upstream`.
+    static constexpr auto max_chunks = MaxChunks;
+    /// Size in bytes of a free block.
+    static constexpr auto block_size = chunk_size / Marker::max_size();
+
   private: // typedefs
     /// Byte pointer for arithmetic purposes.
     using byte_pointer = typename std::pointer_traits<pointer>::template rebind<std::byte>;
 
   public: // constructors
-    /// The size of each free block will be `chunk_size / Marker::max_size()`.
-    ///
-    /// @param chunk_size Size in bytes of request to `Upstream`.
-    /// @param chunk_alignment Alignment in bytes of request to `Upstream` and free blocks.
-    /// @param initial_allocations Number of initial allocations to try to make.
-    /// @param args Constructor arguments to `Upstream`.
-    ///
-    /// @pre `chunk_size % Marker::size() == 0`
-    /// @pre `chunk_size / Marker::size() % chunk_alignment == 0`
-    template<typename... Args>
-    free_block(size_type chunk_size,
-      size_type chunk_alignment,
-      size_type initial_allocations = 0,
-      Args &&... args) noexcept :
-        block_size(chunk_size / Marker::max_size()),
-        chunk_size(chunk_size), chunk_alignment(chunk_alignment),
-        upstream(std::forward<Args>(args)...)
-    {
-      assert(chunk_size % Marker::max_size() == 0);
-      assert(chunk_size / Marker::max_size() % chunk_alignment == 0);
-      assert(initial_allocations <= Allocations);
-      for (size_type i = 0; i != initial_allocations; ++i)
-      {
-        push_back();
-      }
-    }
+    /// Defined because other constructors are defined.
+    free_block() = default;
     /// Deleted because a resource is being held and managed.
     free_block(free_block const &) = delete;
     /// Defined because the destructor is defined. `x` is left is a valid but unspecified state.
     free_block(free_block && x) noexcept :
-        block_size(x.block_size), chunk_size(x.chunk_size), chunk_alignment(x.chunk_alignment),
         biggests(std::move(x.biggests)), ptrs(std::move(x.ptrs)), markers(std::move(x.markers)),
         upstream(std::move(x.upstream))
     {
@@ -80,9 +74,6 @@ namespace kp11
       if (this != &x)
       {
         release();
-        block_size = x.block_size;
-        chunk_size = x.chunk_size;
-        chunk_alignment = x.chunk_alignment;
         biggests = std::move(x.biggests);
         ptrs = std::move(x.ptrs);
         markers = std::move(x.markers);
@@ -105,21 +96,20 @@ namespace kp11
     /// from the new `Marker`.
     /// * Complexity `O(n)`
     ///
-    /// @param bytes Size in bytes of memory to allocate.
+    /// @param size Size in bytes of memory to allocate.
     /// @param alignment Alignment in bytes of memory to allocate.
     ///
-    /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
-    /// `alignment`.
+    /// @returns (success) Pointer to the beginning of a suitable memory block.
     /// @returns (failure) `nullptr`
     ///
-    /// @pre `chunk_alignment (from ctor) % alignment == 0`
+    /// @pre `chunk_alignment % alignment == 0`
     ///
     /// @post (success) (return value) will not be returned again until it has been `deallocated`.
     /// Depends on `Marker`.
-    pointer allocate(size_type bytes, size_type alignment) noexcept
+    pointer allocate(size_type size, [[maybe_unused]] size_type alignment) noexcept
     {
       assert(chunk_alignment % alignment == 0);
-      auto const num_blocks = to_marker_size(bytes);
+      auto const num_blocks = to_marker_size(size);
       for (std::size_t i = 0, last = biggests.size(); i < last; ++i)
       {
         if (num_blocks <= biggests[i])
@@ -138,25 +128,25 @@ namespace kp11
         return nullptr;
       }
     }
-    /// Find the allocation that `ptr` points into and reset the its `Marker` values and its
+    /// Find the allocation that `ptr` points into, deallocate to its `Marker`, and update its
     /// `biggests` value. `nullptr` is determined to not be owned.
     /// * Complexity `O(n)`
     ///
     /// @param ptr Pointer to the beginning of a memory block.
-    /// @param bytes Size in bytes of the memory block.
+    /// @param size Size in bytes of the memory block.
     /// @param alignment Alignment in bytes of the memory block.
     ///
     /// @returns (success) `true`
     /// @returns (failure) `false`
     ///
-    /// @pre If `ptr` points to memory owned here then `bytes` and `alignment` must be the
+    /// @pre If `ptr` points to memory owned here then `size` and `alignment` must be the
     /// corresponding arguments to `allocate`.
-    bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+    bool deallocate(pointer ptr, size_type size, [[maybe_unused]] size_type alignment) noexcept
     {
       auto p = static_cast<byte_pointer>(ptr);
       if (auto i = find(p); i != ptrs.max_size())
       {
-        markers[i].reset(to_marker_index(i, p), to_marker_size(bytes));
+        markers[i].deallocate(to_marker_index(i, p), to_marker_size(size));
         biggests[i] = markers[i].biggest();
         return true;
       }
@@ -175,7 +165,7 @@ namespace kp11
     }
 
     /// Deallocate the most recently allocated memory back to `Upstream` if their markers have all
-    /// vacant spots.
+    /// unallocated indexes.
     void shrink_to_fit() noexcept
     {
       // Use `ptrs` here instead of `markers` so that it works with "moved from" objects.
@@ -199,12 +189,12 @@ namespace kp11
     ///
     /// @pre `num_blocks <= biggests[index]`
     ///
-    /// @returns Pointer to the beginning of a memory block of size `bytes` aligned to
+    /// @returns Pointer to the beginning of a memory block of size `size` aligned to
     /// `alignment`.
     pointer allocate_from(std::size_t index, std::size_t num_blocks) noexcept
     {
       assert(num_blocks <= biggests[index]);
-      auto const i = markers[index].set(num_blocks);
+      auto const i = markers[index].allocate(num_blocks);
       biggests[index] = markers[index].biggest();
       return static_cast<pointer>(ptrs[index] + static_cast<size_type>(i) * block_size);
     }
@@ -223,11 +213,6 @@ namespace kp11
         return static_cast<pointer>(ptrs[i]);
       }
       return nullptr;
-    }
-    /// @returns Size of each free block.
-    size_type get_block_size() const noexcept
-    {
-      return block_size;
     }
 
   public: // accessors
@@ -264,7 +249,7 @@ namespace kp11
 
   private: // modifiers
     /// Allocate from `Upstream` and construct another `Marker` and a `biggests` value. Fail if max
-    /// allocations has been reached or if `Upstream` fails allocation.
+    /// chunks has been reached or if `Upstream` fails allocation.
     ///
     /// @returns (success) `true`
     /// @returns (failure) `false`
@@ -297,12 +282,12 @@ namespace kp11
     }
 
   private: // Marker helper functions
-    /// Convert from `bytes` to number of blocks.
-    typename Marker::size_type to_marker_size(size_type bytes) const noexcept
+    /// Convert from `size` to number of blocks.
+    typename Marker::size_type to_marker_size(size_type size) const noexcept
     {
       // 1 block minimum
       // modulo is required to deal with non block_size sizes
-      size_type s = bytes == 0 ? 1 : bytes / block_size + (bytes % block_size != 0);
+      size_type s = size == 0 ? 1 : size / block_size + (size % block_size != 0);
       return static_cast<typename Marker::size_type>(s);
     }
     /// Convert from `byte_pointer` to an index.
@@ -313,18 +298,12 @@ namespace kp11
     }
 
   private: // variables
-    /// Size in bytes of a free block.
-    size_type block_size;
-    /// Size in bytes of memory allocated from `Upstream`.
-    size_type chunk_size;
-    /// Alignment in bytes of memory allocated from `Upstream` and of free blocks.
-    size_type chunk_alignment;
     /// Holds a biggest size corresponding to each `Marker`.
-    kp11::detail::static_vector<typename Marker::size_type, Allocations> biggests;
+    kp11::detail::static_vector<typename Marker::size_type, max_chunks> biggests;
     /// Holds pointers to memory allocated by `Upstream`.
-    kp11::detail::static_vector<byte_pointer, Allocations> ptrs;
+    kp11::detail::static_vector<byte_pointer, max_chunks> ptrs;
     /// Holds a `Marker` corresponding to each allocation.
-    kp11::detail::static_vector<Marker, Allocations> markers;
+    kp11::detail::static_vector<Marker, max_chunks> markers;
     Upstream upstream;
   };
 }

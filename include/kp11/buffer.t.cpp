@@ -9,7 +9,8 @@ using namespace kp11;
 TEST_CASE("allocate", "[allocate]")
 {
   alignas(4) char buf[128];
-  buffer m(buf, 128, 4);
+  buffer m;
+  m = {buf, 128, 4};
   auto a = m.allocate(32, 4);
   REQUIRE(a != nullptr);
   auto b = m.allocate(32, 4);

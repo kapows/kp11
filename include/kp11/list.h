@@ -32,12 +32,15 @@ namespace kp11
   }
   /// @brief Unordered best fit marker. Iterates through a free list.
   ///
-  /// Free list is stored as a `size` and `index` inside of an array. A cache of the free list index
-  /// is kept for each spot. Occupied spots will have `max_size()` as their value in the cache.
-  /// Vacancies will be merged on a `reset` if they are adjacent to each other. Merges are `O(1)`.
+  /// Free list is stored as a `size` and `index` inside of an array.
+  /// An array is used to cache an index's index in the free list.
+  /// The cache uses the beginning and end of an index range to store it's index into the free list.
+  /// Allocated index ranges will have `max_size()` as their value in the cache.
+  /// Unallocated indexes will be merged on a `deallocate` if they are adjacent to each other.
+  /// Merges are `O(1)`.
   /// * Complexity `O(n)`
   ///
-  /// @tparam N Total number of spots.
+  /// @tparam N Total number of indexes.
   template<std::size_t N>
   class list
   {
@@ -60,29 +63,29 @@ namespace kp11
     }
 
   public: // capacity
-    /// Forward iterates through the free list to determine the number of occupied spots.
+    /// Forward iterates through the free list to count the number of allocated indexes.
     /// * Complexity `O(n)`
     ///
-    /// @returns Number of occupied spots.
+    /// @returns Number of allocated indexes.
     size_type size() const noexcept
     {
-      auto num_occupied = max_size();
+      auto num_allocated = max_size();
       for (auto && node : free_list)
       {
-        num_occupied -= node.size;
+        num_allocated -= node.size;
       }
-      return num_occupied;
+      return num_allocated;
     }
-    /// @returns Total number of spots (`N`).
+    /// @returns Total number of indexes (`N`).
     static constexpr size_type max_size() noexcept
     {
       return static_cast<size_type>(N);
     }
-    /// Forward iterates through the free list to find the largest number of consecutive vacant
-    /// spots.
+    /// Forward iterates through the free list to find the largest number of consecutive unallocated
+    /// indexes.
     /// * Complexity `O(n)`
     ///
-    /// @returns The largest number of consecutive vacant spots.
+    /// @returns The largest number of consecutive unallocated indexes.
     size_type biggest() const noexcept
     {
       size_type largest = 0;
@@ -102,35 +105,35 @@ namespace kp11
     /// is the same as `n` then the node will be removed.
     /// * Complexity `O(n)`.
     ///
-    /// @param n Number of spots to mark as occupied.
+    /// @param n Number of indexes to allocate.
     ///
-    /// @returns Index of the start of the `n` spots marked occupied.
+    /// @returns Index of the start of the `n` indexes allocated.
     ///
     /// @pre `n > 0`.
     /// @pre `n <= biggest()`
     ///
-    /// @post Spots [`(return value)`, `(return value) + n`) will not returned again from
-    /// any subsequent call to `set` unless `reset` has been called on those parameters.
+    /// @post [`(return value)`, `(return value) + n`) will not returned again from
+    /// any subsequent call to `allocate` unless deallocated.
     /// @post `size() == (previous) size() + n`.
-    size_type set(size_type n) noexcept
+    size_type allocate(size_type n) noexcept
     {
       assert(n > 0);
       assert(n <= biggest());
       auto const index = find_best_fit(n);
       return take_front(index, n);
     }
-    /// If the node has adjacent nodes then they are checked to see whether or not they are vacant.
-    /// If there are two vacant adjacent nodes then merge them into one node whilst removing the
-    /// other. If there is one vacant adjacent node then merge with that node. If there are no
-    /// vacant adjacent nodes then add a new node to the free list.
+    /// If the node has adjacent nodes then they are checked to see whether or not they are
+    /// unallocated. If there are two unallocated adjacent nodes then merge them into one node
+    /// whilst removing the other. If there is one unallocated adjacent node then merge with that
+    /// node. If there are no unallocated adjacent nodes then add a new node to the free list.
     /// * Complexity `O(1)`
     ///
-    /// @param index Returned by a call to `set`.
-    /// @param n Corresponding parameter used in `set`.
+    /// @param index Returned by a call to `allocate`.
+    /// @param n Corresponding parameter in the call to `allocate`.
     ///
-    /// @post [`index`, `index + n`) may be returned by a call to `set` with appropriate parameters.
+    /// @post [`index`, `index + n`) may be returned by a call to `allocate`.
     /// @post `size() == (previous) size() - n`.
-    void reset(size_type index, size_type n) noexcept
+    void deallocate(size_type index, size_type n) noexcept
     {
       assert(index < max_size());
       assert(n > 0);
@@ -139,13 +142,10 @@ namespace kp11
       auto const next_is_vacant = index + n < max_size() && cache[index + n] != max_size();
       if (previous_is_vacant)
       {
-        // Need the beginning of the vacant spots, not the immediate previous, as add_back will
-        // invalidate the immediate previous.
         auto const previous_index = free_list[cache[index - 1]].index;
         add_back(previous_index, n);
         if (next_is_vacant)
         {
-          // Need to know the size of next. This must be a copy, as take_front will remove the node.
           auto const next = free_list[cache[index + n]];
           take_front(next.index, next.size);
           add_back(previous_index, next.size);
@@ -162,7 +162,7 @@ namespace kp11
     }
 
   private: // helpers
-    /// Cache setting helper because both the start and end must be set.
+    /// Cache set helper because both the start and end must be set.
     void set_cache(size_type index, size_type size, size_type node_index) noexcept
     {
       assert(index < max_size());
@@ -186,12 +186,12 @@ namespace kp11
       }
       free_list.pop_back();
     }
-    /// Forward iterate through the free list to find the best fit spot for `n`.
+    /// Forward iterate through the free list to find the best fit indexes for `n`.
     ///
     /// @pre `n > 0`
     /// @pre `n <= biggest()`
     ///
-    /// @returns The index to the spot that is the best fit for `n`.
+    /// @returns Index of `n` unallocated indexes.
     size_type find_best_fit(size_type n) const noexcept
     {
       assert(n > 0);
@@ -213,10 +213,10 @@ namespace kp11
       assert(node_index != max_size());
       return free_list[node_index].index;
     }
-    /// Takes `size` spots out of the front of the free list node belonging to `index` and sets the
-    /// cache to max_size(). If the number of spots in the free list node not zero, the cache for
-    /// the new `index` is updated, otherwise, the node is removed. Invalidates the beginning index
-    /// in the cache.
+    /// Takes `size` indexes out of the front of the free list node belonging to `index` and sets
+    /// the cache to max_size(). If the number of indexes in the free list node not zero, the cache
+    /// for the new `index` is updated, otherwise, the node is removed. Invalidates the beginning
+    /// index in the cache.
     size_type take_front(size_type index, size_type size) noexcept
     {
       assert(index < max_size());
@@ -238,8 +238,8 @@ namespace kp11
       }
       return taken_index;
     }
-    /// Adds `size` vacant spots to the back of the free list node belonging to `index` and sets the
-    /// cache. Invalidates the end index in the cache.
+    /// Adds `size` unallocated indexes to the back of the free list node belonging to `index` and
+    /// sets the cache. Invalidates the end index in the cache.
     void add_back(size_type index, size_type size) noexcept
     {
       assert(index < max_size());
@@ -249,8 +249,8 @@ namespace kp11
       node.size += size;
       set_cache(node.index, node.size, node_index);
     }
-    /// Adds `size` vacant spots to the front of the free list node belonging to `index` and sets
-    /// the cache. Invalidates the beginning index in the cache.
+    /// Adds `size` unallocated indexes to the front of the free list node belonging to `index` and
+    /// sets the cache. Invalidates the beginning index in the cache.
     void add_front(size_type index, size_type size) noexcept
     {
       assert(index < max_size());
@@ -274,15 +274,15 @@ namespace kp11
   private: // variables
     /// Free list stores it's own size and index.
     /// `N / 2 + N % 2` because that is the maximum number of free list nodes we will ever have
-    /// (this will happen when we have an alternating vacant, occupied, vacant, occupied pattern).
+    /// (this will happen when we have an alternating unallocated, allocated, unallocated pattern).
     ///
     /// Example: Assume size() == 11, then
     /// [(2, 9), (3, 2)]
     kp11::detail::static_vector<node, N / 2 + N % 2> free_list;
-    /// Cache stores an index into the free list for each run. The index is stored at the beginning
-    /// and the end of the run. If the run is size 1 then the index is only stored in one element.
-    /// If the run is not in the free list (it's been occupied) then `size()` is used as its index.
-    /// Cache enables merges in to be `O(1)`.
+    /// Cache stores an index into the free list for each run of unallocated indexes. The index is
+    /// stored at the beginning and the end of the run. If the run is size 1 then the index is only
+    /// stored in one element. If the run is not in the free list (it's been occupied) then `size()`
+    /// is used as its index. Cache enables merges in to be `O(1)`.
     ///
     /// Example: Assume size() == 11, b refers the the beginning index and e refers to the end, then
     /// [11, 11, 1, X, 1, 11, X, X, 11, 0, 0, 11]

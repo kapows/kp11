@@ -11,18 +11,6 @@
 
 using namespace kp11;
 
-TEST_CASE("constructor", "[constructor]")
-{
-  SECTION("default")
-  {
-    fallback<local<128, 4>, local<128, 4>> m;
-  }
-  SECTION("forwarding")
-  {
-    fallback<free_block<1, stack<4>, local<128, 4>>, local<128, 4>> m(
-      std::piecewise_construct, std::forward_as_tuple(128, 4), std::forward_as_tuple());
-  }
-}
 TEST_CASE("accessor", "[accessor]")
 {
   fallback<local<128, 4>, local<128, 4>> m;
@@ -34,8 +22,7 @@ TEST_CASE("accessor", "[accessor]")
 }
 TEST_CASE("allocate", "[allocate]")
 {
-  fallback<free_block<1, stack<4>, local<128, 4>>, local<128, 4>> m(
-    std::piecewise_construct, std::forward_as_tuple(128, 4), std::forward_as_tuple());
+  fallback<free_block<128, 4, 1, stack<4>, local<128, 4>>, local<128, 4>> m;
   auto a = m.allocate(64, 4);
   REQUIRE(a != nullptr);
   REQUIRE(m.get_primary()[a] != nullptr);
@@ -58,8 +45,7 @@ TEST_CASE("deallocate", "[deallocate]")
 {
   SECTION("returns convertible bool")
   {
-    fallback<free_block<1, stack<4>, local<128, 4>>, local<128, 4>> m(
-      std::piecewise_construct, std::forward_as_tuple(128, 4), std::forward_as_tuple());
+    fallback<free_block<128, 4, 1, stack<4>, local<128, 4>>, local<128, 4>> m;
     auto a = m.allocate(64, 4);
     REQUIRE(a != nullptr);
     REQUIRE(m.get_primary()[a] != nullptr);
@@ -91,8 +77,7 @@ TEST_CASE("deallocate", "[deallocate]")
   }
   SECTION("returns void")
   {
-    fallback<monotonic<1, local<128, 4>>, local<128, 4>> m(
-      std::piecewise_construct, std::forward_as_tuple(128, 4), std::forward_as_tuple());
+    fallback<monotonic<128, 4, 1, local<128, 4>>, local<128, 4>> m;
     auto a = m.allocate(64, 4);
     REQUIRE(a != nullptr);
     REQUIRE(m.get_primary()[a] != nullptr);

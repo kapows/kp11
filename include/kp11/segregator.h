@@ -3,17 +3,16 @@
 #include "traits.h" // is_resource_v
 
 #include <cstddef> // size_t
-#include <tuple> // tuple, get
-#include <utility> // index_sequence, index_sequence_for
 
 namespace kp11
 {
-  /// @brief Sizes less than `threshold` will be allocated by `Small`, greater or equal will be
+  /// @brief Sizes less than `Threshold` will be allocated by `Small`, greater or equal will be
   /// allocated by `Large`.
   ///
+  /// @tparam Threshold Threshold size in bytes.
   /// @tparam Small Meets the `Resource` concept
   /// @tparam Large Meets the `Resource` concept
-  template<typename Small, typename Large>
+  template<std::size_t Threshold, typename Small, typename Large>
   class segregator
   {
     static_assert(is_resource_v<Small>);
@@ -25,76 +24,43 @@ namespace kp11
     /// Size type
     using size_type = typename Small::size_type;
 
-  public: // constructor
-    /// @param threshold Threshold size in bytes.
-    segregator(size_type threshold) noexcept : threshold(threshold)
-    {
-    }
-    /// Fowarding constructor for `Small` and `Large`.
-    ///
-    /// @param threshold Threshold size in bytes.
-    /// @param first_args Constructor arguments to `Small`.
-    /// @param second_args Constructor arguments to `Large`.
-    template<typename... Args1, typename... Args2>
-    segregator(size_type threshold,
-      std::tuple<Args1...> first_args,
-      std::tuple<Args2...> second_args) noexcept :
-        segregator(threshold,
-          first_args,
-          second_args,
-          std::index_sequence_for<Args1...>(),
-          std::index_sequence_for<Args2...>())
-    {
-    }
-
-  private: // constructor helper
-    /// Constructor that unpacks `tuple` arguments.
-    template<std::size_t... Is1, typename... Args1, std::size_t... Is2, typename... Args2>
-    segregator(size_type threshold,
-      std::tuple<Args1...> & first_args,
-      std::tuple<Args2...> & second_args,
-      std::index_sequence<Is1...>,
-      std::index_sequence<Is2...>) noexcept :
-        threshold(threshold),
-        small(std::forward<Args1>(std::get<Is1>(first_args))...),
-        large(std::forward<Args2>(std::get<Is2>(second_args))...)
-    {
-    }
+  public: // constants
+    /// Threshold size in bytes.
+    static constexpr auto threshold = Threshold;
 
   public: // modifier
-    /// If `bytes < threshold` calls `Small::allocate` else calls `Large::allocate`.
+    /// If `size < threshold` calls `Small::allocate` else calls `Large::allocate`.
     ///
-    /// @param bytes Size in bytes of memory to allocate.
+    /// @param size Size in bytes of memory to allocate.
     /// @param alignment Alignment of memory to allocate.
     ///
-    /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
-    /// `alignment`.
+    /// @returns (success) Pointer to the beginning of a suitable memory block.
     /// @returns (failure) `nullptr`.
-    pointer allocate(size_type bytes, size_type alignment) noexcept
+    pointer allocate(size_type size, size_type alignment) noexcept
     {
-      if (bytes < threshold)
+      if (size < threshold)
       {
-        return small.allocate(bytes, alignment);
+        return small.allocate(size, alignment);
       }
       else
       {
-        return large.allocate(bytes, alignment);
+        return large.allocate(size, alignment);
       }
     }
-    /// If `bytes < threshold` calls `Small::deallocate` else calls `Large::deallocate`.
+    /// If `size < threshold` calls `Small::deallocate` else calls `Large::deallocate`.
     ///
     /// @param ptr Pointer to the beginning of memory returned by a call to `allocate`.
-    /// @param bytes Corresposing argument to call to `allocate`.
+    /// @param size Corresposing argument to call to `allocate`.
     /// @param alignment Corresposing argument to call to `allocate`.
-    void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+    void deallocate(pointer ptr, size_type size, size_type alignment) noexcept
     {
-      if (bytes < threshold)
+      if (size < threshold)
       {
-        small.deallocate(ptr, bytes, alignment);
+        small.deallocate(ptr, size, alignment);
       }
       else
       {
-        large.deallocate(ptr, bytes, alignment);
+        large.deallocate(ptr, size, alignment);
       }
     }
 
@@ -121,7 +87,6 @@ namespace kp11
     }
 
   private: // variables
-    size_type threshold;
     Small small;
     Large large;
   };

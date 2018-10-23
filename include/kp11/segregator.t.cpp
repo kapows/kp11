@@ -8,24 +8,12 @@
 
 using namespace kp11;
 
-using small_t = free_block<1, stack<4>, local<128, 4>>;
-using large_t = free_block<1, stack<4>, local<256, 4>>;
+using small_t = free_block<128, 4, 1, stack<4>, local<128, 4>>;
+using large_t = free_block<256, 4, 1, stack<4>, local<256, 4>>;
 
-TEST_CASE("constructor", "[constructor]")
-{
-  SECTION("default")
-  {
-    segregator<local<128, 4>, local<256, 4>> m(128);
-  }
-  SECTION("forwarding")
-  {
-    segregator<small_t, large_t> m(
-      128, std::forward_as_tuple(128, 4), std::forward_as_tuple(256, 4));
-  }
-}
 TEST_CASE("accessor", "[accessor]")
 {
-  segregator<local<128, 4>, local<256, 4>> m(128);
+  segregator<128, local<128, 4>, local<256, 4>> m;
   [[maybe_unused]] auto & a = m.get_small();
   [[maybe_unused]] auto & b = m.get_large();
   auto const & n = m;
@@ -34,7 +22,7 @@ TEST_CASE("accessor", "[accessor]")
 }
 TEST_CASE("allocate", "[allocate]")
 {
-  segregator<small_t, large_t> m(128, std::forward_as_tuple(128, 4), std::forward_as_tuple(256, 4));
+  segregator<128, small_t, large_t> m;
   SECTION("small")
   {
     auto a = m.allocate(64, 4);
@@ -58,7 +46,7 @@ TEST_CASE("allocate", "[allocate]")
 }
 TEST_CASE("deallocate", "[deallocate]")
 {
-  segregator<small_t, large_t> m(128, std::forward_as_tuple(128, 4), std::forward_as_tuple(256, 4));
+  segregator<128, small_t, large_t> m;
   SECTION("small")
   {
     auto a = m.allocate(64, 4);

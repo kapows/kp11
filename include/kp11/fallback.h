@@ -1,9 +1,6 @@
 #pragma once
 
-#include "traits.h" // is_resource_v
-
-#include <tuple> // tuple, get
-#include <utility> // piecewise_construct, index_sequence, index_sequence_for
+#include "traits.h" // is_resource_v, is_owner_v
 
 namespace kp11
 {
@@ -14,7 +11,7 @@ namespace kp11
   template<typename Primary, typename Secondary>
   class fallback
   {
-    static_assert(is_resource_v<Primary>);
+    static_assert(is_owner_v<Primary>);
     static_assert(is_resource_v<Secondary>);
 
   public: // typedefs
@@ -23,64 +20,33 @@ namespace kp11
     /// Size type
     using size_type = typename Primary::size_type;
 
-  public: // constructors
-    /// Defaulted because of the forwarding constructor.
-    fallback() = default;
-    /// Fowarding constructor for `Primary` and `Secondary`.
-    ///
-    /// @param first_args Constructor arguments to `Primary`.
-    /// @param second_args Constructor arguments to `Secondary`.
-    template<typename... Args1, typename... Args2>
-    fallback(std::piecewise_construct_t,
-      std::tuple<Args1...> first_args,
-      std::tuple<Args2...> second_args) noexcept :
-        fallback(first_args,
-          second_args,
-          std::index_sequence_for<Args1...>(),
-          std::index_sequence_for<Args2...>())
-    {
-    }
-
-  private: // constructor helper
-    /// Constructor that unpacks `tuple` arguments.
-    template<std::size_t... Is1, typename... Args1, std::size_t... Is2, typename... Args2>
-    fallback(std::tuple<Args1...> & first_args,
-      std::tuple<Args2...> & second_args,
-      std::index_sequence<Is1...>,
-      std::index_sequence<Is2...>) noexcept :
-        primary(std::forward<Args1>(std::get<Is1>(first_args))...),
-        secondary(std::forward<Args2>(std::get<Is2>(second_args))...)
-    {
-    }
-
   public: // modifiers
     /// Call `Primary::allocate`. On failure call `Secondary::allocate`.
     ///
-    /// @param bytes Size in bytes of memory to allocate.
+    /// @param size Size in bytes of memory to allocate.
     /// @param alignment Alignment of memory to allocate.
     ///
-    /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
-    /// `alignment`.
+    /// @returns (success) Pointer to the beginning of a suitable memory block.
     /// @returns (failure) `nullptr`
-    pointer allocate(size_type bytes, size_type alignment) noexcept
+    pointer allocate(size_type size, size_type alignment) noexcept
     {
-      if (auto ptr = primary.allocate(bytes, alignment))
+      if (auto ptr = primary.allocate(size, alignment))
       {
         return ptr;
       }
-      return secondary.allocate(bytes, alignment);
+      return secondary.allocate(size, alignment);
     }
     /// If `ptr` is owned by `Primary` then calls `Primary:deallocate` else calls
     /// `Secondary::deallocate`.
     ///
     /// @param ptr Pointer to the beginning of memory returned by a call to `allocate`.
-    /// @param bytes Corresposing argument to call to `allocate`.
+    /// @param size Corresposing argument to call to `allocate`.
     /// @param alignment Corresposing argument to call to `allocate`.
-    void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+    void deallocate(pointer ptr, size_type size, size_type alignment) noexcept
     {
-      if (!owner_traits<Primary>::deallocate(primary, ptr, bytes, alignment))
+      if (!owner_traits<Primary>::deallocate(primary, ptr, size, alignment))
       {
-        secondary.deallocate(ptr, bytes, alignment);
+        secondary.deallocate(ptr, size, alignment);
       }
     }
 

@@ -32,37 +32,37 @@ TEST_CASE("biggest", "[biggest]")
   {
     for (auto i = 0; i < 10; ++i)
     {
-      m.set(1);
+      m.allocate(1);
     }
     REQUIRE(m.biggest() == 0);
   }
 }
-TEST_CASE("set", "[set]")
+TEST_CASE("allocate", "[allocate]")
 {
   pool<10> m;
   SECTION("success")
   {
-    auto a = m.set(1);
+    auto a = m.allocate(1);
     REQUIRE(a == 0);
     REQUIRE(m.size() == 1);
     SECTION("post condition")
     {
-      auto b = m.set(1);
+      auto b = m.allocate(1);
       REQUIRE(b == 1);
       REQUIRE(b != a);
       REQUIRE(m.size() == 2);
     }
   }
 }
-TEST_CASE("reset", "[reset]")
+TEST_CASE("deallocate", "[deallocate]")
 {
   pool<10> m;
   SECTION("recovers indexes")
   {
-    auto a = m.set(1);
-    m.reset(a, 1);
+    auto a = m.allocate(1);
+    m.deallocate(a, 1);
     REQUIRE(m.size() == 0);
-    auto b = m.set(1);
+    auto b = m.allocate(1);
     REQUIRE(b == a);
   }
 }

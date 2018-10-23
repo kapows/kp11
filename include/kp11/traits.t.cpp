@@ -12,8 +12,8 @@ class test_resource
 public:
   using pointer = void *;
   using size_type = std::size_t;
-  pointer allocate(size_type bytes, size_type alignment) noexcept;
-  void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
+  pointer allocate(size_type size, size_type alignment) noexcept;
+  void deallocate(pointer ptr, size_type size, size_type alignment) noexcept;
 };
 
 /// @private
@@ -22,8 +22,8 @@ class test_not_a_resource
 public:
   using pointer = void *;
   using size_type = std::size_t;
-  pointer allocate(size_type bytes, size_type alignment) noexcept;
-  void deallocate(size_type bytes, size_type alignment) noexcept;
+  pointer allocate(size_type size, size_type alignment) noexcept;
+  void deallocate(size_type size, size_type alignment) noexcept;
 };
 TEST_CASE("is_resource", "[modifiers]")
 {
@@ -39,11 +39,11 @@ class test_owner
 public:
   using pointer = void *;
   using size_type = std::size_t;
-  pointer allocate(size_type bytes, size_type alignment) noexcept
+  pointer allocate(size_type size, size_type alignment) noexcept
   {
     return nullptr;
   }
-  bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+  bool deallocate(pointer ptr, size_type size, size_type alignment) noexcept
   {
     return false;
   }
@@ -58,11 +58,11 @@ class another_test_owner
 public:
   using pointer = void *;
   using size_type = std::size_t;
-  pointer allocate(size_type bytes, size_type alignment) noexcept
+  pointer allocate(size_type size, size_type alignment) noexcept
   {
     return nullptr;
   }
-  void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+  void deallocate(pointer ptr, size_type size, size_type alignment) noexcept
   {
   }
   pointer operator[](pointer ptr) const noexcept
@@ -76,8 +76,8 @@ class test_not_an_owner
 public:
   using pointer = void *;
   using size_type = std::size_t;
-  pointer allocate(size_type bytes, size_type alignment) noexcept;
-  bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
+  pointer allocate(size_type size, size_type alignment) noexcept;
+  bool deallocate(pointer ptr, size_type size, size_type alignment) noexcept;
 };
 TEST_CASE("is_owner", "[traits]")
 {
@@ -113,8 +113,8 @@ public:
   }
   size_type size() noexcept;
   size_type biggest() const noexcept;
-  size_type set(size_type n) noexcept;
-  void reset(size_type index, size_type n) noexcept;
+  size_type allocate(size_type n) noexcept;
+  void deallocate(size_type index, size_type n) noexcept;
 };
 
 /// @private
@@ -123,8 +123,8 @@ class test_not_a_marker
 {
 public:
   using size_type = std::size_t;
-  size_type set(size_type n) noexcept;
-  void reset(size_type index, size_type n) noexcept;
+  size_type allocate(size_type n) noexcept;
+  void deallocate(size_type index, size_type n) noexcept;
 };
 TEST_CASE("is_marker", "[traits]")
 {

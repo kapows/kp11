@@ -17,14 +17,11 @@ using namespace kp11;
 class resource
 {
 public:
-  free_block<2, stack<4>, heap> m;
+  free_block<256, alignof(std::max_align_t), 2, stack<4>, heap> m; // 64 byte blocks
   int allocations = 0;
 
   using pointer = typename decltype(m)::pointer;
   using size_type = typename decltype(m)::size_type;
-  resource() noexcept : m(256, alignof(std::max_align_t)) // 64 byte blocks
-  {
-  }
   pointer allocate(size_type bytes, size_type alignment) noexcept
   {
     ++allocations;
