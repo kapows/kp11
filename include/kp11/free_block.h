@@ -104,7 +104,7 @@ namespace kp11
     /// `alignment`.
     /// @returns (failure) `nullptr`
     ///
-    /// @pre `chunk_alignment (from ctor) % alignment == 0`
+    /// @pre `chunk_alignment % alignment == 0`
     ///
     /// @post (success) (return value) will not be returned again until it has been `deallocated`.
     /// Depends on `Marker`.
