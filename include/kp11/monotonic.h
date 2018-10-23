@@ -92,7 +92,7 @@ namespace kp11
     /// @returns (failure) `nullptr`
     ///
     /// @pre `chunk_alignment % alignment == 0`
-    pointer allocate(size_type size, size_type alignment) noexcept
+    pointer allocate(size_type size, [[maybe_unused]] size_type alignment) noexcept
     {
       assert(chunk_alignment % alignment == 0);
       size = round_up_to_our_alignment(size);
