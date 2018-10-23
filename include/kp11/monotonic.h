@@ -114,7 +114,7 @@ namespace kp11
     }
     /// No-op.
     /// * Complexity `O(0)`
-    void deallocate(pointer ptr, size_type size, size_type alignment) noexcept
+    void deallocate(pointer, size_type, size_type) noexcept
     {
     }
     /// Deallocate allocated memory back to `Upstream` and clear all metadata.
@@ -129,7 +129,7 @@ namespace kp11
     }
 
   private: // allocate helpers
-    size_type round_up_to_our_alignment(size_type size) const noexcept
+    static constexpr size_type round_up_to_our_alignment(size_type size) noexcept
     {
       return size == 0 ? block_size : (size / block_size + (size % block_size != 0)) * block_size;
     }
