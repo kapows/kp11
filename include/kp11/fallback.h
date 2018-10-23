@@ -23,31 +23,30 @@ namespace kp11
   public: // modifiers
     /// Call `Primary::allocate`. On failure call `Secondary::allocate`.
     ///
-    /// @param bytes Size in bytes of memory to allocate.
+    /// @param size Size in bytes of memory to allocate.
     /// @param alignment Alignment of memory to allocate.
     ///
-    /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
-    /// `alignment`.
+    /// @returns (success) Pointer to the beginning of a suitable memory block.
     /// @returns (failure) `nullptr`
-    pointer allocate(size_type bytes, size_type alignment) noexcept
+    pointer allocate(size_type size, size_type alignment) noexcept
     {
-      if (auto ptr = primary.allocate(bytes, alignment))
+      if (auto ptr = primary.allocate(size, alignment))
       {
         return ptr;
       }
-      return secondary.allocate(bytes, alignment);
+      return secondary.allocate(size, alignment);
     }
     /// If `ptr` is owned by `Primary` then calls `Primary:deallocate` else calls
     /// `Secondary::deallocate`.
     ///
     /// @param ptr Pointer to the beginning of memory returned by a call to `allocate`.
-    /// @param bytes Corresposing argument to call to `allocate`.
+    /// @param size Corresposing argument to call to `allocate`.
     /// @param alignment Corresposing argument to call to `allocate`.
-    void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+    void deallocate(pointer ptr, size_type size, size_type alignment) noexcept
     {
-      if (!owner_traits<Primary>::deallocate(primary, ptr, bytes, alignment))
+      if (!owner_traits<Primary>::deallocate(primary, ptr, size, alignment))
       {
-        secondary.deallocate(ptr, bytes, alignment);
+        secondary.deallocate(ptr, size, alignment);
       }
     }
 

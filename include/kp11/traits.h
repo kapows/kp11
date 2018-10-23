@@ -10,8 +10,8 @@ namespace kp11
   public:
     using pointer = void *;
     using size_type = std::size_t;
-    pointer allocate(size_type bytes, size_type alignment) noexcept;
-    void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
+    pointer allocate(size_type size, size_type alignment) noexcept;
+    void deallocate(pointer ptr, size_type size, size_type alignment) noexcept;
   };
   */
   /// Checks if `T` meets the `Resource` concept.
@@ -43,8 +43,8 @@ namespace kp11
   public:
     using pointer = void *;
     using size_type = std::size_t;
-    pointer allocate(size_type bytes, size_type alignment) noexcept;
-    bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
+    pointer allocate(size_type size, size_type alignment) noexcept;
+    bool deallocate(pointer ptr, size_type size, size_type alignment) noexcept;
     pointer operator[](pointer ptr) const noexcept;
   };
   */
@@ -84,25 +84,25 @@ namespace kp11
     ///
     /// @param owner Meets the `Owner` concept.
     /// @param ptr Pointer to deallocate if owned by `owner`.
-    /// @param bytes Size in bytes of the memory pointed to by `ptr`.
+    /// @param size Size in bytes of the memory pointed to by `ptr`.
     /// @param alignment Alignment in bytes of the memory pointed to by `ptr`.
     ///
     /// @returns (success) `true`, owned by `owner`.
     /// @returns (failure) `false`
-    static bool deallocate(T & owner, pointer ptr, size_type bytes, size_type alignment) noexcept
+    static bool deallocate(T & owner, pointer ptr, size_type size, size_type alignment) noexcept
     {
       // It may be trivial for a type to return success or failure in it's deallocate function, if
       // if is then it should do so.
-      if constexpr (std::is_convertible_v<bool, decltype(owner.deallocate(ptr, bytes, alignment))>)
+      if constexpr (std::is_convertible_v<bool, decltype(owner.deallocate(ptr, size, alignment))>)
       {
-        return owner.deallocate(ptr, bytes, alignment);
+        return owner.deallocate(ptr, size, alignment);
       }
       // If it is not trivial then we can still determine ownership through operator[].
       else
       {
         if (owner[ptr])
         {
-          owner.deallocate(ptr, bytes, alignment);
+          owner.deallocate(ptr, size, alignment);
           return true;
         }
         return false;

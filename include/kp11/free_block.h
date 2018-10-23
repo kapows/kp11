@@ -7,7 +7,6 @@
 #include <cstddef> // size_t, byte
 #include <functional> // less, less_equal
 #include <memory> // pointer_traits
-#include <utility> // forward
 
 namespace kp11
 {
@@ -97,21 +96,20 @@ namespace kp11
     /// from the new `Marker`.
     /// * Complexity `O(n)`
     ///
-    /// @param bytes Size in bytes of memory to allocate.
+    /// @param size Size in bytes of memory to allocate.
     /// @param alignment Alignment in bytes of memory to allocate.
     ///
-    /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
-    /// `alignment`.
+    /// @returns (success) Pointer to the beginning of a suitable memory block.
     /// @returns (failure) `nullptr`
     ///
     /// @pre `chunk_alignment % alignment == 0`
     ///
     /// @post (success) (return value) will not be returned again until it has been `deallocated`.
     /// Depends on `Marker`.
-    pointer allocate(size_type bytes, size_type alignment) noexcept
+    pointer allocate(size_type size, [[maybe_unused]] size_type alignment) noexcept
     {
       assert(chunk_alignment % alignment == 0);
-      auto const num_blocks = to_marker_size(bytes);
+      auto const num_blocks = to_marker_size(size);
       for (std::size_t i = 0, last = biggests.size(); i < last; ++i)
       {
         if (num_blocks <= biggests[i])
@@ -135,20 +133,20 @@ namespace kp11
     /// * Complexity `O(n)`
     ///
     /// @param ptr Pointer to the beginning of a memory block.
-    /// @param bytes Size in bytes of the memory block.
+    /// @param size Size in bytes of the memory block.
     /// @param alignment Alignment in bytes of the memory block.
     ///
     /// @returns (success) `true`
     /// @returns (failure) `false`
     ///
-    /// @pre If `ptr` points to memory owned here then `bytes` and `alignment` must be the
+    /// @pre If `ptr` points to memory owned here then `size` and `alignment` must be the
     /// corresponding arguments to `allocate`.
-    bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+    bool deallocate(pointer ptr, size_type size, [[maybe_unused]] size_type alignment) noexcept
     {
       auto p = static_cast<byte_pointer>(ptr);
       if (auto i = find(p); i != ptrs.max_size())
       {
-        markers[i].deallocate(to_marker_index(i, p), to_marker_size(bytes));
+        markers[i].deallocate(to_marker_index(i, p), to_marker_size(size));
         biggests[i] = markers[i].biggest();
         return true;
       }
@@ -167,7 +165,7 @@ namespace kp11
     }
 
     /// Deallocate the most recently allocated memory back to `Upstream` if their markers have all
-    /// vacant spots.
+    /// unallocated indexes.
     void shrink_to_fit() noexcept
     {
       // Use `ptrs` here instead of `markers` so that it works with "moved from" objects.
@@ -191,7 +189,7 @@ namespace kp11
     ///
     /// @pre `num_blocks <= biggests[index]`
     ///
-    /// @returns Pointer to the beginning of a memory block of size `bytes` aligned to
+    /// @returns Pointer to the beginning of a memory block of size `size` aligned to
     /// `alignment`.
     pointer allocate_from(std::size_t index, std::size_t num_blocks) noexcept
     {
@@ -284,12 +282,12 @@ namespace kp11
     }
 
   private: // Marker helper functions
-    /// Convert from `bytes` to number of blocks.
-    typename Marker::size_type to_marker_size(size_type bytes) const noexcept
+    /// Convert from `size` to number of blocks.
+    typename Marker::size_type to_marker_size(size_type size) const noexcept
     {
       // 1 block minimum
       // modulo is required to deal with non block_size sizes
-      size_type s = bytes == 0 ? 1 : bytes / block_size + (bytes % block_size != 0);
+      size_type s = size == 0 ? 1 : size / block_size + (size % block_size != 0);
       return static_cast<typename Marker::size_type>(s);
     }
     /// Convert from `byte_pointer` to an index.
