@@ -1,7 +1,9 @@
 # kp11
+
 Easy to use, policy based memory resource builder.
 
 ## Introduction
+
 C++17 has given us `<memory_resource>` and has basically shown us what stateful allocators should look like.
 
 This library tries to make it easy to create memory resources and from those, make "good" allocators.
@@ -12,6 +14,7 @@ Thus, there is a hard limit on the amount of allocations that can be made to an 
 The allocated memory from the upstream is never touched by any of these classes.
 
 ## Inspiration
+
 [CppCon 2015: Andrei Alexandrescu “std::allocator...”](https://www.youtube.com/watch?v=LIb3L4vKZ7U)
 
 [CppCon 2017: Pablo Halpern “Allocators: The Good Parts”](https://www.youtube.com/watch?v=v3dz-AKOVL8)
@@ -21,6 +24,7 @@ The allocated memory from the upstream is never touched by any of these classes.
 [C++Now 2018: Arthur O'Dwyer “An Allocator is a Handle to a Heap”](https://www.youtube.com/watch?v=0MdSJsCTRkY)
 
 ## Design
+
 First and foremost the library is made to be easy to use. Since it is using a policy based design this basically means that everything is default constructed. If something more complicated is required then that will have to be done with an ugly two phase initialization style.
 
 The library is broken up into a few pieces.
@@ -76,14 +80,13 @@ You should only really consider those two types of allocators, this should ease 
 ### Making memory resources
 An upstream resource is picked and that is used with a `free_block` and a `marker` or a `monotonic`.
 
-#### Examples
-
 ```cpp
 // 1024 byte sized, 8 byte aligned request to the upstream
 // 100 allocations from upstream maximum
 // upstream is the heap
 using resource = monotonic<1024, 8, 100, heap>; 
 ```
+
 ```cpp
 // 10 allocations from upstream maximum
 // 10 blocks per allocation, uses the pool marker (only able to allocate a single block)
@@ -92,11 +95,13 @@ using resource = monotonic<1024, 8, 100, heap>;
 // all requests above 32 bytes returns nullptr as the nullocator always returns nullptr
 using resource = segregator<32, free_block<320, 4, 10, pool<10>, heap>, nullocator>; 
 ```
+
 ```cpp
 // the free block will allocate from the local buffer once only. Once these have all been allocated, allocate from the heap
 // segregator is required here as the small allocator can only allocate upto 320 bytes.
 using resource = segregator<320, free_block<320, 4, 10, list<10>, fallback<local<320,4>, heap>,heap>; 
 ```
+
 ```cpp
 // requires two phase initialization
 using resource = free_block<320, 4, 1, list<10>, buffer>;
@@ -105,7 +110,8 @@ resource r;
 r.get_upstream() = {buf, 320, 4};
 ```
 
-##### Making a resource
+### Making a new resource
+
 ```cpp
 class resource
 {
@@ -153,14 +159,15 @@ public:
 ```
 ### Making allocators
 
-#### Examples
+#### Stateless Allocator
 
-##### Stateless Allocator
 ```cpp
 using alloc = allocator<int, resource>; // empty class
 std::vector<int, alloc> v;
 ```
-##### Stateful Allocator
+
+#### Stateful Allocator
+
 ```cpp
 using alloc = allocator<int, resource *>; // class contains a pointer to resource
                                           // a pointer to resource must be passed into the constructor
