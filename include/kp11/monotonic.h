@@ -14,7 +14,8 @@ namespace kp11
   /// @brief Advance a pointer through single allocations from `Upstream`. Deallocation is a no-op.
   ///
   /// @tparam ChunkSize Size in bytes of a request to `Upstream`.
-  /// @tparam ChunkAlignment Alignment in bytes of a request to `Upstream` and alignment of blocks.
+  /// @tparam ChunkAlignment Alignment in bytes of a request to `Upstream` and alignment of blocks
+  /// and the block size.
   /// @tparam MaxChunks Maximum number of concurrent allocations from `Upstream`.
   /// @tparam Upstream Meets the `Resource` concept.
   template<std::size_t ChunkSize,
@@ -39,6 +40,8 @@ namespace kp11
     static constexpr auto chunk_alignment = ChunkAlignment;
     /// Maximum number of concurrent allocations from `Upstream`.
     static constexpr auto max_chunks = MaxChunks;
+    /// Size in bytes of a free block.
+    static constexpr auto block_size = ChunkAlignment;
 
   private: // typedefs
     /// Byte pointer for arithmetic purposes.
@@ -129,14 +132,13 @@ namespace kp11
   private: // allocate helpers
     size_type round_up_to_our_alignment(size_type bytes) const noexcept
     {
-      return bytes == 0 ?
-               chunk_alignment :
-               (bytes / chunk_alignment + (bytes % chunk_alignment != 0)) * chunk_alignment;
+      return bytes == 0 ? block_size :
+                          (bytes / block_size + (bytes % block_size != 0)) * block_size;
     }
     /// @pre `bytes % alignment == 0`.
     pointer allocate_from_back(size_type bytes) noexcept
     {
-      assert(bytes % chunk_alignment == 0);
+      assert(bytes % block_size == 0);
       if (auto space = static_cast<size_type>(last - first); bytes <= space)
       {
         return static_cast<pointer>(std::exchange(first, first + bytes));
