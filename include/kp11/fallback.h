@@ -23,36 +23,6 @@ namespace kp11
     /// Size type
     using size_type = typename Primary::size_type;
 
-  public: // constructors
-    /// Defaulted because of the forwarding constructor.
-    fallback() = default;
-    /// Fowarding constructor for `Primary` and `Secondary`.
-    ///
-    /// @param first_args Constructor arguments to `Primary`.
-    /// @param second_args Constructor arguments to `Secondary`.
-    template<typename... Args1, typename... Args2>
-    fallback(std::piecewise_construct_t,
-      std::tuple<Args1...> first_args,
-      std::tuple<Args2...> second_args) noexcept :
-        fallback(first_args,
-          second_args,
-          std::index_sequence_for<Args1...>(),
-          std::index_sequence_for<Args2...>())
-    {
-    }
-
-  private: // constructor helper
-    /// Constructor that unpacks `tuple` arguments.
-    template<std::size_t... Is1, typename... Args1, std::size_t... Is2, typename... Args2>
-    fallback(std::tuple<Args1...> & first_args,
-      std::tuple<Args2...> & second_args,
-      std::index_sequence<Is1...>,
-      std::index_sequence<Is2...>) noexcept :
-        primary(std::forward<Args1>(std::get<Is1>(first_args))...),
-        secondary(std::forward<Args2>(std::get<Is2>(second_args))...)
-    {
-    }
-
   public: // modifiers
     /// Call `Primary::allocate`. On failure call `Secondary::allocate`.
     ///
