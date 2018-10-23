@@ -86,10 +86,9 @@ namespace kp11
     /// * Complexity `O(1)`
     ///
     /// @param size Size in bytes of memory to allocate.
-    /// @param alignment Alignment of memory to allocate.
+    /// @param alignment Alignment in bytes of memory to allocate.
     ///
-    /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
-    /// `alignment`.
+    /// @returns (success) Pointer to the beginning of a suitable memory block.
     /// @returns (failure) `nullptr`
     ///
     /// @pre `chunk_alignment % alignment == 0`
