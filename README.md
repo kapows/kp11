@@ -90,12 +90,12 @@ using resource = monotonic<1024, 8, 100, heap>;
 // upstream is the heap (calls new and delete)
 // segregator should be used, unless it is guaranteed no request over 32 bytes is ever made.
 // all requests above 32 bytes returns nullptr as the nullocator always returns nullptr
-using resource = segregator<33, free_block<320, 4, 10, pool<10>, heap>, nullocator>; 
+using resource = segregator<32, free_block<320, 4, 10, pool<10>, heap>, nullocator>; 
 ```
 ```cpp
 // the free block will allocate from the local buffer once only. Once these have all been allocated, allocate from the heap
 // segregator is required here as the small allocator can only allocate upto 320 bytes.
-using resource = segregator<321, fallback<free_block<320, 4, 1, list<10>, local<320,4>>, heap>,heap>; 
+using resource = segregator<320, fallback<free_block<320, 4, 1, list<10>, local<320,4>>, heap>,heap>; 
 ```
 
 ##### Making a resource
