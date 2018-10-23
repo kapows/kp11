@@ -85,7 +85,7 @@ namespace kp11
     /// from `Upstream` and allocates from this new memory block.
     /// * Complexity `O(1)`
     ///
-    /// @param bytes Size in bytes of memory to allocate.
+    /// @param size Size in bytes of memory to allocate.
     /// @param alignment Alignment of memory to allocate.
     ///
     /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
@@ -93,18 +93,18 @@ namespace kp11
     /// @returns (failure) `nullptr`
     ///
     /// @pre `chunk_alignment % alignment == 0`
-    pointer allocate(size_type bytes, size_type alignment) noexcept
+    pointer allocate(size_type size, size_type alignment) noexcept
     {
       assert(chunk_alignment % alignment == 0);
-      bytes = round_up_to_our_alignment(bytes);
-      if (auto ptr = allocate_from_back(bytes))
+      size = round_up_to_our_alignment(size);
+      if (auto ptr = allocate_from_back(size))
       {
         return ptr;
       }
       else if (push_back())
       {
         // This call should not fail as a full buffer should be able to fulfil any request made.
-        auto ptr = allocate_from_back(bytes);
+        auto ptr = allocate_from_back(size);
         assert(ptr != nullptr);
         return ptr;
       }
@@ -115,7 +115,7 @@ namespace kp11
     }
     /// No-op.
     /// * Complexity `O(0)`
-    void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+    void deallocate(pointer ptr, size_type size, size_type alignment) noexcept
     {
     }
     /// Deallocate allocated memory back to `Upstream` and clear all metadata.
@@ -130,25 +130,24 @@ namespace kp11
     }
 
   private: // allocate helpers
-    size_type round_up_to_our_alignment(size_type bytes) const noexcept
+    size_type round_up_to_our_alignment(size_type size) const noexcept
     {
-      return bytes == 0 ? block_size :
-                          (bytes / block_size + (bytes % block_size != 0)) * block_size;
+      return size == 0 ? block_size : (size / block_size + (size % block_size != 0)) * block_size;
     }
-    /// @pre `bytes % alignment == 0`.
-    pointer allocate_from_back(size_type bytes) noexcept
+    /// @pre `size % block_size == 0`.
+    pointer allocate_from_back(size_type size) noexcept
     {
-      assert(bytes % block_size == 0);
-      if (auto space = static_cast<size_type>(last - first); bytes <= space)
+      assert(size % block_size == 0);
+      if (auto space = static_cast<size_type>(last - first); size <= space)
       {
-        return static_cast<pointer>(std::exchange(first, first + bytes));
+        return static_cast<pointer>(std::exchange(first, first + size));
       }
       return nullptr;
     }
 
   private: // modifiers
-    /// Allocate a new block of memory from `Upstream`. Can fail if max chunks has been
-    /// reached or if `Upstream` fails allocation.
+    /// Allocate a chunk from `Upstream`. Can fail if max chunks has been reached or if `Upstream`
+    /// fails allocation.
     ///
     /// @returns (success) `true`
     /// @returns (failure) `false`
