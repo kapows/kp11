@@ -256,7 +256,7 @@ namespace kp11
 
   private: // modifiers
     /// Allocate from `Upstream` and construct another `Marker` and a `biggests` value. Fail if max
-    /// allocations has been reached or if `Upstream` fails allocation.
+    /// chunks has been reached or if `Upstream` fails allocation.
     ///
     /// @returns (success) `true`
     /// @returns (failure) `false`
