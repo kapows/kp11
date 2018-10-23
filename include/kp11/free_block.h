@@ -106,7 +106,7 @@ namespace kp11
     ///
     /// @post (success) (return value) will not be returned again until it has been `deallocated`.
     /// Depends on `Marker`.
-    pointer allocate(size_type size, size_type alignment) noexcept
+    pointer allocate(size_type size, [[maybe_unused]] size_type alignment) noexcept
     {
       assert(chunk_alignment % alignment == 0);
       auto const num_blocks = to_marker_size(size);
@@ -141,7 +141,7 @@ namespace kp11
     ///
     /// @pre If `ptr` points to memory owned here then `size` and `alignment` must be the
     /// corresponding arguments to `allocate`.
-    bool deallocate(pointer ptr, size_type size, size_type alignment) noexcept
+    bool deallocate(pointer ptr, size_type size, [[maybe_unused]] size_type alignment) noexcept
     {
       auto p = static_cast<byte_pointer>(ptr);
       if (auto i = find(p); i != ptrs.max_size())
