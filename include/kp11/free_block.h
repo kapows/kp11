@@ -16,14 +16,24 @@ namespace kp11
   /// Each memory block allocated from `Upstream` has a `Marker` to manage blocks. The `Marker`s
   /// biggest value is cached when it is modified so that allocations that can't be met are skipped.
   ///
-  /// @tparam Allocations Maximum number of concurrent allocations from `Upstream`.
+  /// @tparam ChunkSize Size in bytes of request to `Upstream`.
+  /// @tparam ChunkAlignment Alignment in bytes of request to `Upstream` and alignment of blocks.
+  /// @tparam MaxChunks Maximum number of concurrent allocations from `Upstream`.
   /// @tparam Marker Meets the `Marker` concept.
   /// @tparam Upstream Meets the `Resource` concept.
-  template<std::size_t Allocations, typename Marker, typename Upstream>
+  template<std::size_t ChunkSize,
+    std::size_t ChunkAlignment,
+    std::size_t MaxChunks,
+    typename Marker,
+    typename Upstream>
   class free_block
   {
     static_assert(is_marker_v<Marker>);
     static_assert(is_resource_v<Upstream>);
+    static_assert(ChunkSize % ChunkAlignment == 0);
+    static_assert(ChunkSize % Marker::max_size() == 0);
+    /// Block size must be aligned to chunk alignment.
+    static_assert(ChunkSize / Marker::max_size() % ChunkAlignment == 0);
 
   public: // typedefs
     /// Pointer type.
@@ -31,42 +41,27 @@ namespace kp11
     /// Size type.
     using size_type = typename Upstream::size_type;
 
+  public: // constants
+    /// Size in bytes of request to `Upstream`.
+    static constexpr auto chunk_size = ChunkSize;
+    /// Alignment in bytes of request to `Upstream` and alignment of blocks.
+    static constexpr auto chunk_alignment = ChunkAlignment;
+    /// Maximum number of concurrent allocations from `Upstream`.
+    static constexpr auto max_chunks = MaxChunks;
+    /// Size in bytes of a free block.
+    static constexpr auto block_size = chunk_size / Marker::max_size();
+
   private: // typedefs
     /// Byte pointer for arithmetic purposes.
     using byte_pointer = typename std::pointer_traits<pointer>::template rebind<std::byte>;
 
   public: // constructors
-    /// The size of each free block will be `chunk_size / Marker::max_size()`.
-    ///
-    /// @param chunk_size Size in bytes of request to `Upstream`.
-    /// @param chunk_alignment Alignment in bytes of request to `Upstream` and free blocks.
-    /// @param initial_allocations Number of initial allocations to try to make.
-    /// @param args Constructor arguments to `Upstream`.
-    ///
-    /// @pre `chunk_size % Marker::size() == 0`
-    /// @pre `chunk_size / Marker::size() % chunk_alignment == 0`
-    template<typename... Args>
-    free_block(size_type chunk_size,
-      size_type chunk_alignment,
-      size_type initial_allocations = 0,
-      Args &&... args) noexcept :
-        block_size(chunk_size / Marker::max_size()),
-        chunk_size(chunk_size), chunk_alignment(chunk_alignment),
-        upstream(std::forward<Args>(args)...)
-    {
-      assert(chunk_size % Marker::max_size() == 0);
-      assert(chunk_size / Marker::max_size() % chunk_alignment == 0);
-      assert(initial_allocations <= Allocations);
-      for (size_type i = 0; i != initial_allocations; ++i)
-      {
-        push_back();
-      }
-    }
+    /// Defined because other constructors are defined.
+    free_block() = default;
     /// Deleted because a resource is being held and managed.
     free_block(free_block const &) = delete;
     /// Defined because the destructor is defined. `x` is left is a valid but unspecified state.
     free_block(free_block && x) noexcept :
-        block_size(x.block_size), chunk_size(x.chunk_size), chunk_alignment(x.chunk_alignment),
         biggests(std::move(x.biggests)), ptrs(std::move(x.ptrs)), markers(std::move(x.markers)),
         upstream(std::move(x.upstream))
     {
@@ -80,9 +75,6 @@ namespace kp11
       if (this != &x)
       {
         release();
-        block_size = x.block_size;
-        chunk_size = x.chunk_size;
-        chunk_alignment = x.chunk_alignment;
         biggests = std::move(x.biggests);
         ptrs = std::move(x.ptrs);
         markers = std::move(x.markers);
@@ -112,7 +104,7 @@ namespace kp11
     /// `alignment`.
     /// @returns (failure) `nullptr`
     ///
-    /// @pre `chunk_alignment (from ctor) % alignment == 0`
+    /// @pre `chunk_alignment % alignment == 0`
     ///
     /// @post (success) (return value) will not be returned again until it has been `deallocated`.
     /// Depends on `Marker`.
@@ -224,11 +216,6 @@ namespace kp11
       }
       return nullptr;
     }
-    /// @returns Size of each free block.
-    size_type get_block_size() const noexcept
-    {
-      return block_size;
-    }
 
   public: // accessors
     /// @returns Reference to `Upstream`.
@@ -264,7 +251,7 @@ namespace kp11
 
   private: // modifiers
     /// Allocate from `Upstream` and construct another `Marker` and a `biggests` value. Fail if max
-    /// allocations has been reached or if `Upstream` fails allocation.
+    /// chunks has been reached or if `Upstream` fails allocation.
     ///
     /// @returns (success) `true`
     /// @returns (failure) `false`
@@ -313,18 +300,12 @@ namespace kp11
     }
 
   private: // variables
-    /// Size in bytes of a free block.
-    size_type block_size;
-    /// Size in bytes of memory allocated from `Upstream`.
-    size_type chunk_size;
-    /// Alignment in bytes of memory allocated from `Upstream` and of free blocks.
-    size_type chunk_alignment;
     /// Holds a biggest size corresponding to each `Marker`.
-    kp11::detail::static_vector<typename Marker::size_type, Allocations> biggests;
+    kp11::detail::static_vector<typename Marker::size_type, max_chunks> biggests;
     /// Holds pointers to memory allocated by `Upstream`.
-    kp11::detail::static_vector<byte_pointer, Allocations> ptrs;
+    kp11::detail::static_vector<byte_pointer, max_chunks> ptrs;
     /// Holds a `Marker` corresponding to each allocation.
-    kp11::detail::static_vector<Marker, Allocations> markers;
+    kp11::detail::static_vector<Marker, max_chunks> markers;
     Upstream upstream;
   };
 }

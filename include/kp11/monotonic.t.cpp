@@ -9,31 +9,27 @@ using namespace kp11;
 
 TEST_CASE("constructor", "[constructor]")
 {
-  monotonic<2, heap> m(128, 4);
-  SECTION("initial allocation")
-  {
-    decltype(m) n(128, 4, true);
-  }
+  monotonic<128, 4, 2, heap> m;
   SECTION("move")
   {
     auto n = std::move(m);
   }
   SECTION("move assignment")
   {
-    decltype(m) n(32, 4);
+    decltype(m) n;
     n = std::move(m);
   }
 }
 TEST_CASE("accessor", "[accessor]")
 {
-  monotonic<2, heap> m(128, 4);
+  monotonic<128, 4, 2, heap> m;
   [[maybe_unused]] auto & a = m.get_upstream();
   auto const & n = m;
   [[maybe_unused]] auto & b = n.get_upstream();
 }
 TEST_CASE("allocate", "[allocate]")
 {
-  monotonic<2, heap> m(128, 4);
+  monotonic<128, 4, 2, heap> m;
   auto a = m.allocate(128, 4);
   REQUIRE(a != nullptr);
   SECTION("new memory block")
@@ -50,7 +46,7 @@ TEST_CASE("allocate", "[allocate]")
 }
 TEST_CASE("operator[]", "[operator[]]")
 {
-  monotonic<2, heap> m(128, 4);
+  monotonic<128, 4, 2, heap> m;
   SECTION("success")
   {
     auto a = m.allocate(128, 4);
@@ -63,7 +59,7 @@ TEST_CASE("operator[]", "[operator[]]")
 }
 TEST_CASE("release", "[release]")
 {
-  monotonic<2, heap> m(128, 4);
+  monotonic<128, 4, 2, heap> m;
   auto a = m.allocate(128, 4);
   auto b = m.allocate(128, 4);
   REQUIRE(a != nullptr);
@@ -74,5 +70,5 @@ TEST_CASE("release", "[release]")
 }
 TEST_CASE("traits", "[traits]")
 {
-  REQUIRE(is_owner_v<monotonic<2, heap>> == true);
+  REQUIRE(is_owner_v<monotonic<128, 4, 2, heap>> == true);
 }
