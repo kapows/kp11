@@ -16,20 +16,19 @@ namespace kp11
   public: // modifiers
     /// Allocate memory by calling `new`.
     ///
-    /// @param bytes Size in bytes of memory to allocate.
+    /// @param size Size in bytes of memory to allocate.
     /// @param alignment Alignment of memory to allocate.
     ///
-    /// @returns (success) Pointer to the beginning of a memory block of size `bytes` aligned to
-    /// `alignment`.
+    /// @returns (success) Pointer to the beginning of a suitable memory block.
     /// @returns (failure) `nullptr`
     ///
-    /// @post (success) (Return value) will not be returned again until it has been `deallocated`.
-    pointer allocate(size_type bytes, size_type alignment) noexcept;
+    /// @post (success) `(return value)` will not be returned again until it has been `deallocated`.
+    pointer allocate(size_type size, size_type alignment) noexcept;
     /// Deallocate memory pointed to by `ptr` by calling `delete`.
     ///
     /// @param ptr Pointer return by a call to `allocate`.
-    /// @param bytes Corresponding parameter used in `allocate`.
+    /// @param size Corresponding parameter used in `allocate`.
     /// @param alignment Corresponding parameter used in `allocate`.
-    void deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept;
+    void deallocate(pointer ptr, size_type size, size_type alignment) noexcept;
   };
 }

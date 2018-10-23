@@ -4,12 +4,12 @@
 
 namespace kp11
 {
-  typename heap::pointer heap::allocate(size_type bytes, size_type alignment) noexcept
+  typename heap::pointer heap::allocate(size_type size, size_type alignment) noexcept
   {
-    return ::operator new(bytes, std::align_val_t(alignment), std::nothrow);
+    return ::operator new(size, std::align_val_t(alignment), std::nothrow);
   }
-  void heap::deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+  void heap::deallocate(pointer ptr, size_type size, size_type alignment) noexcept
   {
-    ::operator delete(ptr, bytes, std::align_val_t(alignment));
+    ::operator delete(ptr, size, std::align_val_t(alignment));
   }
 }
