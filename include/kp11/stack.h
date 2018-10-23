@@ -6,13 +6,14 @@
 
 namespace kp11
 {
-  /// @brief LIFO marker. Only supports `reset` of the most recent successful `set` call.
+  /// @brief LIFO marker. Only recovers `deallocate`d indexes if they are adjacent to the the
+  /// current unallocated index.
   ///
-  /// Spots are stored as a single number. This number is increased by the number of spots that
-  /// need to be occupied by a call to `set`. It is only decreased if `reset` is called by the most
-  /// recent call to `set`.
+  /// Indexes are stored as a single number. This number is increased by the number of indexes that
+  /// need to be allocated. It is only decreased if when deallocating the most recently allocated
+  /// indexes.
   ///
-  /// @tparam N Total number of spots.
+  /// @tparam N Total number of indexes.
   template<std::size_t N>
   class stack
   {
@@ -21,20 +22,20 @@ namespace kp11
     using size_type = std::size_t;
 
   public: // capacity
-    /// @returns Number of occupied spots.
+    /// @returns Number of allocated indexes.
     size_type size() const noexcept
     {
       return first;
     }
-    /// @returns Total number of spots (`N`).
+    /// @returns Total number of indexes (`N`).
     static constexpr size_type max_size() noexcept
     {
       return N;
     }
-    /// The biggest is always `size()` for this structure.
+    /// The biggest is always `max_size() - size()` for this structure.
     /// * Complexity `O(1)`
     ///
-    /// @returns The largest number of consecutive vacant spots.
+    /// @returns The largest number of consecutive unallocated indexes.
     size_type biggest() const noexcept
     {
       return max_size() - size();
@@ -44,34 +45,33 @@ namespace kp11
     /// Increases our index by `n` and returns the previous index.
     /// * Complexity `O(1)`
     ///
-    /// @param n Number of spots to mark as occupied.
+    /// @param n Number of indexes to allocate.
     ///
-    /// @returns Index of the start of the `n` spots marked occupied.
+    /// @returns Index of the start of the `n` indexes allocated.
     ///
     /// @pre `n > 0`.
     /// @pre `n <= biggests()`
     ///
-    /// @post Spots from the `(return value)` to `(return value) + n - 1` will not
-    /// returned again from any subsequent call to `set` unless `reset` has been called on those
-    /// parameters and this is the most recent call to `set`.
+    /// @post [`(return value)`, `(return value) + n`) will not returned again from any subsequent
+    /// call to `allocate` unless properly deallocated.
     /// @post `size() == (previous) size() + n`
-    size_type set(size_type n) noexcept
+    size_type allocate(size_type n) noexcept
     {
       assert(n > 0);
       assert(n <= biggest());
       return std::exchange(first, first + n);
     }
-    /// The `index + n` is checked to see whether it is the most recent `set` call. If it is then
-    /// our number becomes `index` and thus our first vacant index will start at `index`. If it is
-    /// not then it is a no-op.
+    /// The `index + n` is checked to see whether it is adjacent to our number. If it is then our
+    /// number becomes `index` and thus our first unallocated index will start at `index`. If it is
+    /// not then it is a no-op and the indexes are not recovered.
     /// * Complexity `O(1)`
     ///
-    /// @param index Returned by a call to `set`.
-    /// @param n Corresponding parameter used in `set`.
+    /// @param index Returned by a call to `allocate`.
+    /// @param n Corresponding parameter in the call to `allocate`.
     ///
-    /// @post (success) `index` to `index + n - 1` can be returned by a call to `set`.
+    /// @post (success) [`index`, `index + n`) can be returned by a call to `allocate`.
     /// @post (success) `size() == (previous) size() - n`
-    void reset(size_type index, size_type n) noexcept
+    void deallocate(size_type index, size_type n) noexcept
     {
       assert(index <= max_size());
       assert(index + n <= max_size());
