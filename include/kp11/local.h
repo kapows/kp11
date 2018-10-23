@@ -15,10 +15,10 @@ namespace kp11
   /// used to track the whether the buffer has been allocated or not.
   ///
   /// @tparam Pointer Pointer type.
-  /// @tparam Size Size type.
-  /// @tparam Bytes Size in bytes of the buffer.
+  /// @tparam SizeType Size type.
+  /// @tparam Size Size in bytes of the buffer.
   /// @tparam Alignment Alignment in bytes of the buffer.
-  template<typename Pointer, typename SizeType, std::size_t Bytes, std::size_t Alignment>
+  template<typename Pointer, typename SizeType, std::size_t Size, std::size_t Alignment>
   class basic_local
   {
   public: // typedefs
@@ -37,7 +37,7 @@ namespace kp11
     /// pointer to the beginning of our buffer is allocated.
     /// * Complexity `O(1)`
     ///
-    /// @param bytes Size in bytes of memory to allocate.
+    /// @param size Size in bytes of memory to allocate.
     /// @param alignment Alignment of memory to allocate.
     ///
     /// @returns (success) Pointer to the beginning of our buffer.
@@ -46,10 +46,10 @@ namespace kp11
     /// @pre `Alignment % alignment == 0`
     ///
     /// @post (success) (return value) will not be returned again until it has been `deallocated`.
-    pointer allocate(size_type bytes, size_type alignment) noexcept
+    pointer allocate(size_type size, size_type alignment) noexcept
     {
       assert(Alignment % alignment == 0);
-      if (!allocated && bytes <= Bytes)
+      if (!allocated && size <= Size)
       {
         allocated = true;
         return static_cast<pointer>(buffer_ptr());
@@ -60,12 +60,12 @@ namespace kp11
     /// * Complexity `O(1)`
     ///
     /// @param ptr Pointer to the beginning of a memory block.
-    /// @param bytes Size in bytes of the memory block.
+    /// @param size Size in bytes of the memory block.
     /// @param alignment Alignment in bytes of the memory block.
     ///
     /// @returns (success) `true`
     /// @returns (failure) `false`
-    bool deallocate(pointer ptr, size_type bytes, size_type alignment) noexcept
+    bool deallocate(pointer ptr, size_type size, size_type alignment) noexcept
     {
       if (static_cast<byte_pointer>(ptr) == buffer_ptr())
       {
@@ -86,7 +86,7 @@ namespace kp11
     {
       if (auto const buf = buffer_ptr();
           std::less_equal<pointer>()(static_cast<pointer>(buf), ptr) &&
-          std::less<pointer>()(ptr, static_cast<pointer>(buf + Bytes)))
+          std::less<pointer>()(ptr, static_cast<pointer>(buf + Size)))
       {
         return static_cast<pointer>(buf);
       }
@@ -103,7 +103,7 @@ namespace kp11
   private: // variables
     /// Flag whether or not we have allocated our buffer.
     bool allocated = false;
-    alignas(Alignment) std::byte buffer[Bytes];
+    alignas(Alignment) std::byte buffer[Size];
   };
 
   /// Typedef of basic_local with `void *` as the `pointer` and `std::size_t` as the `size_type`.
