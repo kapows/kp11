@@ -18,4 +18,20 @@ Easy to use, policy based memory resource builder.
 
 ## Install
 
+```
+git clone https://github.com/kapows/kp11 && cd kp11
+mkdir build && cd build
+cmake .. -G Ninja -DCMAKE_CXX_FLAGS=-fsized-deallocation -DCMAKE_INSTALL_PREFIX=$INSTALL_PATH
+cmake --build . --target install --config Release
+```
+
 ## Develop
+
+```
+vcpkg install catch2
+git clone https://github.com/kapows/kp11 && cd kp11
+mkdir build && cd build
+cmake .. -G Ninja -DBUILD_TESTING=ON -DCMAKE_TOOLCHAIN_FILE=$VCPKG_PATH -DCMAKE_CXX_FLAGS=-fsized-deallocation
+cmake --build . --config Debug
+ctest
+```
