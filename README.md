@@ -25,7 +25,8 @@ Allows us to treat all memory in exactly the same way. That is, a pointer to the
 kept and we just do pointer arithmetic to allocate without embedding data in the memory itself.
 * **All the resources are statically sized.**
 Allows the user to know exactly how much memory will be allocated.
-A limitation here is that, along with the above, the size of the resource itself could get too big.
+A limitation here is that, along with the above, there is a strict allocation limit.
+The size of the resource itself could get also too big.
 Resolving this would require heap allocation of the resource itself, but the user would know about it.
 * **Unchecked allocations.**
 Requires the user to segregate allocations that resources cannot handle, it is undefined behaviour if these allocations go through.
@@ -39,12 +40,109 @@ If more complex construction is required, then it has to be done in the two-phas
 
 ## Use
 
-```Cmake
-find_package(kp11 CONFIG REQUIRED)
-target_link_libraries(main PRIVATE kp11::kp11)
+Steps:
+1. Choose `free_block` or `monotonic`. 
+2. Pick a `Marker` (if using `free_block`).
+3. Pick an "Upstream" `Resource`.
+4. Possibly guard against the allocation limitation with `fallback`.
+5. Possibly guard against the `Marker`'s or `monotonic` limitations with a `segregator`.
+
+```cpp
+#include <kp11/free_block.h> // Our main block splitting class
+#include <kp11/pool.h> // One of our `Marker`s
+#include <kp11/heap.h> // An Upstream resource
+#include <kp11/segregator.h> // A control structure to deal with the limitations of the pool 
+#include <kp11/fallback.h> // A control structure to deal free_block allocation limitations
+#include <kp11/allocator.h> // Adaptor
+#include <string>
+
+using namespace kp11;
+// This resource uses a pool allocation strategy.
+// It allocates 10 256 byte blocks from heap in a single allocation (2560 bytes) (up to 5 times).
+using pool_256 = free_block<256*10, alignof(char), 5, pool<10>, heap>;
+
+// This resource allocates from the heap when all the small blocks run out.
+// In this case it is 10 * 5 small block allocations without deallocations.
+using safe_pool_256 = fallback<pool_256, heap>;
+
+// This resource segregates allocations <= 256 to safe_pool_256 all others go to heap.
+// This resource can now support any allocations
+using resource = segregator<256, safe_pool_256, heap>;
+
+// creates an allocator with a standard interface
+template<typename T>
+using alloc = allocator<T, resource>;
+
+using string = std::basic_string<char, std::char_traits<char>, alloc<char>>;
+
+int main()
+{
+  // Allocates from our pool
+  string s = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+  return 0;
+}
+```
+
+Though the control structures are provided, you don't have to use them and can just use regular C++.
+
+```cpp
+#include <kp11/free_block.h> // Our main block splitting class
+#include <kp11/pool.h> // One of our `Marker`s
+#include <kp11/heap.h> // An Upstream resource
+#include <kp11/fallback.h> // A control structure to deal free_block allocation limitations
+#include <cstddef>
+#include <variant>
+
+using namespace kp11;
+
+class resource 
+{
+  // if you don't use `fallback` you'll want to use `owner_traits` to deal with ownership.
+  using pool_32 = fallback<free_block<32*10, alignof(std::max_align_t), 10, pool<10>, heap>,heap>;
+  using pool_64 = fallback<free_block<64*10, alignof(std::max_align_t), 10, pool<10>, heap>,heap>;
+  using pool_96 = fallback<free_block<96*10, alignof(std::max_align_t), 10, pool<10>, heap>,heap>;
+  using pool_128 = fallback<free_block<128*10, alignof(std::max_align_t), 5, pool<10>, heap>,heap>;
+  std::variant<std::monostate, pool_32, pool_64, pool_96, pool_128> pools[4]; 
+  heap backup;
+public:
+  using pointer = typename heap::pointer;
+  using size_type = typename heap::size_type;
+
+  resource()
+  {
+    pools[0].emplace<pool_32>();
+    pools[1].emplace<pool_64>();
+    pools[2].emplace<pool_96>();
+    pools[3].emplace<pool_128>();
+  }
+  pointer allocate(size_type size, size_type alignment) noexcept
+  {
+    if(size / 32 < 4)
+    {
+      auto p = std::visit([size,alignment](auto&& p) { return p.allocate(size,alignment);}, pools[size / 32]);
+    }
+    else
+    {
+      return backup.allocate(size,alignment);
+    }
+  }
+  void deallocate(pointer ptr, size_type size, size_type alignment) noexcept
+  {
+    if(size / 32 < 4)
+    {
+      std::visit([ptr, size, alignment](auto&& p) { p.deallocate(ptr,size,alignment);}, pools[size / 32]);
+    }
+    else
+    {
+      backup.deallocate(ptr, size, alignment);
+    }
+  }
+};
 ```
 
 ## Install
+
+### Shell
 
 ```Shell
 git clone https://github.com/kapows/kp11 && cd kp11
@@ -53,7 +151,16 @@ cmake .. -G Ninja -DCMAKE_CXX_FLAGS=-fsized-deallocation -DCMAKE_INSTALL_PREFIX=
 cmake --build . --target install --config Release
 ```
 
+### Cmake
+
+```Cmake
+find_package(kp11 CONFIG REQUIRED)
+target_link_libraries(main PRIVATE kp11::kp11)
+```
+
 ## Develop
+
+### Shell
 
 ```Shell
 vcpkg install catch2
