@@ -20,9 +20,9 @@ The following expressions must be valid and meet their specified requirements:
 
 | Expression | Requirements | Return Type |
 | ---------- | ------------ | ----------- | 
-| `R::pointer` |  Satisfies `NullablePointer` and `RandomAccessIterator` | | 
-| `R::size_type` | Can represent the size of the largest object `r` can allocate. | |
-| `R r` | The object `r` is default-constructible | |
+| `R::pointer` (optional) |  Satisfies `NullablePointer` and `RandomAccessIterator` | | 
+| `R::size_type` (optional) | Can represent the size of the largest object `r` can allocate. | |
+| `R r()` | | |
 | `ptr = r.allocate(size, alignment)` | Unless `ptr` is `nullptr` it is not returned again unless it has been passed to `r.deallocate(ptr, size, alignment)`. | `R::pointer` |
 | `r.deallocate(ptr, size, alignment)` | | unspecified |
 
@@ -61,7 +61,7 @@ The following expressions must be valid and meet their specified requirements:
 | Expression | Requirements | Return Type |
 | ---------- | ------------ | ----------- | 
 | `ptr = r[ptr]` | | `R::pointer` |
-| `b = r.deallocate(ptr, size, alignment)` or `r.deallocate(ptr, size, alignment)` | | convertible to `bool`, otherwise unspecified |
+| `b = r.deallocate(ptr, size, alignment)` (optional) | | |
 
 ### Exemplar
 
@@ -95,9 +95,11 @@ The following expressions must be valid and meet their specified requirements:
 | Expression | Requirements | Return Type |
 | ---------- | ------------ | ----------- | 
 | `R::size_type` | Can represent the maximum number of indexes `r` can allocate. | | 
-| `n = R::max_size()` | | `R::size_type` | 
-| `n = r.size()` | `n <= R::max_size()` | `R::size_type` | 
-| `n = r.max_alloc()` | `n <= R::max_size() - r.size()` | `R::size_type` | 
+| `R r()` | | | 
+| `n = R::size()` | | `R::size_type` | 
+| `n = r.count()` | `n <= R::size()` | `R::size_type` | 
+| `n = R::max_size()` (optional) | `n <= R::size()` | `R::size_type` | 
+| `n = r.max_alloc()` | `n <= min(R::max_size(), R::size() - r.count())` | `R::size_type` | 
 | `i = r.allocate(n)` | `n <= r.max_alloc()`. `i < R::max_size()`. `[i,i+n)` is not returned until a call to `r.deallocate(i, n)`. | `R::size_type` | 
 | `r.deallocate(i, n)` | | unused | 
 
@@ -108,8 +110,9 @@ class marker
 {
 public:
   using size_type = std::size_t;
+  static constexpr size_type size() noexcept;
+  size_type count() const noexcept;
   static constexpr size_type max_size() noexcept;
-  size_type size() const noexcept;
   size_type max_alloc() const noexcept;
   size_type allocate(size_type n) noexcept;
   void deallocate(size_type i, size_type n) noexcept;
