@@ -90,8 +90,8 @@ The following expressions must be valid and meet their specified requirements:
 | `R::size_type` | Can represent the maximum number of indexes `r` can allocate. | | 
 | `n = R::max_size()` | |`R::size_type` | 
 | `n = r.size()` | `n <= R::max_size()` |`R::size_type` | 
-| `n = r.biggest()` | `n <= R::max_size() - r.size()` |`R::size_type` | 
-| `i = r.allocate(n)` | `n <= r.biggest()`. `i < R::max_size()`. `[i,i+n)` is not returned until a call to `r.deallocate(i, n)`. | `R::size_type` | 
+| `n = r.max_alloc()` | `n <= R::max_size() - r.size()` |`R::size_type` | 
+| `i = r.allocate(n)` | `n <= r.max_alloc()`. `i < R::max_size()`. `[i,i+n)` is not returned until a call to `r.deallocate(i, n)`. | `R::size_type` | 
 | `r.deallocate(i, n)` | | unused | 
 
 ### Exemplar
@@ -102,7 +102,7 @@ public:
   using size_type = std::size_t;
   static constexpr size_type max_size() noexcept;
   size_type size() const noexcept;
-  size_type biggest() const noexcept;
+  size_type max_alloc() const noexcept;
   size_type allocate(size_type n) noexcept;
   void deallocate(size_type index, size_type n) noexcept;
 };
