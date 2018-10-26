@@ -1,10 +1,13 @@
 # Concepts
+
 Unless otherwise stated, expressions do not throw exceptions.
 
 ## Resource
+
 The `Resource` concept describes types that can allocate and deallocate memory.
 
 ### Requirements
+
 The type `R` satisfies `Resource` if
 
 Given:
@@ -24,6 +27,7 @@ The following expressions must be valid and meet their specified requirements:
 | `r.deallocate(ptr, size, alignment)` | | unspecified |
 
 ### Exemplar
+
 ```cpp
 class resource
 {
@@ -60,6 +64,7 @@ The following expressions must be valid and meet their specified requirements:
 | `b = r.deallocate(ptr, size, alignment)` or `r.deallocate(ptr, size, alignment)` | | convertible to `bool`, otherwise unspecified |
 
 ### Exemplar
+
 ```cpp
 class owner
 {
@@ -73,9 +78,11 @@ public:
 ```
 
 ## Marker
+
 The `Marker` concept describes types that can allocate and deallocate ranges of indexes.
 
 ### Requirements
+
 The type `R` satisfies `Marker` if:
 
 Given:
@@ -95,6 +102,7 @@ The following expressions must be valid and meet their specified requirements:
 | `r.deallocate(i, n)` | | unused | 
 
 ### Exemplar
+
 ```cpp
 class marker
 {
