@@ -14,6 +14,29 @@ Easy to use, policy based memory resource builder.
 
 ## Design
 
+The main ideas are:
+
+* **Split a large fixed sized memory block into smaller fixed sized memory blocks.**
+Allows a single class to handle all the memory whilst deferring the block allocation strategy to other classes, which only need to deal in indexes.
+* **Fixed sized alignment.**
+Allows us to sidestep runtime memory alignment completely whilst also providing properly aligned memory.
+* **All the resources are self contained (they don't touch the memory.)**
+Allows us to treat all memory in exactly the same way. That is, a pointer to the initial memory is 
+kept and we just do pointer arithmetic to allocate without embedding data in the memory itself.
+* **All the resources are statically sized.**
+Allows the user to know exactly how much memory will be allocated.
+A limitation here is that, along with the above, the size of the resource itself could get too big.
+Resolving this would require heap allocation of the resource itself, but the user would know about it.
+* **Unchecked allocations.**
+Requires the user to segregate allocations that resources cannot handle, it is undefined behaviour if these allocations go through.
+This is only checked with asserts.
+This allows the user to know that allocation failure is the result of some limitation being met (out of memory, out of small blocks, out of big blocks), rather than as a result of requesting memory that the resource could never have fulfilled.
+i.e. You can't order a Big Mac from KFC.
+* **Easy to use.**
+The policy based, composable nature, make creating and adapting different resources easy.
+If more complex control structures than the ones provided are needed, then the user should create a new resource class.
+If more complex construction is required, then it has to be done in the two-phase initialization style.
+
 ## Use
 
 ```Cmake
