@@ -91,7 +91,7 @@ The following expressions must be valid and meet their specified requirements:
 | `n = R::max_size()` | |`R::size_type` | 
 | `n = r.size()` | `n <= R::max_size()` |`R::size_type` | 
 | `n = r.biggest()` | `n <= R::max_size() - r.size()` |`R::size_type` | 
-| `i = r.allocate(n)` | `n <= r.biggest`. `i < R::max_size()`. `[i,i+n)` is not returned until a call to `r.deallocate(i, n)`. | `R::size_type` | 
+| `i = r.allocate(n)` | `n <= r.biggest()`. `i < R::max_size()`. `[i,i+n)` is not returned until a call to `r.deallocate(i, n)`. | `R::size_type` | 
 | `r.deallocate(i, n)` | | unused | 
 
 ### Exemplar
