@@ -16,9 +16,14 @@ Easy to use, policy based memory resource builder.
 
 ## Use
 
+```Cmake
+find_package(kp11 CONFIG REQUIRED)
+target_link_libraries(main PRIVATE kp11::kp11)
+```
+
 ## Install
 
-```
+```Shell
 git clone https://github.com/kapows/kp11 && cd kp11
 mkdir build && cd build
 cmake .. -G Ninja -DCMAKE_CXX_FLAGS=-fsized-deallocation -DCMAKE_INSTALL_PREFIX=$INSTALL_PATH
@@ -27,7 +32,7 @@ cmake --build . --target install --config Release
 
 ## Develop
 
-```
+```Shell
 vcpkg install catch2
 git clone https://github.com/kapows/kp11 && cd kp11
 mkdir build && cd build
