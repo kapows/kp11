@@ -13,7 +13,7 @@ namespace kp11
   /// @brief Splits single allocations from `Upstream` into multiple blocks that can be allocated.
   ///
   /// Each memory block allocated from `Upstream` has a `Marker` to manage blocks. The `Marker`s
-  /// biggest value is cached when it is modified so that allocations that can't be met are skipped.
+  /// `max_alloc` is cached when it is modified so that allocations that can't be met are skipped.
   ///
   /// @tparam ChunkSize Size in bytes of request to `Upstream`.
   /// @tparam ChunkAlignment Alignment in bytes of request to `Upstream` and alignment of blocks.
@@ -61,7 +61,7 @@ namespace kp11
     free_block(free_block const &) = delete;
     /// Defined because the destructor is defined. `x` is left is a valid but unspecified state.
     free_block(free_block && x) noexcept :
-        biggests(std::move(x.biggests)), ptrs(std::move(x.ptrs)), markers(std::move(x.markers)),
+        max_allocs(std::move(x.max_allocs)), ptrs(std::move(x.ptrs)), markers(std::move(x.markers)),
         upstream(std::move(x.upstream))
     {
       x.ptrs.clear();
@@ -74,7 +74,7 @@ namespace kp11
       if (this != &x)
       {
         release();
-        biggests = std::move(x.biggests);
+        max_allocs = std::move(x.max_allocs);
         ptrs = std::move(x.ptrs);
         markers = std::move(x.markers);
         upstream = std::move(x.upstream);
@@ -91,9 +91,9 @@ namespace kp11
 
   public: // modifiers
     /// Check if existing `Marker`s can allocate the required blocks by checking the corresponding
-    /// cached `biggests` value. If any can, then allocate using its `Marker` and update its
-    /// `biggests` value. Otherwise try to allocate a new memory block from `Upstream` and allocate
-    /// from the new `Marker`.
+    /// `max_allocs` value. If any can, then allocate using its `Marker` and update its
+    /// `max_allocs` value. Otherwise try to allocate a new memory block from `Upstream` and
+    /// allocate from the new `Marker`.
     /// * Complexity `O(n)`
     ///
     /// @param size Size in bytes of memory to allocate.
@@ -110,9 +110,9 @@ namespace kp11
     {
       assert(chunk_alignment % alignment == 0);
       auto const num_blocks = to_marker_size(size);
-      for (std::size_t i = 0, last = biggests.size(); i < last; ++i)
+      for (std::size_t i = 0, last = max_allocs.size(); i < last; ++i)
       {
-        if (num_blocks <= biggests[i])
+        if (num_blocks <= max_allocs[i])
         {
           return allocate_from(i, num_blocks);
         }
@@ -120,7 +120,7 @@ namespace kp11
       if (push_back())
       {
         // New blocks should be able to fulfil any request.
-        assert(num_blocks <= biggests.back());
+        assert(num_blocks <= max_allocs.back());
         return allocate_from(ptrs.size() - 1, num_blocks);
       }
       else
@@ -129,7 +129,7 @@ namespace kp11
       }
     }
     /// Find the allocation that `ptr` points into, deallocate to its `Marker`, and update its
-    /// `biggests` value. `nullptr` is determined to not be owned.
+    /// `max_allocs` value. `nullptr` is determined to not be owned.
     /// * Complexity `O(n)`
     ///
     /// @param ptr Pointer to the beginning of a memory block.
@@ -147,7 +147,7 @@ namespace kp11
       if (auto i = find(p); i != ptrs.max_size())
       {
         markers[i].deallocate(to_marker_index(i, p), to_marker_size(size));
-        biggests[i] = markers[i].biggest();
+        max_allocs[i] = markers[i].max_alloc();
         return true;
       }
       return false;
@@ -159,7 +159,7 @@ namespace kp11
       {
         upstream.deallocate(static_cast<pointer>(p), chunk_size, chunk_alignment);
       }
-      biggests.clear();
+      max_allocs.clear();
       ptrs.clear();
       markers.clear();
     }
@@ -184,18 +184,18 @@ namespace kp11
     }
 
   private: // allocate helper
-    /// Helper function to make it easier to allocate from each `Marker` and update its `biggests`
+    /// Helper function to make it easier to allocate from each `Marker` and update its `max_allocs`
     /// value. Does not return `nullptr`.
     ///
-    /// @pre `num_blocks <= biggests[index]`
+    /// @pre `num_blocks <= max_allocs[index]`
     ///
     /// @returns Pointer to the beginning of a memory block of size `size` aligned to
     /// `alignment`.
     pointer allocate_from(std::size_t index, std::size_t num_blocks) noexcept
     {
-      assert(num_blocks <= biggests[index]);
+      assert(num_blocks <= max_allocs[index]);
       auto const i = markers[index].allocate(num_blocks);
-      biggests[index] = markers[index].biggest();
+      max_allocs[index] = markers[index].max_alloc();
       return static_cast<pointer>(ptrs[index] + static_cast<size_type>(i) * block_size);
     }
 
@@ -229,7 +229,7 @@ namespace kp11
 
   private: // helper
     /// Find the index of the allocation to which `ptr` points. This function makes it easier to
-    /// deal with our split biggests/ptrs/markers structure since we'll need a common index to
+    /// deal with our split max_allocs/ptrs/markers structure since we'll need a common index to
     /// access the corresponding parts.
     ///
     /// @returns (success) Index of the memory block to which `ptr` points.
@@ -248,8 +248,8 @@ namespace kp11
     }
 
   private: // modifiers
-    /// Allocate from `Upstream` and construct another `Marker` and a `biggests` value. Fail if max
-    /// chunks has been reached or if `Upstream` fails allocation.
+    /// Allocate from `Upstream` and construct another `Marker` and a `max_allocs` value. Fail if
+    /// max chunks has been reached or if `Upstream` fails allocation.
     ///
     /// @returns (success) `true`
     /// @returns (failure) `false`
@@ -263,7 +263,7 @@ namespace kp11
       {
         ptrs.emplace_back(static_cast<byte_pointer>(ptr));
         markers.emplace_back();
-        biggests.emplace_back(markers.back().biggest());
+        max_allocs.emplace_back(markers.back().max_alloc());
         return true;
       }
       return false;
@@ -277,7 +277,7 @@ namespace kp11
       assert(!ptrs.empty());
       upstream.deallocate(ptrs.back(), chunk_size, chunk_alignment);
       ptrs.pop_back();
-      biggests.pop_back();
+      max_allocs.pop_back();
       markers.pop_back();
     }
 
@@ -298,8 +298,8 @@ namespace kp11
     }
 
   private: // variables
-    /// Holds a biggest size corresponding to each `Marker`.
-    kp11::detail::static_vector<typename Marker::size_type, max_chunks> biggests;
+    /// Holds the `max_alloc` corresponding to each `Marker`.
+    kp11::detail::static_vector<typename Marker::size_type, max_chunks> max_allocs;
     /// Holds pointers to memory allocated by `Upstream`.
     kp11::detail::static_vector<byte_pointer, max_chunks> ptrs;
     /// Holds a `Marker` corresponding to each allocation.
