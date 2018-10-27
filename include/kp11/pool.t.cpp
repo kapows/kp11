@@ -21,12 +21,12 @@ TEST_CASE("max_size", "[max_size]")
     REQUIRE(m.size() == 0);
   }
 }
-TEST_CASE("biggest", "[biggest]")
+TEST_CASE("max_alloc", "[max_alloc]")
 {
   pool<10> m;
   SECTION("not empty")
   {
-    REQUIRE(m.biggest() == 1);
+    REQUIRE(m.max_alloc() == 1);
   }
   SECTION("empty")
   {
@@ -34,7 +34,7 @@ TEST_CASE("biggest", "[biggest]")
     {
       m.allocate(1);
     }
-    REQUIRE(m.biggest() == 0);
+    REQUIRE(m.max_alloc() == 0);
   }
 }
 TEST_CASE("allocate", "[allocate]")
