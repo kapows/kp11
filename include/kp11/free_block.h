@@ -172,7 +172,7 @@ namespace kp11
       while (ptrs.size())
       {
         auto & m = markers.back();
-        if (m.size() == 0)
+        if (m.count() == 0)
         {
           pop_back();
         }
