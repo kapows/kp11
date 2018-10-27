@@ -21,17 +21,17 @@ TEST_CASE("max_size", "[max_size]")
     REQUIRE(m.size() == 0);
   }
 }
-TEST_CASE("biggest", "[biggest]")
+TEST_CASE("max_alloc", "[max_alloc]")
 {
   list<10> m;
   SECTION("initial")
   {
-    REQUIRE(m.biggest() == 10);
+    REQUIRE(m.max_alloc() == 10);
   }
   SECTION("out of spots")
   {
     [[maybe_unused]] auto a = m.allocate(10);
-    REQUIRE(m.biggest() == 0);
+    REQUIRE(m.max_alloc() == 0);
   }
   SECTION("set")
   {
@@ -39,7 +39,7 @@ TEST_CASE("biggest", "[biggest]")
     auto b = m.allocate(4);
     [[maybe_unused]] auto c = m.allocate(3);
     m.deallocate(b, 4);
-    REQUIRE(m.biggest() == 4);
+    REQUIRE(m.max_alloc() == 4);
   }
   SECTION("merge")
   {
@@ -48,9 +48,9 @@ TEST_CASE("biggest", "[biggest]")
     auto c = m.allocate(3);
     m.deallocate(b, 4);
     m.deallocate(c, 3);
-    REQUIRE(m.biggest() == 7);
+    REQUIRE(m.max_alloc() == 7);
     m.deallocate(a, 3);
-    REQUIRE(m.biggest() == 10);
+    REQUIRE(m.max_alloc() == 10);
   }
 }
 TEST_CASE("set", "[set]")
@@ -62,13 +62,13 @@ TEST_CASE("set", "[set]")
     {
       SECTION("less than size")
       {
-        REQUIRE(m.biggest() >= 5);
+        REQUIRE(m.max_alloc() >= 5);
         [[maybe_unused]] auto a = m.allocate(5);
         REQUIRE(m.size() == 5);
       }
       SECTION("exact size")
       {
-        REQUIRE(m.biggest() >= 10);
+        REQUIRE(m.max_alloc() >= 10);
         [[maybe_unused]] auto a = m.allocate(10);
         REQUIRE(m.size() == 10);
       }
@@ -78,14 +78,14 @@ TEST_CASE("set", "[set]")
       auto a = m.allocate(3);
       SECTION("less than size")
       {
-        REQUIRE(m.biggest() >= 3);
+        REQUIRE(m.max_alloc() >= 3);
         auto b = m.allocate(3);
         REQUIRE(b != a);
         REQUIRE(m.size() == 6);
       }
       SECTION("exact size")
       {
-        REQUIRE(m.biggest() >= 7);
+        REQUIRE(m.max_alloc() >= 7);
         auto b = m.allocate(7);
         REQUIRE(b != a);
         REQUIRE(m.size() == 10);
@@ -101,13 +101,13 @@ TEST_CASE("set", "[set]")
     m.deallocate(c, 4);
     SECTION("less than size")
     {
-      REQUIRE(m.biggest() >= 2);
+      REQUIRE(m.max_alloc() >= 2);
       [[maybe_unused]] auto d = m.allocate(2);
       REQUIRE(m.size() == 5);
     }
     SECTION("exact size")
     {
-      REQUIRE(m.biggest() >= 4);
+      REQUIRE(m.max_alloc() >= 4);
       [[maybe_unused]] auto d = m.allocate(4);
       REQUIRE(m.size() == 7);
     }
@@ -121,7 +121,7 @@ TEST_CASE("reset", "[reset]")
     auto a = m.allocate(10);
     m.deallocate(a, 10);
     REQUIRE(m.size() == 0);
-    REQUIRE(m.biggest() == 10);
+    REQUIRE(m.max_alloc() == 10);
   }
   SECTION("boundary, occupied")
   {
@@ -129,7 +129,7 @@ TEST_CASE("reset", "[reset]")
     [[maybe_unused]] auto b = m.allocate(5);
     m.deallocate(a, 5);
     REQUIRE(m.size() == 5);
-    REQUIRE(m.biggest() == 5);
+    REQUIRE(m.max_alloc() == 5);
   }
   SECTION("occupied, boundary")
   {
@@ -137,7 +137,7 @@ TEST_CASE("reset", "[reset]")
     auto b = m.allocate(5);
     m.deallocate(b, 5);
     REQUIRE(m.size() == 5);
-    REQUIRE(m.biggest() == 5);
+    REQUIRE(m.max_alloc() == 5);
   }
   SECTION("boundary, vacant")
   {
@@ -146,7 +146,7 @@ TEST_CASE("reset", "[reset]")
     m.deallocate(b, 5);
     m.deallocate(a, 5);
     REQUIRE(m.size() == 0);
-    REQUIRE(m.biggest() == 10);
+    REQUIRE(m.max_alloc() == 10);
   }
   SECTION("vacant, boundary")
   {
@@ -155,7 +155,7 @@ TEST_CASE("reset", "[reset]")
     m.deallocate(a, 5);
     m.deallocate(b, 5);
     REQUIRE(m.size() == 0);
-    REQUIRE(m.biggest() == 10);
+    REQUIRE(m.max_alloc() == 10);
   }
   SECTION("occupied, occupied")
   {
@@ -164,7 +164,7 @@ TEST_CASE("reset", "[reset]")
     [[maybe_unused]] auto c = m.allocate(3);
     m.deallocate(b, 4);
     REQUIRE(m.size() == 6);
-    REQUIRE(m.biggest() == 4);
+    REQUIRE(m.max_alloc() == 4);
   }
   SECTION("vacant, vacant")
   {
@@ -177,7 +177,7 @@ TEST_CASE("reset", "[reset]")
     REQUIRE(m.size() == 4);
     m.deallocate(b, 4);
     REQUIRE(m.size() == 0);
-    REQUIRE(m.biggest() == 10);
+    REQUIRE(m.max_alloc() == 10);
   }
   SECTION("occupied, vacant")
   {
@@ -188,7 +188,7 @@ TEST_CASE("reset", "[reset]")
     REQUIRE(m.size() == 7);
     m.deallocate(b, 4);
     REQUIRE(m.size() == 3);
-    REQUIRE(m.biggest() == 7);
+    REQUIRE(m.max_alloc() == 7);
   }
   SECTION("vacant, occupied")
   {
@@ -199,7 +199,7 @@ TEST_CASE("reset", "[reset]")
     REQUIRE(m.size() == 7);
     m.deallocate(b, 4);
     REQUIRE(m.size() == 3);
-    REQUIRE(m.biggest() == 7);
+    REQUIRE(m.max_alloc() == 7);
   }
 }
 TEST_CASE("best fit", "[bestfit]")
