@@ -107,17 +107,6 @@ namespace kp11
   template<typename T>
   constexpr bool is_resource_v = is_resource<T>::value;
 
-  /* Owner Exemplar
-  class owner
-  {
-  public:
-    using pointer = void *;
-    using size_type = std::size_t;
-    pointer allocate(size_type size, size_type alignment) noexcept;
-    bool deallocate(pointer ptr, size_type size, size_type alignment) noexcept;
-    pointer operator[](pointer ptr) const noexcept;
-  };
-  */
   /// Checks if `T` meets the `Owner` concept.
   template<typename T, typename Enable = void>
   struct is_owner : std::false_type
@@ -127,9 +116,10 @@ namespace kp11
   /// @private
   template<typename T>
   struct is_owner<T,
-    std::enable_if_t<is_resource_v<T> &&
-                     std::is_same_v<typename T::pointer,
-                       decltype(std::declval<T>()[std::declval<typename T::pointer>()])>>>
+    std::enable_if_t<
+      is_resource_v<T> &&
+      std::is_same_v<typename resource_traits<T>::pointer,
+        decltype(std::declval<T>()[std::declval<typename resource_traits<T>::pointer>()])>>>
       : std::true_type
   {
   };
@@ -137,15 +127,11 @@ namespace kp11
   template<typename T>
   constexpr bool is_owner_v = is_owner<T>::value;
 
-  /// Provides a way to deallocate owned memory from `owner`s.
+  /// Provides a standardized way of accessing properties of `Owners`.
+  /// Autogenerates some things if they are not provided.
   template<typename T>
-  struct owner_traits
+  struct owner_traits : public resource_traits<T>
   {
-    static_assert(is_owner_v<T>);
-    /// Pointer type.
-    using pointer = typename T::pointer;
-    /// Size type.
-    using size_type = typename T::size_type;
     /// If `owner` has a convertible to `bool` deallocate function then uses that. Otherwise checks
     /// to see if ptr is owned by using `operator[]` before deallocating.
     ///
@@ -156,20 +142,24 @@ namespace kp11
     ///
     /// @returns (success) `true`, owned by `owner`.
     /// @returns (failure) `false`
-    static bool deallocate(T & owner, pointer ptr, size_type size, size_type alignment) noexcept
+    static bool deallocate(T & owner,
+      typename resource_traits<T>::pointer ptr,
+      typename resource_traits<T>::size_type size,
+      typename resource_traits<T>::size_type alignment) noexcept
     {
       // It may be trivial for a type to return success or failure in it's deallocate function, if
       // if is then it should do so.
-      if constexpr (std::is_convertible_v<bool, decltype(owner.deallocate(ptr, size, alignment))>)
+      if constexpr (std::is_convertible_v<bool,
+                      decltype(resource_traits<T>::deallocate(owner, ptr, size, alignment))>)
       {
-        return owner.deallocate(ptr, size, alignment);
+        return resource_traits<T>::deallocate(owner, ptr, size, alignment);
       }
       // If it is not trivial then we can still determine ownership through operator[].
       else
       {
         if (owner[ptr])
         {
-          owner.deallocate(ptr, size, alignment);
+          resource_traits<T>::deallocate(owner, ptr, size, alignment);
           return true;
         }
         return false;
