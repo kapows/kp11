@@ -11,6 +11,11 @@
 
 using namespace kp11;
 
+TEST_CASE("max_size", "[max_size]")
+{
+  REQUIRE(fallback<free_block<128, 4, 1, stack<4>, local<128, 4>>, local<128, 4>>::max_size() ==
+          free_block<128, 4, 1, stack<4>, local<128, 4>>::max_size());
+}
 TEST_CASE("accessor", "[accessor]")
 {
   fallback<local<128, 4>, local<128, 4>> m;
