@@ -7,35 +7,35 @@
 
 namespace kp11
 {
-#define KP11_TRAITS_NESTED_TYPE(TYPE, ALT)                 \
-private:                                                   \
-  template<typename T, typename Enable = void>             \
-  struct TYPE##_helper                                     \
-  {                                                        \
-    using type = ALT;                                      \
-  };                                                       \
-  template<typename T>                                     \
-  struct TYPE##_helper<T, std::void_t<typename T::TYPE>>   \
-  {                                                        \
-    using type = typename T::TYPE;                         \
-  };                                                       \
-  template<typename T>                                     \
-  using TYPE##_helper_t = typename TYPE##_helper<T>::type; \
-                                                           \
+#define KP11_TRAITS_NESTED_TYPE(TYPE, ALT)                     \
+private:                                                       \
+  template<typename MY_T, typename Enable = void>              \
+  struct TYPE##_helper                                         \
+  {                                                            \
+    using type = ALT;                                          \
+  };                                                           \
+  template<typename MY_T>                                      \
+  struct TYPE##_helper<MY_T, std::void_t<typename MY_T::TYPE>> \
+  {                                                            \
+    using type = typename MY_T::TYPE;                          \
+  };                                                           \
+  template<typename MY_T>                                      \
+  using TYPE##_helper_t = typename TYPE##_helper<MY_T>::type;  \
+                                                               \
 public:
-#define KP11_TRAITS_NESTED_STATIC_FUNC(FUNC)                                 \
-private:                                                                     \
-  template<typename T, typename Enable = void>                               \
-  struct FUNC##_helper : std::false_type                                     \
-  {                                                                          \
-  };                                                                         \
-  template<typename T>                                                       \
-  struct FUNC##_helper<T, std::void_t<decltype(T::FUNC())>> : std::true_type \
-  {                                                                          \
-  };                                                                         \
-  template<typename T>                                                       \
-  static constexpr auto FUNC##_helper_v = FUNC##_helper<T>::value;           \
-                                                                             \
+#define KP11_TRAITS_NESTED_STATIC_FUNC(FUNC)                                       \
+private:                                                                           \
+  template<typename MY_T, typename Enable = void>                                  \
+  struct FUNC##_helper : std::false_type                                           \
+  {                                                                                \
+  };                                                                               \
+  template<typename MY_T>                                                          \
+  struct FUNC##_helper<MY_T, std::void_t<decltype(MY_T::FUNC())>> : std::true_type \
+  {                                                                                \
+  };                                                                               \
+  template<typename MY_T>                                                          \
+  static constexpr auto FUNC##_helper_v = FUNC##_helper<MY_T>::value;              \
+                                                                                   \
 public:
   /// Provides a standardized way of accessing properties of `Resources`.
   /// Autogenerates some things if they are not provided.
@@ -165,6 +165,7 @@ public:
   /// Checks if `T` meets the `Owner` concept.
   template<typename T>
   constexpr bool is_owner_v = is_owner<T>::value;
+
   /// Provides a standardized way of accessing some properties of `Markers`.
   /// Autogenerates some things if they are not provided.
   template<typename T>
