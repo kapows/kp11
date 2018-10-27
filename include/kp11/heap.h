@@ -15,6 +15,7 @@ namespace kp11
     using size_type = std::size_t;
 
   public: // capacity
+    /// @returns The maximum allocation size supported.
     static constexpr size_type max_size() noexcept
     {
       return std::numeric_limits<size_type>::max();
