@@ -30,7 +30,7 @@ namespace kp11
     static constexpr auto threshold = Threshold;
 
   public: // capacity
-    /// @returns The maximum allocation size supported.
+    /// @returns The maximum allocation size supported. This is `Large::max_size()`.
     static constexpr size_type max_size() noexcept
     {
       return Large::max_size();
