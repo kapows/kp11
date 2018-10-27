@@ -30,9 +30,9 @@ namespace kp11
     static_assert(is_marker_v<Marker>);
     static_assert(is_resource_v<Upstream>);
     static_assert(ChunkSize % ChunkAlignment == 0);
-    static_assert(ChunkSize % Marker::max_size() == 0);
+    static_assert(ChunkSize % Marker::size() == 0);
     /// Block size must be aligned to chunk alignment.
-    static_assert(ChunkSize / Marker::max_size() % ChunkAlignment == 0);
+    static_assert(ChunkSize / Marker::size() % ChunkAlignment == 0);
 
   public: // typedefs
     /// Pointer type.
@@ -48,7 +48,7 @@ namespace kp11
     /// Maximum number of concurrent allocations from `Upstream`.
     static constexpr auto max_chunks = MaxChunks;
     /// Size in bytes of a free block.
-    static constexpr auto block_size = chunk_size / Marker::max_size();
+    static constexpr auto block_size = chunk_size / Marker::size();
 
   private: // typedefs
     /// Byte pointer for arithmetic purposes.
