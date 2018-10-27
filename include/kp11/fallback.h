@@ -23,7 +23,7 @@ namespace kp11
     using size_type = typename Primary::size_type;
 
   public: // capacity
-    /// @returns The maximum allocation size supported.
+    /// @returns The maximum allocation size supported. This is `Primary::max_size()`.
     static constexpr size_type max_size() noexcept
     {
       return Primary::max_size();
