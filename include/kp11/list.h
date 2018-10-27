@@ -81,7 +81,7 @@ namespace kp11
     {
       return static_cast<size_type>(N);
     }
-    /// @returns Maximum allocation (`N`).
+    /// @returns The maximum allocation size supported.
     static constexpr size_type max_size() noexcept
     {
       return size();
