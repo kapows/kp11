@@ -12,12 +12,14 @@ TEST_CASE("size", "[size]")
   {
     list<10> m;
     REQUIRE(m.size() == 10);
+    REQUIRE(m.max_size() == 10);
     REQUIRE(m.count() == 0);
   }
   SECTION("2")
   {
     list<101> m;
     REQUIRE(m.size() == 101);
+    REQUIRE(m.max_size() == 101);
     REQUIRE(m.count() == 0);
   }
 }
