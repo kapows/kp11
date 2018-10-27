@@ -37,46 +37,34 @@ public:
   }
 };
 
-/// @private
-class test_not_a_resource
+TEST_CASE("resource_traits", "[resource_traits]")
 {
-public:
-  using pointer = void *;
-  using size_type = std::size_t;
-  pointer allocate(size_type size, size_type alignment) noexcept;
-  void deallocate(size_type size, size_type alignment) noexcept;
-};
-TEST_CASE("is_resource", "[modifiers]")
+  SECTION("minimal")
+  {
+    minimal_test_resource x;
+    using rt = resource_traits<minimal_test_resource>;
+    REQUIRE(std::is_same_v<rt::pointer, void *>);
+    REQUIRE(std::is_same_v<rt::size_type,
+      std::make_unsigned_t<typename std::pointer_traits<void *>::difference_type>>);
+    REQUIRE(rt::max_size() == std::numeric_limits<std::size_t>::max());
+    REQUIRE(rt::allocate(x, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) == nullptr);
+    rt::deallocate(x, nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4));
+  }
+  SECTION("full")
+  {
+    test_resource x;
+    using rt = resource_traits<test_resource>;
+    REQUIRE(rt::max_size() == test_resource::max_size());
+    REQUIRE(rt::allocate(x, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) == nullptr);
+    rt::deallocate(x, nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4));
+  }
+}
+TEST_CASE("is_resource", "[resource_traits]")
 {
   REQUIRE(is_resource_v<int> == false);
   REQUIRE(is_resource_v<float> == false);
-  REQUIRE(is_resource_v<test_not_a_resource> == false);
   REQUIRE(is_resource_v<test_resource> == true);
-}
-TEST_CASE("resource_traits", "[resource_traits]")
-{
-  SECTION("generated")
-  {
-    minimal_test_resource x;
-    REQUIRE(std::is_same_v<resource_traits<minimal_test_resource>::pointer, void *>);
-    REQUIRE(std::is_same_v<resource_traits<minimal_test_resource>::size_type,
-      std::make_unsigned_t<typename std::pointer_traits<void *>::difference_type>>);
-    REQUIRE(resource_traits<minimal_test_resource>::max_size() ==
-            std::numeric_limits<std::size_t>::max());
-    REQUIRE(resource_traits<minimal_test_resource>::allocate(
-              x, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) == nullptr);
-    resource_traits<minimal_test_resource>::deallocate(
-      x, nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4));
-  }
-  SECTION("explicit")
-  {
-    test_resource x;
-    REQUIRE(resource_traits<test_resource>::max_size() == test_resource::max_size());
-    REQUIRE(resource_traits<test_resource>::allocate(
-              x, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) == nullptr);
-    resource_traits<test_resource>::deallocate(
-      x, nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4));
-  }
+  REQUIRE(is_resource_v<minimal_test_resource> == true);
 }
 
 /// @private
