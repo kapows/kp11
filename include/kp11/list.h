@@ -86,7 +86,7 @@ namespace kp11
     /// * Complexity `O(n)`
     ///
     /// @returns The largest number of consecutive unallocated indexes.
-    size_type biggest() const noexcept
+    size_type max_alloc() const noexcept
     {
       size_type largest = 0;
       for (auto && node : free_list)
@@ -110,7 +110,7 @@ namespace kp11
     /// @returns Index of the start of the `n` indexes allocated.
     ///
     /// @pre `n > 0`.
-    /// @pre `n <= biggest()`
+    /// @pre `n <= max_alloc()`
     ///
     /// @post [`(return value)`, `(return value) + n`) will not returned again from
     /// any subsequent call to `allocate` unless deallocated.
@@ -118,7 +118,7 @@ namespace kp11
     size_type allocate(size_type n) noexcept
     {
       assert(n > 0);
-      assert(n <= biggest());
+      assert(n <= max_alloc());
       auto const index = find_best_fit(n);
       return take_front(index, n);
     }
@@ -189,13 +189,13 @@ namespace kp11
     /// Forward iterate through the free list to find the best fit indexes for `n`.
     ///
     /// @pre `n > 0`
-    /// @pre `n <= biggest()`
+    /// @pre `n <= max_alloc()`
     ///
     /// @returns Index of `n` unallocated indexes.
     size_type find_best_fit(size_type n) const noexcept
     {
       assert(n > 0);
-      assert(n <= biggest());
+      assert(n <= max_alloc());
       size_type node_index = max_size();
       for (size_type i = 0, last = static_cast<size_type>(free_list.size()); i != last; ++i)
       {
