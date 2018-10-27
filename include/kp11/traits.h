@@ -7,74 +7,61 @@
 
 namespace kp11
 {
-  /// @private
-  namespace resource_traits_detail
-  {
-    /// @private
-    template<typename T, typename Enable = void>
-    struct pointer
-    {
-      using type = void *;
-    };
-    /// @private
-    template<typename T>
-    struct pointer<T, std::void_t<typename T::pointer>>
-    {
-      using type = typename T::pointer;
-    };
-    /// @private
-    template<typename T>
-    using pointer_t = typename pointer<T>::type;
-
-    /// @private
-    template<typename T, typename Enable = void>
-    struct size_type
-    {
-      using type =
-        std::make_unsigned_t<typename std::pointer_traits<pointer_t<T>>::difference_type>;
-    };
-    /// @private
-    template<typename T>
-    struct size_type<T, std::void_t<typename T::size_type>>
-    {
-      using type = typename T::size_type;
-    };
-    /// @private
-    template<typename T>
-    using size_type_t = typename size_type<T>::type;
-
-    /// @private
-    template<typename T, typename Enable = void>
-    struct max_size
-    {
-      using size_type = size_type_t<T>;
-      static constexpr auto value = static_cast<size_type>(std::numeric_limits<size_type>::max());
-    };
-    /// @private
-    template<typename T>
-    struct max_size<T, std::void_t<decltype(T::max_size())>>
-    {
-      using size_type = size_type_t<T>;
-      static constexpr auto value = static_cast<size_type>(T::max_size());
-    };
-    /// @private
-    template<typename T>
-    static constexpr auto max_size_v = max_size<T>::value;
-  };
+#define KP11_TRAITS_NESTED_TYPE(TYPE, ALT)                 \
+private:                                                   \
+  template<typename T, typename Enable = void>             \
+  struct TYPE##_helper                                     \
+  {                                                        \
+    using type = ALT;                                      \
+  };                                                       \
+  template<typename T>                                     \
+  struct TYPE##_helper<T, std::void_t<typename T::TYPE>>   \
+  {                                                        \
+    using type = typename T::TYPE;                         \
+  };                                                       \
+  template<typename T>                                     \
+  using TYPE##_helper_t = typename TYPE##_helper<T>::type; \
+                                                           \
+public:
+#define KP11_TRAITS_NESTED_STATIC_FUNC(FUNC)                                 \
+private:                                                                     \
+  template<typename T, typename Enable = void>                               \
+  struct FUNC##_helper : std::false_type                                     \
+  {                                                                          \
+  };                                                                         \
+  template<typename T>                                                       \
+  struct FUNC##_helper<T, std::void_t<decltype(T::FUNC())>> : std::true_type \
+  {                                                                          \
+  };                                                                         \
+  template<typename T>                                                       \
+  static constexpr auto FUNC##_helper_v = FUNC##_helper<T>::value;           \
+                                                                             \
+public:
   /// Provides a standardized way of accessing properties of `Resources`.
   /// Autogenerates some things if they are not provided.
   template<typename T>
   struct resource_traits
   {
+    KP11_TRAITS_NESTED_TYPE(pointer, void *)
     /// `T::pointer` if present otherwise `void *`.
-    using pointer = resource_traits_detail::pointer_t<T>;
+    using pointer = pointer_helper_t<T>;
+    KP11_TRAITS_NESTED_TYPE(
+      size_type, std::make_unsigned_t<typename std::pointer_traits<pointer>::difference_type>)
     /// `T::size_type` if present otherwise `std::size_t`.
-    using size_type = resource_traits_detail::size_type_t<T>;
+    using size_type = size_type_helper_t<T>;
+    KP11_TRAITS_NESTED_STATIC_FUNC(max_size)
     /// `T::max_size()` if present otherwise `std::numeric_limits<size_type>::max()`.
     /// @returns The maximum allocation size supported.
     static constexpr size_type max_size() noexcept
     {
-      return resource_traits_detail::max_size_v<T>;
+      if constexpr (max_size_helper_v<T>)
+      {
+        return T::max_size();
+      }
+      else
+      {
+        return std::numeric_limits<size_type>::max();
+      }
     }
     /// Calls `T::allocate`.
     static auto allocate(T & x, size_type size, size_type alignment) noexcept
@@ -170,34 +157,23 @@ namespace kp11
       }
     }
   };
-  /// @private
-  namespace marker_traits_detail
-  {
-    /// @private
-    template<typename T, typename Enable = void>
-    struct max_size
-    {
-      static constexpr auto value = T::size();
-    };
-    /// @private
-    template<typename T>
-    struct max_size<T, std::void_t<decltype(T::max_size())>>
-    {
-      static constexpr auto value = T::max_size();
-    };
-    /// @private
-    template<typename T>
-    static constexpr auto max_size_v = max_size<T>::value;
-  };
   /// Provides a standardized way of accessing some properties of `Markers`.
   /// Autogenerates some things if they are not provided.
   template<typename T>
   struct marker_traits
   {
     using size_type = typename T::size_type;
+    KP11_TRAITS_NESTED_STATIC_FUNC(max_size)
     static constexpr auto max_size() noexcept
     {
-      return marker_traits_detail::max_size_v<T>;
+      if constexpr (max_size_helper_v<T>)
+      {
+        return T::max_size();
+      }
+      else
+      {
+        return T::size();
+      }
     }
   };
 
