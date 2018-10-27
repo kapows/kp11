@@ -187,7 +187,8 @@ public:
   /// @private
   template<typename R>
   auto has_marker_expressions(R r, typename R::size_type i = {}, typename R::size_type n = {})
-    -> decltype(R{},
+    -> decltype(typename R::size_type{},
+      R{},
       n = R::size(),
       n = r.count(),
       n = marker_traits<R>::max_size(),
