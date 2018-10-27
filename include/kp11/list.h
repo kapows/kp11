@@ -35,7 +35,7 @@ namespace kp11
   /// Free list is stored as a `size` and `index` inside of an array.
   /// An array is used to cache an index's index in the free list.
   /// The cache uses the beginning and end of an index range to store it's index into the free list.
-  /// Allocated index ranges will have `max_size()` as their value in the cache.
+  /// Allocated index ranges will have `size()` as their value in the cache.
   /// Unallocated indexes will be merged on a `deallocate` if they are adjacent to each other.
   /// Merges are `O(1)`.
   /// * Complexity `O(n)`
@@ -56,9 +56,9 @@ namespace kp11
   public: // constructors
     list() noexcept
     {
-      if constexpr (max_size() > 0)
+      if constexpr (size() > 0)
       {
-        push_back(0, max_size());
+        push_back(0, size());
       }
     }
 
@@ -69,7 +69,7 @@ namespace kp11
     /// @returns Number of allocated indexes.
     size_type count() const noexcept
     {
-      auto num_allocated = max_size();
+      auto num_allocated = size();
       for (auto && node : free_list)
       {
         num_allocated -= node.size;
@@ -77,7 +77,7 @@ namespace kp11
       return num_allocated;
     }
     /// @returns Total number of indexes (`N`).
-    static constexpr size_type max_size() noexcept
+    static constexpr size_type size() noexcept
     {
       return static_cast<size_type>(N);
     }
@@ -135,11 +135,11 @@ namespace kp11
     /// @post `count() == (previous) count() - n`.
     void deallocate(size_type index, size_type n) noexcept
     {
-      assert(index < max_size());
+      assert(index < size());
       assert(n > 0);
-      assert(index + n <= max_size());
-      auto const previous_is_vacant = index > 0 && cache[index - 1] != max_size();
-      auto const next_is_vacant = index + n < max_size() && cache[index + n] != max_size();
+      assert(index + n <= size());
+      auto const previous_is_vacant = index > 0 && cache[index - 1] != size();
+      auto const next_is_vacant = index + n < size() && cache[index + n] != size();
       if (previous_is_vacant)
       {
         auto const previous_index = free_list[cache[index - 1]].index;
@@ -165,9 +165,9 @@ namespace kp11
     /// Cache set helper because both the start and end must be set.
     void set_cache(size_type index, size_type size, size_type node_index) noexcept
     {
-      assert(index < max_size());
+      assert(index < this->size());
       assert(size > 0);
-      assert(index + size <= max_size());
+      assert(index + size <= this->size());
       cache[index + (size - 1)] = cache[index] = node_index;
     }
     /// Node removal helper because the cache needs to be kept in sync.
@@ -196,11 +196,11 @@ namespace kp11
     {
       assert(n > 0);
       assert(n <= max_alloc());
-      size_type node_index = max_size();
+      size_type node_index = size();
       for (size_type i = 0, last = static_cast<size_type>(free_list.size()); i != last; ++i)
       {
         if (n <= free_list[i].size &&
-            (node_index == max_size() || free_list[i].size < free_list[node_index].size))
+            (node_index == size() || free_list[i].size < free_list[node_index].size))
         {
           node_index = i;
           // Exact fit is best fit
@@ -210,24 +210,24 @@ namespace kp11
           }
         }
       }
-      assert(node_index != max_size());
+      assert(node_index != size());
       return free_list[node_index].index;
     }
     /// Takes `size` indexes out of the front of the free list node belonging to `index` and sets
-    /// the cache to max_size(). If the number of indexes in the free list node not zero, the cache
+    /// the cache to size(). If the number of indexes in the free list node not zero, the cache
     /// for the new `index` is updated, otherwise, the node is removed. Invalidates the beginning
     /// index in the cache.
     size_type take_front(size_type index, size_type size) noexcept
     {
-      assert(index < max_size());
+      assert(index < this->size());
       assert(size > 0);
-      assert(cache[index] != max_size());
+      assert(cache[index] != this->size());
       auto node_index = cache[index];
       auto && node = free_list[node_index];
       assert(node.size >= size);
       node.size -= size;
       auto const taken_index = std::exchange(node.index, node.index + size);
-      set_cache(taken_index, size, max_size());
+      set_cache(taken_index, size, this->size());
       if (node.size)
       {
         set_cache(node.index, node.size, node_index);
@@ -242,8 +242,8 @@ namespace kp11
     /// sets the cache. Invalidates the end index in the cache.
     void add_back(size_type index, size_type size) noexcept
     {
-      assert(index < max_size());
-      assert(cache[index] != max_size());
+      assert(index < this->size());
+      assert(cache[index] != this->size());
       auto node_index = cache[index];
       auto && node = free_list[node_index];
       node.size += size;
@@ -253,8 +253,8 @@ namespace kp11
     /// sets the cache. Invalidates the beginning index in the cache.
     void add_front(size_type index, size_type size) noexcept
     {
-      assert(index < max_size());
-      assert(cache[index] != max_size());
+      assert(index < this->size());
+      assert(cache[index] != this->size());
       auto node_index = cache[index];
       auto && node = free_list[node_index];
       node.size += size;
@@ -264,7 +264,7 @@ namespace kp11
     /// Add a node to the back of the free list and sets the cache for the new node.
     void push_back(size_type index, size_type size) noexcept
     {
-      assert(index < max_size());
+      assert(index < this->size());
       assert(size > 0);
       free_list.emplace_back(size, index);
       auto const node_index = static_cast<size_type>(free_list.size() - 1);
@@ -276,15 +276,15 @@ namespace kp11
     /// `N / 2 + N % 2` because that is the maximum number of free list nodes we will ever have
     /// (this will happen when we have an alternating unallocated, allocated, unallocated pattern).
     ///
-    /// Example: Assume `max_size() == 11`, then
+    /// Example: Assume `size() == 11`, then
     /// [(2, 9), (3, 2)]
     kp11::detail::static_vector<node, N / 2 + N % 2> free_list;
     /// Cache stores an index into the free list for each run of unallocated indexes. The index is
     /// stored at the beginning and the end of the run. If the run is size 1 then the index is only
     /// stored in one element. If the run is not in the free list (it's been occupied) then
-    /// `max_size()` is used as its index. Cache enables merges in to be `O(1)`.
+    /// `size()` is used as its index. Cache enables merges in to be `O(1)`.
     ///
-    /// Example: Assume `max_size() == 11`, b is the beginning index and e is the end, then
+    /// Example: Assume `size() == 11`, b is the beginning index and e is the end, then
     /// [11, 11, 1, X, 1, 11, X, X, 11, 0, 0, 11]
     ///          b     e                b  e
     /// X is just a placeholder here for garbage indexes.

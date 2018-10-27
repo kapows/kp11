@@ -34,7 +34,7 @@ namespace kp11
   public: // constructors
     pool() noexcept
     {
-      for (size_type i = 0, last = max_size(); i < last; ++i)
+      for (size_type i = 0, last = size(); i < last; ++i)
       {
         next[i] = i + 1;
       }
@@ -47,14 +47,14 @@ namespace kp11
       return num_occupied;
     }
     /// @returns Total number of indexes (`N`).
-    static constexpr size_type max_size() noexcept
+    static constexpr size_type size() noexcept
     {
       return static_cast<size_type>(N);
     }
     /// @returns `1` if there are unallocated indexes otherwise `0`.
     size_type max_alloc() const noexcept
     {
-      return head != max_size() ? static_cast<size_type>(1) : static_cast<size_type>(0);
+      return head != size() ? static_cast<size_type>(1) : static_cast<size_type>(0);
     }
 
   public: // modifiers
@@ -93,7 +93,7 @@ namespace kp11
     void deallocate(size_type index, size_type n) noexcept
     {
       assert(n == 1);
-      assert(index < max_size());
+      assert(index < size());
       --num_occupied;
       next[index] = head;
       head = index;

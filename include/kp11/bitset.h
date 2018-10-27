@@ -25,7 +25,7 @@ namespace kp11
       return bits.count();
     }
     /// @returns Total number of indexes (`N`).
-    static constexpr size_type max_size() noexcept
+    static constexpr size_type size() noexcept
     {
       return N;
     }
@@ -90,9 +90,9 @@ namespace kp11
     /// @post `count() == (previous) count() - n`
     void deallocate(size_type index, size_type n) noexcept
     {
-      assert(n <= max_size());
-      assert(index < max_size());
-      assert(index + n <= max_size());
+      assert(n <= size());
+      assert(index < size());
+      assert(index + n <= size());
       for (auto first = index, last = index + n; first < last; ++first)
       {
         bits.reset(first);
