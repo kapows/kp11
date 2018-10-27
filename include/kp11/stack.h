@@ -28,17 +28,17 @@ namespace kp11
       return first;
     }
     /// @returns Total number of indexes (`N`).
-    static constexpr size_type max_size() noexcept
+    static constexpr size_type size() noexcept
     {
       return N;
     }
-    /// The max_alloc is always `max_size() - count()` for this structure.
+    /// The max_alloc is always `size() - count()` for this structure.
     /// * Complexity `O(1)`
     ///
     /// @returns The largest number of consecutive unallocated indexes.
     size_type max_alloc() const noexcept
     {
-      return max_size() - count();
+      return size() - count();
     }
 
   public: // modifiers
@@ -73,8 +73,8 @@ namespace kp11
     /// @post (success) `count() == (previous) count() - n`
     void deallocate(size_type index, size_type n) noexcept
     {
-      assert(index <= max_size());
-      assert(index + n <= max_size());
+      assert(index <= size());
+      assert(index + n <= size());
       assert(index < first);
       if (index + n == first)
       {
