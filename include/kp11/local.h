@@ -32,6 +32,12 @@ namespace kp11
     using byte_pointer = typename std::pointer_traits<pointer>::template rebind<std::byte>;
     using byte_pointer_traits = std::pointer_traits<byte_pointer>;
 
+  public: // capacity
+    static constexpr size_type max_size() noexcept
+    {
+      return Size;
+    }
+
   public: // modifiers
     /// If our memory has not already been allocated and we can fulfil the size request then a
     /// pointer to the beginning of our buffer is allocated.
