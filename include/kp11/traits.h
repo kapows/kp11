@@ -37,11 +37,12 @@ private:                                                                        
   static constexpr auto FUNC##_helper_v = FUNC##_helper<MY_T>::value;              \
                                                                                    \
 public:
-  /// Provides a standardized way of accessing properties of `Resources`.
+  /// @brief Provides a standardized way of accessing properties of `Resources`.
   /// Autogenerates some things if they are not provided.
   template<typename T>
   struct resource_traits
   {
+    /// `T::pointer`
     using pointer = typename T::pointer;
     KP11_TRAITS_NESTED_TYPE(
       size_type, std::make_unsigned_t<typename std::pointer_traits<pointer>::difference_type>)
@@ -99,7 +100,7 @@ public:
   template<typename T>
   constexpr bool is_resource_v = is_resource<T>::value;
 
-  /// Provides a standardized way of accessing properties of `Owners`.
+  /// @brief Provides a standardized way of accessing properties of `Owners`.
   /// Autogenerates some things if they are not provided.
   template<typename T>
   struct owner_traits
@@ -163,13 +164,13 @@ public:
   template<typename T>
   constexpr bool is_owner_v = is_owner<T>::value;
 
-  /// Provides a standardized way of accessing some properties of `Markers`.
+  /// @brief Provides a standardized way of accessing some properties of `Markers`.
   /// Autogenerates some things if they are not provided.
   template<typename T>
   struct marker_traits
   {
-    using size_type = typename T::size_type;
     KP11_TRAITS_NESTED_STATIC_FUNC(max_size)
+    /// `T::max_size()` if present otherwise `T::size()`.
     static constexpr auto max_size() noexcept
     {
       if constexpr (max_size_helper_v<T>)
