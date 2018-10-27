@@ -59,7 +59,8 @@ TEST_CASE("resource_traits", "[resource_traits]")
   {
     minimal_test_resource x;
     REQUIRE(std::is_same_v<resource_traits<minimal_test_resource>::pointer, void *>);
-    REQUIRE(std::is_same_v<resource_traits<minimal_test_resource>::size_type, std::size_t>);
+    REQUIRE(std::is_same_v<resource_traits<minimal_test_resource>::size_type,
+      std::make_unsigned_t<typename std::pointer_traits<void *>::difference_type>>);
     REQUIRE(resource_traits<minimal_test_resource>::max_size() ==
             std::numeric_limits<std::size_t>::max());
     REQUIRE(resource_traits<minimal_test_resource>::allocate(

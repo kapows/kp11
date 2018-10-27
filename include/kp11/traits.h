@@ -2,6 +2,7 @@
 
 #include <cstddef> // size_t
 #include <limits> // numeric_limits
+#include <memory> // pointer_traits
 #include <type_traits>
 
 namespace kp11
@@ -29,7 +30,8 @@ namespace kp11
     template<typename T, typename Enable = void>
     struct size_type
     {
-      using type = std::size_t;
+      using type =
+        std::make_unsigned_t<typename std::pointer_traits<pointer_t<T>>::difference_type>;
     };
     /// @private
     template<typename T>
