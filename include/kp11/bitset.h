@@ -35,15 +35,15 @@ namespace kp11
     /// @returns The largest number of consecutive unallocated indexes.
     size_type max_alloc() const noexcept
     {
-      size_type max_alloc = 0;
+      size_type max = 0;
       size_type count = 0;
       for (std::size_t i = 0; i < N; ++i)
       {
         if (bits[i])
         {
-          if (max_alloc < count)
+          if (max < count)
           {
-            max_alloc = count;
+            max = count;
           }
           count = 0;
         }
@@ -52,11 +52,11 @@ namespace kp11
           ++count;
         }
       }
-      if (max_alloc < count)
+      if (max < count)
       {
-        max_alloc = count;
+        max = count;
       }
-      return max_alloc;
+      return max;
     }
 
   public: // modifiers
