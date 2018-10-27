@@ -109,6 +109,12 @@ namespace kp11
   template<typename T>
   constexpr bool is_resource_v = is_resource<T>::value;
 
+  template<typename R>
+  auto has_owner_expressions(R r,
+    typename resource_traits<R>::pointer ptr = {},
+    typename resource_traits<R>::size_type size = {},
+    typename resource_traits<R>::size_type alignment = {},
+    bool b = {}) -> decltype(ptr = r[ptr]);
   /// Checks if `T` meets the `Owner` concept.
   template<typename T, typename Enable = void>
   struct is_owner : std::false_type
@@ -118,11 +124,8 @@ namespace kp11
   /// @private
   template<typename T>
   struct is_owner<T,
-    std::enable_if_t<
-      is_resource_v<T> &&
-      std::is_same_v<typename resource_traits<T>::pointer,
-        decltype(std::declval<T>()[std::declval<typename resource_traits<T>::pointer>()])>>>
-      : std::true_type
+    std::void_t<std::enable_if_t<is_resource_v<T>>,
+      decltype(has_owner_expressions(std::declval<T>()))>> : std::true_type
   {
   };
   /// Checks if `T` meets the `Owner` concept.
