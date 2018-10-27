@@ -67,7 +67,7 @@ namespace kp11
     /// * Complexity `O(n)`
     ///
     /// @returns Number of allocated indexes.
-    size_type size() const noexcept
+    size_type count() const noexcept
     {
       auto num_allocated = max_size();
       for (auto && node : free_list)
@@ -114,7 +114,7 @@ namespace kp11
     ///
     /// @post [`(return value)`, `(return value) + n`) will not returned again from
     /// any subsequent call to `allocate` unless deallocated.
-    /// @post `size() == (previous) size() + n`.
+    /// @post `count() == (previous) count() + n`.
     size_type allocate(size_type n) noexcept
     {
       assert(n > 0);
@@ -132,7 +132,7 @@ namespace kp11
     /// @param n Corresponding parameter in the call to `allocate`.
     ///
     /// @post [`index`, `index + n`) may be returned by a call to `allocate`.
-    /// @post `size() == (previous) size() - n`.
+    /// @post `count() == (previous) count() - n`.
     void deallocate(size_type index, size_type n) noexcept
     {
       assert(index < max_size());
