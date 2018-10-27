@@ -168,32 +168,6 @@ namespace kp11
       }
     }
   };
-
-  /// Checks if `T` meets the `Marker` concept.
-  template<typename T, typename Enable = void>
-  struct is_marker : std::false_type
-  {
-  };
-  /// Checks if `T` meets the `Marker` concept.
-  /// @private
-  template<typename T>
-  struct is_marker<T,
-    std::void_t<typename T::size_type,
-      std::enable_if_t<std::is_default_constructible_v<T>>,
-      std::enable_if_t<std::is_same_v<typename T::size_type, decltype(T::size())>>,
-      std::enable_if_t<std::is_same_v<typename T::size_type, decltype(std::declval<T>().count())>>,
-      std::enable_if_t<
-        std::is_same_v<typename T::size_type, decltype(std::declval<T>().max_alloc())>>,
-      std::enable_if_t<std::is_same_v<typename T::size_type,
-        decltype(std::declval<T>().allocate(std::declval<typename T::size_type>()))>>,
-      decltype(std::declval<T>().deallocate(std::declval<typename T::size_type>(),
-        std::declval<typename T::size_type>()))>> : std::true_type
-  {
-  };
-  /// Checks if `T` meets the `Marker` concept.
-  template<typename T>
-  constexpr bool is_marker_v = is_marker<T>::value;
-
   /// @private
   namespace marker_traits_detail
   {
@@ -244,4 +218,30 @@ namespace kp11
       return x.deallocate(i, n);
     }
   };
+
+  /// Checks if `T` meets the `Marker` concept.
+  template<typename T, typename Enable = void>
+  struct is_marker : std::false_type
+  {
+  };
+  template<typename R>
+  auto has_marker_expressions(R r, typename R::size_type i = {}, typename R::size_type n = {})
+    -> decltype(R{},
+      n = R::size(),
+      n = r.count(),
+      n = marker_traits<R>::max_size(),
+      n = r.max_alloc(),
+      i = r.allocate(n),
+      r.deallocate(i, n));
+  /// Checks if `T` meets the `Marker` concept.
+  /// @private
+  template<typename T>
+  struct is_marker<T, std::void_t<decltype(has_marker_expressions(std::declval<T>()))>>
+      : std::true_type
+  {
+  };
+  /// Checks if `T` meets the `Marker` concept.
+  template<typename T>
+  constexpr bool is_marker_v = is_marker<T>::value;
+
 }
