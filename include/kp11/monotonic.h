@@ -81,6 +81,7 @@ namespace kp11
     }
 
   public: // capacity
+    /// @returns The maximum allocation size supported.
     static constexpr size_type max_size() noexcept
     {
       return chunk_size;
@@ -98,9 +99,11 @@ namespace kp11
     /// @returns (failure) `nullptr`
     ///
     /// @pre `chunk_alignment % alignment == 0`
+    /// @pre `size <= max_size()`
     pointer allocate(size_type size, [[maybe_unused]] size_type alignment) noexcept
     {
       assert(chunk_alignment % alignment == 0);
+      assert(size <= max_size());
       size = round_up_to_our_alignment(size);
       if (auto ptr = allocate_from_back(size))
       {
