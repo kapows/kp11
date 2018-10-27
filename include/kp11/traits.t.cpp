@@ -112,6 +112,7 @@ public:
     return N;
   }
   size_type count() noexcept;
+  static constexpr size_type max_size() noexcept;
   size_type max_alloc() const noexcept;
   size_type allocate(size_type n) noexcept;
   void deallocate(size_type index, size_type n) noexcept;
