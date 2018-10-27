@@ -136,8 +136,7 @@ namespace kp11
       std::enable_if_t<std::is_default_constructible_v<T>>,
       std::enable_if_t<std::is_same_v<typename T::size_type, decltype(T::size())>>,
       std::enable_if_t<std::is_same_v<typename T::size_type, decltype(std::declval<T>().count())>>,
-      std::enable_if_t<
-        std::is_same_v<typename T::size_type, decltype(std::declval<T>().max_size())>>,
+      std::enable_if_t<std::is_same_v<typename T::size_type, decltype(T::max_size())>>,
       std::enable_if_t<
         std::is_same_v<typename T::size_type, decltype(std::declval<T>().max_alloc())>>,
       std::enable_if_t<std::is_same_v<typename T::size_type,
