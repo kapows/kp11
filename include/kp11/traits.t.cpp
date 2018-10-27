@@ -68,16 +68,9 @@ TEST_CASE("is_resource", "[resource_traits]")
 }
 
 /// @private
-class test_owner
+class test_owner : public test_resource
 {
 public:
-  using pointer = void *;
-  using size_type = std::size_t;
-  static constexpr size_type max_size() noexcept;
-  pointer allocate(size_type size, size_type alignment) noexcept
-  {
-    return nullptr;
-  }
   bool deallocate(pointer ptr, size_type size, size_type alignment) noexcept
   {
     return false;
@@ -88,53 +81,36 @@ public:
   }
 };
 /// @private
-class another_test_owner
+class minimal_test_owner : public minimal_test_resource
 {
 public:
-  using pointer = void *;
-  using size_type = std::size_t;
-  static constexpr size_type max_size() noexcept;
-  pointer allocate(size_type size, size_type alignment) noexcept
-  {
-    return nullptr;
-  }
-  void deallocate(pointer ptr, size_type size, size_type alignment) noexcept
-  {
-  }
-  pointer operator[](pointer ptr) const noexcept
+  void * operator[](void * ptr) const noexcept
   {
     return nullptr;
   }
 };
-/// @private
-class test_not_an_owner
+TEST_CASE("owner_traits", "[owner_traits]")
 {
-public:
-  using pointer = void *;
-  using size_type = std::size_t;
-  pointer allocate(size_type size, size_type alignment) noexcept;
-  bool deallocate(pointer ptr, size_type size, size_type alignment) noexcept;
-};
-TEST_CASE("is_owner", "[traits]")
-{
-  REQUIRE(is_owner_v<test_owner> == true);
-  REQUIRE(is_owner_v<test_not_an_owner> == false);
-  REQUIRE(is_owner_v<int> == false);
+  SECTION("minimal")
+  {
+    minimal_test_owner x;
+    using ot = owner_traits<minimal_test_owner>;
+    REQUIRE(ot::deallocate(x, nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) ==
+            false);
+  }
+  SECTION("full")
+  {
+    test_owner x;
+    using ot = owner_traits<test_owner>;
+    REQUIRE(ot::deallocate(x, nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) ==
+            false);
+  }
 }
-TEST_CASE("owner_traits", "[traits]")
+TEST_CASE("is_owner", "[owner_traits]")
 {
-  SECTION("deallocate returns bool")
-  {
-    test_owner m;
-    auto ptr = m.allocate(32, 4);
-    owner_traits<test_owner>::deallocate(m, ptr, 32, 4);
-  }
-  SECTION("deallocate does not return bool")
-  {
-    another_test_owner m;
-    auto ptr = m.allocate(32, 4);
-    owner_traits<another_test_owner>::deallocate(m, ptr, 32, 4);
-  }
+  REQUIRE(is_owner_v<int> == false);
+  REQUIRE(is_owner_v<test_owner> == true);
+  REQUIRE(is_owner_v<minimal_test_owner> == true);
 }
 
 /// @private

@@ -105,7 +105,7 @@ public:
   /// Provides a standardized way of accessing properties of `Owners`.
   /// Autogenerates some things if they are not provided.
   template<typename T>
-  struct owner_traits : public resource_traits<T>
+  struct owner_traits
   {
     /// If `owner` has a convertible to `bool` deallocate function then uses that. Otherwise checks
     /// to see if ptr is owned by using `operator[]` before deallocating.
