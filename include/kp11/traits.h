@@ -76,10 +76,15 @@ public:
   };
   template<typename R>
   auto has_resource_expressions(R r,
-    typename resource_traits<R>::pointer ptr = {},
+    typename resource_traits<R>::pointer ptr = {nullptr},
     typename resource_traits<R>::size_type size = {},
     typename resource_traits<R>::size_type alignment = {})
-    -> decltype(R{}, ptr = r.allocate(size, alignment), r.deallocate(ptr, size, alignment));
+    -> decltype(typename resource_traits<R>::pointer{nullptr},
+      typename resource_traits<R>::size_type{},
+      R{},
+      size = resource_traits<R>::max_size(),
+      ptr = r.allocate(size, alignment),
+      r.deallocate(ptr, size, alignment));
   /// Checks if `T` meets the `Resource` concept.
   template<typename T, typename Enable = void>
   struct is_resource : std::false_type
