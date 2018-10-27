@@ -96,28 +96,6 @@ public:
   template<typename T>
   constexpr bool is_resource_v = is_resource<T>::value;
 
-  template<typename R>
-  auto has_owner_expressions(R r,
-    typename resource_traits<R>::pointer ptr = {},
-    typename resource_traits<R>::size_type size = {},
-    typename resource_traits<R>::size_type alignment = {}) -> decltype(ptr = r[ptr]);
-  /// Checks if `T` meets the `Owner` concept.
-  template<typename T, typename Enable = void>
-  struct is_owner : std::false_type
-  {
-  };
-  /// Checks if `T` meets the `Owner` concept.
-  /// @private
-  template<typename T>
-  struct is_owner<T,
-    std::void_t<std::enable_if_t<is_resource_v<T>>,
-      decltype(has_owner_expressions(std::declval<T>()))>> : std::true_type
-  {
-  };
-  /// Checks if `T` meets the `Owner` concept.
-  template<typename T>
-  constexpr bool is_owner_v = is_owner<T>::value;
-
   /// Provides a standardized way of accessing properties of `Owners`.
   /// Autogenerates some things if they are not provided.
   template<typename T>
@@ -157,6 +135,30 @@ public:
       }
     }
   };
+  /// @private
+  template<typename R>
+  auto has_owner_expressions(R r,
+    typename resource_traits<R>::pointer ptr = {},
+    typename resource_traits<R>::size_type size = {},
+    typename resource_traits<R>::size_type alignment = {},
+    bool b = {})
+    -> decltype(ptr = r[ptr], b = owner_traits<R>::deallocate(r, ptr, size, alignment));
+  /// Checks if `T` meets the `Owner` concept.
+  template<typename T, typename Enable = void>
+  struct is_owner : std::false_type
+  {
+  };
+  /// Checks if `T` meets the `Owner` concept.
+  /// @private
+  template<typename T>
+  struct is_owner<T,
+    std::void_t<std::enable_if_t<is_resource_v<T>>,
+      decltype(has_owner_expressions(std::declval<T>()))>> : std::true_type
+  {
+  };
+  /// Checks if `T` meets the `Owner` concept.
+  template<typename T>
+  constexpr bool is_owner_v = is_owner<T>::value;
   /// Provides a standardized way of accessing some properties of `Markers`.
   /// Autogenerates some things if they are not provided.
   template<typename T>
