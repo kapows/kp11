@@ -169,18 +169,6 @@ namespace kp11
     }
   };
 
-  /* Marker Exemplar
-  class marker
-  {
-  public:
-    using size_type = std::size_t;
-    static constexpr size_type max_size() noexcept;
-    size_type size() const noexcept;
-    size_type biggest() const noexcept;
-    size_type allocate(size_type n) noexcept;
-    void deallocate(size_type index, size_type n) noexcept;
-  };
-  */
   /// Checks if `T` meets the `Marker` concept.
   template<typename T, typename Enable = void>
   struct is_marker : std::false_type
@@ -194,7 +182,6 @@ namespace kp11
       std::enable_if_t<std::is_default_constructible_v<T>>,
       std::enable_if_t<std::is_same_v<typename T::size_type, decltype(T::size())>>,
       std::enable_if_t<std::is_same_v<typename T::size_type, decltype(std::declval<T>().count())>>,
-      std::enable_if_t<std::is_same_v<typename T::size_type, decltype(T::max_size())>>,
       std::enable_if_t<
         std::is_same_v<typename T::size_type, decltype(std::declval<T>().max_alloc())>>,
       std::enable_if_t<std::is_same_v<typename T::size_type,
@@ -206,4 +193,55 @@ namespace kp11
   /// Checks if `T` meets the `Marker` concept.
   template<typename T>
   constexpr bool is_marker_v = is_marker<T>::value;
+
+  /// @private
+  namespace marker_traits_detail
+  {
+    /// @private
+    template<typename T, typename Enable = void>
+    struct max_size
+    {
+      static constexpr auto value = T::size();
+    };
+    /// @private
+    template<typename T>
+    struct max_size<T, std::void_t<decltype(T::max_size())>>
+    {
+      static constexpr auto value = T::max_size();
+    };
+    /// @private
+    template<typename T>
+    static constexpr auto max_size_v = max_size<T>::value;
+  };
+  /// Provides a standardized way of accessing properties of `Markers`.
+  /// Autogenerates some things if they are not provided.
+  template<typename T>
+  struct marker_traits
+  {
+    using size_type = typename T::size_type;
+    static constexpr size_type size() noexcept
+    {
+      return T::size();
+    }
+    size_type count(T & x) const noexcept
+    {
+      return x.count();
+    }
+    static constexpr auto max_size() noexcept
+    {
+      return marker_traits_detail::max_size_v<T>;
+    }
+    size_type max_alloc(T & x) const noexcept
+    {
+      return x.max_alloc();
+    }
+    size_type allocate(T & x, size_type n) noexcept
+    {
+      return x.allocate(n);
+    }
+    auto deallocate(T & x, size_type i, size_type n) noexcept
+    {
+      return x.deallocate(i, n);
+    }
+  };
 }
