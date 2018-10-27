@@ -89,6 +89,12 @@ namespace kp11
       release();
     }
 
+  public: // capacity
+    static constexpr size_type max_size() noexcept
+    {
+      return block_size * Marker::max_size();
+    }
+
   public: // modifiers
     /// Check if existing `Marker`s can allocate the required blocks by checking the corresponding
     /// `max_allocs` value. If any can, then allocate using its `Marker` and update its
