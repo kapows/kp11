@@ -20,6 +20,12 @@ namespace kp11
     /// Size type
     using size_type = typename Primary::size_type;
 
+  public: // capacity
+    static constexpr size_type max_size() noexcept
+    {
+      return Primary::max_size();
+    }
+
   public: // modifiers
     /// Call `Primary::allocate`. On failure call `Secondary::allocate`.
     ///
