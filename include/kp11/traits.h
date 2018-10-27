@@ -113,8 +113,7 @@ namespace kp11
   auto has_owner_expressions(R r,
     typename resource_traits<R>::pointer ptr = {},
     typename resource_traits<R>::size_type size = {},
-    typename resource_traits<R>::size_type alignment = {},
-    bool b = {}) -> decltype(ptr = r[ptr]);
+    typename resource_traits<R>::size_type alignment = {}) -> decltype(ptr = r[ptr]);
   /// Checks if `T` meets the `Owner` concept.
   template<typename T, typename Enable = void>
   struct is_owner : std::false_type
