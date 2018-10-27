@@ -33,6 +33,7 @@ namespace kp11
     using byte_pointer_traits = std::pointer_traits<byte_pointer>;
 
   public: // capacity
+    /// @returns The maximum allocation size supported.
     static constexpr size_type max_size() noexcept
     {
       return Size;
