@@ -33,17 +33,17 @@ namespace kp11
     /// * Complexity `O(n)`
     ///
     /// @returns The largest number of consecutive unallocated indexes.
-    size_type biggest() const noexcept
+    size_type max_alloc() const noexcept
     {
-      size_type biggest = 0;
+      size_type max_alloc = 0;
       size_type count = 0;
       for (std::size_t i = 0; i < N; ++i)
       {
         if (bits[i])
         {
-          if (biggest < count)
+          if (max_alloc < count)
           {
-            biggest = count;
+            max_alloc = count;
           }
           count = 0;
         }
@@ -52,11 +52,11 @@ namespace kp11
           ++count;
         }
       }
-      if (biggest < count)
+      if (max_alloc < count)
       {
-        biggest = count;
+        max_alloc = count;
       }
-      return biggest;
+      return max_alloc;
     }
 
   public: // modifiers
@@ -69,7 +69,7 @@ namespace kp11
     /// @returns Index of the start of the `n` indexes allocated.
     ///
     /// @pre `n > 0`
-    /// @pre `n <= biggest()`
+    /// @pre `n <= max_alloc()`
     ///
     /// @post Indexes from `(return value)` to `(return value) + n - 1` will not returned again from
     /// any subsequent call to `allocate` unless it has been `deallocate`d.
@@ -77,7 +77,7 @@ namespace kp11
     size_type allocate(size_type n) noexcept
     {
       assert(n > 0);
-      assert(n <= biggest());
+      assert(n <= max_alloc());
       return n == 1 ? allocate_one() : allocate_many(n);
     }
     /// Forward iterate through the bitset from `index` to `index + n` and deallocate them.
