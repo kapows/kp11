@@ -28,6 +28,12 @@ namespace kp11
     /// Threshold size in bytes.
     static constexpr auto threshold = Threshold;
 
+  public: // capacity
+    static constexpr size_type max_size() noexcept
+    {
+      return Large::max_size();
+    }
+
   public: // modifier
     /// If `size <= threshold` calls `Small::allocate` else calls `Large::allocate`.
     ///
