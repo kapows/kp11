@@ -11,13 +11,13 @@ TEST_CASE("size", "[size]")
   SECTION("1")
   {
     bitset<10> m;
-    REQUIRE(m.max_size() == 10);
+    REQUIRE(m.size() == 10);
     REQUIRE(m.count() == 0);
   }
   SECTION("2")
   {
     bitset<101581> m;
-    REQUIRE(m.max_size() == 101581);
+    REQUIRE(m.size() == 101581);
     REQUIRE(m.count() == 0);
   }
 }
