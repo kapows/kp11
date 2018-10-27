@@ -2,6 +2,7 @@
 
 #include <cassert> // assert
 #include <cstddef> // size_t
+#include <limits> // numeric_limits
 
 namespace kp11
 {
@@ -17,6 +18,12 @@ namespace kp11
     using pointer = Pointer;
     /// Size type
     using size_type = SizeType;
+
+  public: // capacity
+    static constexpr size_type max_size() noexcept
+    {
+      return std::numeric_limits<size_type>::max();
+    }
 
   public:
     /// @returns `nullptr`
