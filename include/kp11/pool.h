@@ -42,7 +42,7 @@ namespace kp11
 
   public: // capacity
     /// @returns Number of allocated indexes.
-    size_type size() const noexcept
+    size_type count() const noexcept
     {
       return num_occupied;
     }
@@ -71,7 +71,7 @@ namespace kp11
     ///
     /// @post `(return value)` will not returned again from any subsequent call to `allocate`
     /// unless `deallocate` has been called on it.
-    /// @post `size() == (previous) size() + n`
+    /// @post `count() == (previous) count() + n`
     size_type allocate(size_type n) noexcept
     {
       assert(n == 1);
@@ -89,7 +89,7 @@ namespace kp11
     /// @pre `n == 1`
     ///
     /// @post `index` may be returned by a call to `allocate`.
-    /// @post `size() == (previous) size() - n`
+    /// @post `count() == (previous) count() - n`
     void deallocate(size_type index, size_type n) noexcept
     {
       assert(n == 1);

@@ -12,13 +12,13 @@ TEST_CASE("max_size", "[max_size]")
   {
     stack<10> m;
     REQUIRE(m.max_size() == 10);
-    REQUIRE(m.size() == 0);
+    REQUIRE(m.count() == 0);
   }
   SECTION("2")
   {
     stack<101581> m;
     REQUIRE(m.max_size() == 101581);
-    REQUIRE(m.size() == 0);
+    REQUIRE(m.count() == 0);
   }
 }
 TEST_CASE("max_alloc", "[max_alloc]")
@@ -54,13 +54,13 @@ TEST_CASE("allocate", "[allocate]")
   {
     auto a = m.allocate(5);
     REQUIRE(a == 0);
-    REQUIRE(m.size() == 5);
+    REQUIRE(m.count() == 5);
     SECTION("post condition")
     {
       auto b = m.allocate(5);
       REQUIRE(b == 5);
       REQUIRE(b != a);
-      REQUIRE(m.size() == 10);
+      REQUIRE(m.count() == 10);
     }
   }
 }
@@ -71,7 +71,7 @@ TEST_CASE("deallocate", "[deallocate]")
   {
     auto a = m.allocate(5);
     m.deallocate(a, 5);
-    REQUIRE(m.size() == 0);
+    REQUIRE(m.count() == 0);
     auto b = m.allocate(10);
     REQUIRE(b == a);
   }
@@ -80,7 +80,7 @@ TEST_CASE("deallocate", "[deallocate]")
     auto a = m.allocate(3);
     m.allocate(4);
     m.deallocate(a, 3);
-    REQUIRE(m.size() == 7);
+    REQUIRE(m.count() == 7);
     auto c = m.allocate(3);
     REQUIRE(c != a);
   }
