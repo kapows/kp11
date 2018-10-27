@@ -114,14 +114,13 @@ TEST_CASE("is_owner", "[owner_traits]")
 }
 
 /// @private
-template<std::size_t N>
 class test_marker
 {
 public:
   using size_type = std::size_t;
   static constexpr size_type size() noexcept
   {
-    return N;
+    return 5;
   }
   size_type count() noexcept
   {
@@ -145,18 +144,47 @@ public:
 };
 
 /// @private
-template<std::size_t N>
-class test_not_a_marker
+class minimal_test_marker
 {
 public:
   using size_type = std::size_t;
-  size_type allocate(size_type n) noexcept;
-  void deallocate(size_type index, size_type n) noexcept;
+  static constexpr size_type size() noexcept
+  {
+    return 5;
+  }
+  size_type count() noexcept
+  {
+    return size();
+  }
+  size_type max_alloc() const noexcept
+  {
+    return size();
+  }
+  size_type allocate(size_type n) noexcept
+  {
+    return size();
+  }
+  void deallocate(size_type index, size_type n) noexcept
+  {
+  }
 };
-TEST_CASE("is_marker", "[traits]")
+
+TEST_CASE("marker_traits", "[marker_traits]")
+{
+  SECTION("minimal")
+  {
+    using mt = marker_traits<minimal_test_marker>;
+    REQUIRE(mt::max_size() == minimal_test_marker::size());
+  }
+  SECTION("full")
+  {
+    using mt = marker_traits<test_marker>;
+    REQUIRE(mt::max_size() == test_marker::max_size());
+  }
+}
+TEST_CASE("is_marker", "[marker_traits]")
 {
   REQUIRE(is_marker_v<int> == false);
-  REQUIRE(is_marker_v<float> == false);
-  REQUIRE(is_marker_v<test_not_a_marker<1>> == false);
-  REQUIRE(is_marker_v<test_marker<1>> == true);
+  REQUIRE(is_marker_v<test_marker> == true);
+  REQUIRE(is_marker_v<minimal_test_marker> == true);
 }
