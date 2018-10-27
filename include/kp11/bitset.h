@@ -20,7 +20,7 @@ namespace kp11
 
   public: // capacity
     /// @returns Number of allocated indexes.
-    size_type size() const noexcept
+    size_type count() const noexcept
     {
       return bits.count();
     }
@@ -73,7 +73,7 @@ namespace kp11
     ///
     /// @post Indexes from `(return value)` to `(return value) + n - 1` will not returned again from
     /// any subsequent call to `allocate` unless it has been `deallocate`d.
-    /// @post `size() == (previous) size() + n`.
+    /// @post `count() == (previous) count() + n`.
     size_type allocate(size_type n) noexcept
     {
       assert(n > 0);
@@ -87,7 +87,7 @@ namespace kp11
     /// @param n Corresponding parameter in the call to `allocate`.
     ///
     /// @post `index` to `index + n - 1` may be returned by a call to `allocate`.
-    /// @post `size() == (previous) size() - n`
+    /// @post `count() == (previous) count() - n`
     void deallocate(size_type index, size_type n) noexcept
     {
       assert(n <= max_size());
