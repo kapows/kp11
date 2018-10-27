@@ -90,6 +90,7 @@ namespace kp11
     }
 
   public: // capacity
+    /// @returns The maximum allocation size supported.
     static constexpr size_type max_size() noexcept
     {
       return block_size * Marker::max_size();
@@ -109,12 +110,14 @@ namespace kp11
     /// @returns (failure) `nullptr`
     ///
     /// @pre `chunk_alignment % alignment == 0`
+    /// @pre `size <= max_size()`
     ///
     /// @post (success) (return value) will not be returned again until it has been `deallocated`.
     /// Depends on `Marker`.
     pointer allocate(size_type size, [[maybe_unused]] size_type alignment) noexcept
     {
       assert(chunk_alignment % alignment == 0);
+      assert(size <= max_size());
       auto const num_blocks = to_marker_size(size);
       for (std::size_t i = 0, last = max_allocs.size(); i < last; ++i)
       {
