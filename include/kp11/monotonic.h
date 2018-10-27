@@ -80,6 +80,12 @@ namespace kp11
       release();
     }
 
+  public: // capacity
+    static constexpr size_type max_size() noexcept
+    {
+      return chunk_size;
+    }
+
   public: // modifiers
     /// Try to allocate from the latest memory block. Otherwise try to allocate a new memory block
     /// from `Upstream` and allocates from this new memory block.
