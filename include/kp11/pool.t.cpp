@@ -12,12 +12,14 @@ TEST_CASE("size", "[size]")
   {
     pool<10> m;
     REQUIRE(m.size() == 10);
+    REQUIRE(m.max_size() == 1);
     REQUIRE(m.count() == 0);
   }
   SECTION("2")
   {
     pool<101581> m;
     REQUIRE(m.size() == 101581);
+    REQUIRE(m.max_size() == 1);
     REQUIRE(m.count() == 0);
   }
 }
