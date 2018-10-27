@@ -81,6 +81,11 @@ namespace kp11
     {
       return static_cast<size_type>(N);
     }
+    /// @returns The maximum allocation size supported.
+    static constexpr size_type max_size() noexcept
+    {
+      return size();
+    }
     /// Forward iterates through the free list to find the largest number of consecutive unallocated
     /// indexes.
     /// * Complexity `O(n)`

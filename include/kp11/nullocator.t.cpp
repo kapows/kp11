@@ -4,8 +4,14 @@
 
 #include <catch.hpp>
 
+#include <limits> // numeric_limits
+
 using namespace kp11;
 
+TEST_CASE("max_size", "[max_size]")
+{
+  REQUIRE(nullocator::max_size() == std::numeric_limits<typename nullocator::size_type>::max());
+}
 TEST_CASE("allocate/deallocate", "[allocate/deallocate]")
 {
   nullocator m;

@@ -32,9 +32,16 @@ namespace kp11
     using byte_pointer = typename std::pointer_traits<pointer>::template rebind<std::byte>;
     using byte_pointer_traits = std::pointer_traits<byte_pointer>;
 
+  public: // capacity
+    /// @returns The maximum allocation size supported.
+    static constexpr size_type max_size() noexcept
+    {
+      return Size;
+    }
+
   public: // modifiers
-    /// If our memory has not already been allocated and we can fulfil the size request then a
-    /// pointer to the beginning of our buffer is allocated.
+    /// If our memory has not already been allocated then a pointer to the beginning of our buffer
+    /// is allocated.
     /// * Complexity `O(1)`
     ///
     /// @param size Size in bytes of memory to allocate.
@@ -49,7 +56,8 @@ namespace kp11
     pointer allocate(size_type size, size_type alignment) noexcept
     {
       assert(Alignment % alignment == 0);
-      if (!allocated && size <= Size)
+      assert(size <= max_size());
+      if (!allocated)
       {
         allocated = true;
         return static_cast<pointer>(buffer_ptr());

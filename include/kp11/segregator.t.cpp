@@ -11,6 +11,10 @@ using namespace kp11;
 using small_t = free_block<128 * 2, 4, 1, stack<4>, local<128 * 2, 4>>;
 using large_t = free_block<256 * 2, 4, 1, stack<4>, local<256 * 2, 4>>;
 
+TEST_CASE("max_size", "[max_size]")
+{
+  REQUIRE(segregator<128, small_t, large_t>::max_size() == large_t::max_size());
+}
 TEST_CASE("accessor", "[accessor]")
 {
   segregator<128, local<128, 4>, local<256, 4>> m;

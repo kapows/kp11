@@ -80,6 +80,13 @@ namespace kp11
       release();
     }
 
+  public: // capacity
+    /// @returns The maximum allocation size supported.
+    static constexpr size_type max_size() noexcept
+    {
+      return chunk_size;
+    }
+
   public: // modifiers
     /// Try to allocate from the latest memory block. Otherwise try to allocate a new memory block
     /// from `Upstream` and allocates from this new memory block.
@@ -92,9 +99,11 @@ namespace kp11
     /// @returns (failure) `nullptr`
     ///
     /// @pre `chunk_alignment % alignment == 0`
+    /// @pre `size <= max_size()`
     pointer allocate(size_type size, [[maybe_unused]] size_type alignment) noexcept
     {
       assert(chunk_alignment % alignment == 0);
+      assert(size <= max_size());
       size = round_up_to_our_alignment(size);
       if (auto ptr = allocate_from_back(size))
       {

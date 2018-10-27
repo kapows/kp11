@@ -12,6 +12,7 @@ class test_resource
 public:
   using pointer = void *;
   using size_type = std::size_t;
+  static constexpr size_type max_size() noexcept;
   pointer allocate(size_type size, size_type alignment) noexcept;
   void deallocate(pointer ptr, size_type size, size_type alignment) noexcept;
 };
@@ -39,6 +40,7 @@ class test_owner
 public:
   using pointer = void *;
   using size_type = std::size_t;
+  static constexpr size_type max_size() noexcept;
   pointer allocate(size_type size, size_type alignment) noexcept
   {
     return nullptr;
@@ -58,6 +60,7 @@ class another_test_owner
 public:
   using pointer = void *;
   using size_type = std::size_t;
+  static constexpr size_type max_size() noexcept;
   pointer allocate(size_type size, size_type alignment) noexcept
   {
     return nullptr;
@@ -112,6 +115,7 @@ public:
     return N;
   }
   size_type count() noexcept;
+  static constexpr size_type max_size() noexcept;
   size_type max_alloc() const noexcept;
   size_type allocate(size_type n) noexcept;
   void deallocate(size_type index, size_type n) noexcept;

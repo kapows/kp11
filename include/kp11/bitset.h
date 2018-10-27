@@ -29,6 +29,11 @@ namespace kp11
     {
       return N;
     }
+    /// @returns The maximum allocation size supported.
+    static constexpr size_type max_size() noexcept
+    {
+      return size();
+    }
     /// Forward iterate through the bitset and count consecutive bits.
     /// * Complexity `O(n)`
     ///

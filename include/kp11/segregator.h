@@ -2,6 +2,7 @@
 
 #include "traits.h" // is_resource_v
 
+#include <cassert> // assert
 #include <cstddef> // size_t
 
 namespace kp11
@@ -28,6 +29,13 @@ namespace kp11
     /// Threshold size in bytes.
     static constexpr auto threshold = Threshold;
 
+  public: // capacity
+    /// @returns The maximum allocation size supported. This is `Large::max_size()`.
+    static constexpr size_type max_size() noexcept
+    {
+      return Large::max_size();
+    }
+
   public: // modifier
     /// If `size <= threshold` calls `Small::allocate` else calls `Large::allocate`.
     ///
@@ -36,8 +44,11 @@ namespace kp11
     ///
     /// @returns (success) Pointer to the beginning of a suitable memory block.
     /// @returns (failure) `nullptr`.
+    ///
+    /// @pre `size <= max_size()`
     pointer allocate(size_type size, size_type alignment) noexcept
     {
+      assert(size <= max_size());
       if (size <= threshold)
       {
         return small.allocate(size, alignment);

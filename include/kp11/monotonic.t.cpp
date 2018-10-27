@@ -7,6 +7,11 @@
 
 using namespace kp11;
 
+TEST_CASE("max_size", "[max_size]")
+{
+  REQUIRE(monotonic<128, 4, 2, heap>::max_size() == 128);
+  REQUIRE(monotonic<256, 4, 2, heap>::max_size() == 256);
+}
 TEST_CASE("constructor", "[constructor]")
 {
   monotonic<128, 4, 2, heap> m;

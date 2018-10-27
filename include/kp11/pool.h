@@ -51,6 +51,11 @@ namespace kp11
     {
       return static_cast<size_type>(N);
     }
+    /// @returns The maximum allocation size supported. This is always `1`.
+    static constexpr size_type max_size() noexcept
+    {
+      return 1;
+    }
     /// @returns `1` if there are unallocated indexes otherwise `0`.
     size_type max_alloc() const noexcept
     {
