@@ -70,13 +70,10 @@ namespace kp11
   constexpr bool is_owner_v = is_owner<T>::value;
 
   /// Provides a way to deallocate owned memory from `owner`s.
-  /// @private
-  template<typename T, bool Enable = is_owner_v<T>>
-  struct owner_traits;
-  /// Provides a way to deallocate owned memory from `owner`s.
   template<typename T>
-  struct owner_traits<T, true>
+  struct owner_traits
   {
+    static_assert(is_owner_v<T>);
     /// Pointer type.
     using pointer = typename T::pointer;
     /// Size type.
