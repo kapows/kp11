@@ -32,10 +32,10 @@ namespace kp11
     {
       return N;
     }
-    /// @returns Maximum allocation (`N`).
+    /// @returns The maximum allocation size supported.
     static constexpr size_type max_size() noexcept
     {
-      return N;
+      return size();
     }
     /// The max_alloc is always `size() - count()` for this structure.
     /// * Complexity `O(1)`
