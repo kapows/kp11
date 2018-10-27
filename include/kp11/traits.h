@@ -187,35 +187,15 @@ namespace kp11
     template<typename T>
     static constexpr auto max_size_v = max_size<T>::value;
   };
-  /// Provides a standardized way of accessing properties of `Markers`.
+  /// Provides a standardized way of accessing some properties of `Markers`.
   /// Autogenerates some things if they are not provided.
   template<typename T>
   struct marker_traits
   {
     using size_type = typename T::size_type;
-    static constexpr size_type size() noexcept
-    {
-      return T::size();
-    }
-    size_type count(T & x) const noexcept
-    {
-      return x.count();
-    }
     static constexpr auto max_size() noexcept
     {
       return marker_traits_detail::max_size_v<T>;
-    }
-    size_type max_alloc(T & x) const noexcept
-    {
-      return x.max_alloc();
-    }
-    size_type allocate(T & x, size_type n) noexcept
-    {
-      return x.allocate(n);
-    }
-    auto deallocate(T & x, size_type i, size_type n) noexcept
-    {
-      return x.deallocate(i, n);
     }
   };
 
