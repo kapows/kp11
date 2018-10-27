@@ -21,22 +21,22 @@ TEST_CASE("max_size", "[max_size]")
     REQUIRE(m.size() == 0);
   }
 }
-TEST_CASE("biggest", "[biggest]")
+TEST_CASE("max_alloc", "[max_alloc]")
 {
   stack<10> m;
   SECTION("initial")
   {
-    REQUIRE(m.biggest() == 10);
+    REQUIRE(m.max_alloc() == 10);
   }
   SECTION("empty")
   {
     [[maybe_unused]] auto a = m.allocate(10);
-    REQUIRE(m.biggest() == 0);
+    REQUIRE(m.max_alloc() == 0);
   }
   SECTION("set")
   {
     [[maybe_unused]] auto a = m.allocate(3);
-    REQUIRE(m.biggest() == 7);
+    REQUIRE(m.max_alloc() == 7);
   }
   SECTION("reset")
   {
@@ -44,7 +44,7 @@ TEST_CASE("biggest", "[biggest]")
     auto b = m.allocate(7);
     m.deallocate(b, 7);
     m.deallocate(a, 3);
-    REQUIRE(m.biggest() == 10);
+    REQUIRE(m.max_alloc() == 10);
   }
 }
 TEST_CASE("allocate", "[allocate]")

@@ -52,7 +52,7 @@ namespace kp11
       return static_cast<size_type>(N);
     }
     /// @returns `1` if there are unallocated indexes otherwise `0`.
-    size_type biggest() const noexcept
+    size_type max_alloc() const noexcept
     {
       return head != max_size() ? static_cast<size_type>(1) : static_cast<size_type>(0);
     }
@@ -67,7 +67,7 @@ namespace kp11
     /// @returns Index of the start of the `n` indexes to allocate.
     ///
     /// @pre `n == 1`
-    /// @pre `n <= biggest()`
+    /// @pre `n <= max_alloc()`
     ///
     /// @post `(return value)` will not returned again from any subsequent call to `allocate`
     /// unless `deallocate` has been called on it.
@@ -75,7 +75,7 @@ namespace kp11
     size_type allocate(size_type n) noexcept
     {
       assert(n == 1);
-      assert(n <= biggest());
+      assert(n <= max_alloc());
       ++num_occupied;
       return std::exchange(head, next[head]);
     }
