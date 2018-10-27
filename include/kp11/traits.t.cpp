@@ -28,6 +28,7 @@ public:
 class minimal_test_resource
 {
 public:
+  using pointer = void *;
   void * allocate(std::size_t size, std::size_t alignment) noexcept
   {
     return nullptr;

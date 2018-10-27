@@ -42,9 +42,7 @@ public:
   template<typename T>
   struct resource_traits
   {
-    KP11_TRAITS_NESTED_TYPE(pointer, void *)
-    /// `T::pointer` if present otherwise `void *`.
-    using pointer = pointer_helper_t<T>;
+    using pointer = typename T::pointer;
     KP11_TRAITS_NESTED_TYPE(
       size_type, std::make_unsigned_t<typename std::pointer_traits<pointer>::difference_type>)
     /// `T::size_type` if present otherwise `std::size_t`.
@@ -77,15 +75,14 @@ public:
   /// @private
   template<typename R>
   auto has_resource_expressions(R r,
-    typename resource_traits<R>::pointer ptr = {nullptr},
+    typename R::pointer ptr = {nullptr},
     typename resource_traits<R>::size_type size = {},
-    typename resource_traits<R>::size_type alignment = {})
-    -> decltype(typename resource_traits<R>::pointer{nullptr},
-      typename resource_traits<R>::size_type{},
-      R{},
-      size = resource_traits<R>::max_size(),
-      ptr = r.allocate(size, alignment),
-      r.deallocate(ptr, size, alignment));
+    typename resource_traits<R>::size_type alignment = {}) -> decltype(typename R::pointer{nullptr},
+    typename resource_traits<R>::size_type{},
+    R{},
+    size = resource_traits<R>::max_size(),
+    ptr = r.allocate(size, alignment),
+    r.deallocate(ptr, size, alignment));
   /// Checks if `T` meets the `Resource` concept.
   template<typename T, typename Enable = void>
   struct is_resource : std::false_type
