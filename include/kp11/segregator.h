@@ -2,6 +2,7 @@
 
 #include "traits.h" // is_resource_v
 
+#include <cassert> // assert
 #include <cstddef> // size_t
 
 namespace kp11
