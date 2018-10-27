@@ -29,6 +29,7 @@ namespace kp11
     static constexpr auto threshold = Threshold;
 
   public: // capacity
+    /// @returns The maximum allocation size supported.
     static constexpr size_type max_size() noexcept
     {
       return Large::max_size();
@@ -42,8 +43,11 @@ namespace kp11
     ///
     /// @returns (success) Pointer to the beginning of a suitable memory block.
     /// @returns (failure) `nullptr`.
+    ///
+    /// @pre `size <= max_size()`
     pointer allocate(size_type size, size_type alignment) noexcept
     {
+      assert(size <= max_size());
       if (size <= threshold)
       {
         return small.allocate(size, alignment);
