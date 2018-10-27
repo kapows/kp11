@@ -71,8 +71,8 @@ namespace kp11
     /// @pre `n > 0`
     /// @pre `n <= max_alloc()`
     ///
-    /// @post Indexes from `(return value)` to `(return value) + n - 1` will not returned again from
-    /// any subsequent call to `allocate` unless it has been `deallocate`d.
+    /// @post [`(return value)`, `(return value) + n`) will not returned again from any subsequent
+    /// call to `allocate` unless it has been `deallocate`d.
     /// @post `count() == (previous) count() + n`.
     size_type allocate(size_type n) noexcept
     {
@@ -86,7 +86,7 @@ namespace kp11
     /// @param index Return value of a call to `allocate`.
     /// @param n Corresponding parameter in the call to `allocate`.
     ///
-    /// @post `index` to `index + n - 1` may be returned by a call to `allocate`.
+    /// @post [`index`, `index + n`) may be returned by a call to `allocate`.
     /// @post `count() == (previous) count() - n`
     void deallocate(size_type index, size_type n) noexcept
     {
