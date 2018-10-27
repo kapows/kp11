@@ -74,6 +74,7 @@ public:
       return x.deallocate(ptr, size, alignment);
     }
   };
+  /// @private
   template<typename R>
   auto has_resource_expressions(R r,
     typename resource_traits<R>::pointer ptr = {nullptr},
@@ -189,6 +190,7 @@ public:
   struct is_marker : std::false_type
   {
   };
+  /// @private
   template<typename R>
   auto has_marker_expressions(R r, typename R::size_type i = {}, typename R::size_type n = {})
     -> decltype(R{},
