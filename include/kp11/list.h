@@ -276,15 +276,15 @@ namespace kp11
     /// `N / 2 + N % 2` because that is the maximum number of free list nodes we will ever have
     /// (this will happen when we have an alternating unallocated, allocated, unallocated pattern).
     ///
-    /// Example: Assume size() == 11, then
+    /// Example: Assume `max_size() == 11`, then
     /// [(2, 9), (3, 2)]
     kp11::detail::static_vector<node, N / 2 + N % 2> free_list;
     /// Cache stores an index into the free list for each run of unallocated indexes. The index is
     /// stored at the beginning and the end of the run. If the run is size 1 then the index is only
-    /// stored in one element. If the run is not in the free list (it's been occupied) then `size()`
-    /// is used as its index. Cache enables merges in to be `O(1)`.
+    /// stored in one element. If the run is not in the free list (it's been occupied) then
+    /// `max_size()` is used as its index. Cache enables merges in to be `O(1)`.
     ///
-    /// Example: Assume size() == 11, b refers the the beginning index and e refers to the end, then
+    /// Example: Assume `max_size() == 11`, b is the beginning index and e is the end, then
     /// [11, 11, 1, X, 1, 11, X, X, 11, 0, 0, 11]
     ///          b     e                b  e
     /// X is just a placeholder here for garbage indexes.
