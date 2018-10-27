@@ -1,19 +1,90 @@
 #pragma once
 
+#include <cstddef> // size_t
+#include <limits> // numeric_limits
 #include <type_traits>
 
 namespace kp11
 {
-  /* Resource Exemplar
-  class resource
+  /// @private
+  namespace resource_traits_detail
   {
-  public:
-    using pointer = void *;
-    using size_type = std::size_t;
-    pointer allocate(size_type size, size_type alignment) noexcept;
-    void deallocate(pointer ptr, size_type size, size_type alignment) noexcept;
+    /// @private
+    template<typename T, typename Enable = void>
+    struct pointer
+    {
+      using type = void *;
+    };
+    /// @private
+    template<typename T>
+    struct pointer<T, std::void_t<typename T::pointer>>
+    {
+      using type = typename T::pointer;
+    };
+    /// @private
+    template<typename T>
+    using pointer_t = typename pointer<T>::type;
+
+    /// @private
+    template<typename T, typename Enable = void>
+    struct size_type
+    {
+      using type = std::size_t;
+    };
+    /// @private
+    template<typename T>
+    struct size_type<T, std::void_t<typename T::size_type>>
+    {
+      using type = typename T::size_type;
+    };
+    /// @private
+    template<typename T>
+    using size_type_t = typename size_type<T>::type;
+
+    /// @private
+    template<typename T, typename Enable = void>
+    struct max_size
+    {
+      using size_type = size_type_t<T>;
+      static constexpr auto value = static_cast<size_type>(std::numeric_limits<size_type>::max());
+    };
+    /// @private
+    template<typename T>
+    struct max_size<T, std::void_t<decltype(T::max_size())>>
+    {
+      using size_type = size_type_t<T>;
+      static constexpr auto value = static_cast<size_type>(T::max_size());
+    };
+    /// @private
+    template<typename T>
+    static constexpr auto max_size_v = max_size<T>::value;
   };
-  */
+  /// Provides a standardized way of accessing properties of `Resources`.
+  /// Autogenerates some things if they are not provided.
+  template<typename T>
+  struct resource_traits
+  {
+    /// `T::pointer` if present otherwise `void *`.
+    using pointer = resource_traits_detail::pointer_t<T>;
+    /// `T::size_type` if present otherwise `std::size_t`.
+    using size_type = resource_traits_detail::size_type_t<T>;
+    /// `T::max_size()` if present otherwise `std::numeric_limits<size_type>::max()`.
+    /// @returns The maximum allocation size supported.
+    static constexpr size_type max_size() noexcept
+    {
+      return resource_traits_detail::max_size_v<T>;
+    }
+    /// Calls `T::allocate`.
+    static auto allocate(T & x, size_type size, size_type alignment) noexcept
+    {
+      return x.allocate(size, alignment);
+    }
+    /// Calls `T::deallocate`.
+    static auto deallocate(T & x, pointer ptr, size_type size, size_type alignment) noexcept
+    {
+      return x.deallocate(ptr, size, alignment);
+    }
+  };
   /// Checks if `T` meets the `Resource` concept.
   template<typename T, typename Enable = void>
   struct is_resource : std::false_type
@@ -23,16 +94,13 @@ namespace kp11
   /// @private
   template<typename T>
   struct is_resource<T,
-    std::void_t<typename T::pointer,
-      typename T::size_type,
-      std::enable_if_t<std::is_default_constructible_v<T>>,
-      std::enable_if_t<std::is_same_v<typename T::size_type, decltype(T::max_size())>>,
-      std::enable_if_t<std::is_same_v<typename T::pointer,
-        decltype(std::declval<T>().allocate(
-          std::declval<typename T::size_type>(), std::declval<typename T::size_type>()))>>,
-      decltype(std::declval<T>().deallocate(std::declval<typename T::pointer>(),
-        std::declval<typename T::size_type>(),
-        std::declval<typename T::size_type>()))>> : std::true_type
+    std::void_t<std::enable_if_t<std::is_default_constructible_v<T>>,
+      std::enable_if_t<std::is_same_v<typename resource_traits<T>::pointer,
+        decltype(std::declval<T>().allocate(std::declval<typename resource_traits<T>::size_type>(),
+          std::declval<typename resource_traits<T>::size_type>()))>>,
+      decltype(std::declval<T>().deallocate(std::declval<typename resource_traits<T>::pointer>(),
+        std::declval<typename resource_traits<T>::size_type>(),
+        std::declval<typename resource_traits<T>::size_type>()))>> : std::true_type
   {
   };
   /// Checks if `T` meets the `Resource` concept.

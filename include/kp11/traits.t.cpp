@@ -12,9 +12,29 @@ class test_resource
 public:
   using pointer = void *;
   using size_type = std::size_t;
-  static constexpr size_type max_size() noexcept;
-  pointer allocate(size_type size, size_type alignment) noexcept;
-  void deallocate(pointer ptr, size_type size, size_type alignment) noexcept;
+  static constexpr size_type max_size() noexcept
+  {
+    return 10;
+  }
+  pointer allocate(size_type size, size_type alignment) noexcept
+  {
+    return nullptr;
+  }
+  void deallocate(pointer ptr, size_type size, size_type alignment) noexcept
+  {
+  }
+};
+/// @private
+class minimal_test_resource
+{
+public:
+  void * allocate(std::size_t size, std::size_t alignment) noexcept
+  {
+    return nullptr;
+  }
+  void deallocate(void * ptr, std::size_t size, std::size_t alignment) noexcept
+  {
+  }
 };
 
 /// @private
@@ -32,6 +52,28 @@ TEST_CASE("is_resource", "[modifiers]")
   REQUIRE(is_resource_v<float> == false);
   REQUIRE(is_resource_v<test_not_a_resource> == false);
   REQUIRE(is_resource_v<test_resource> == true);
+}
+TEST_CASE("resource_traits", "[resource_traits]")
+{
+  SECTION("generated")
+  {
+    minimal_test_resource x;
+    REQUIRE(resource_traits<minimal_test_resource>::max_size() ==
+            std::numeric_limits<std::size_t>::max());
+    REQUIRE(resource_traits<minimal_test_resource>::allocate(
+              x, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) == nullptr);
+    resource_traits<minimal_test_resource>::deallocate(
+      x, nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4));
+  }
+  SECTION("explicit")
+  {
+    test_resource x;
+    REQUIRE(resource_traits<test_resource>::max_size() == test_resource::max_size());
+    REQUIRE(resource_traits<test_resource>::allocate(
+              x, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) == nullptr);
+    resource_traits<test_resource>::deallocate(
+      x, nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4));
+  }
 }
 
 /// @private
