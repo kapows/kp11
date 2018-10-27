@@ -49,7 +49,7 @@ public:
     /// `T::size_type` if present otherwise `std::size_t`.
     using size_type = size_type_helper_t<T>;
     KP11_TRAITS_NESTED_STATIC_FUNC(max_size)
-    /// `T::max_size()` if present otherwise `std::numeric_limits<size_type>::max()`.
+    /// `T::max_size()` if present otherwise `std::numeric_limits<size_type>::%max()`
     /// @returns The maximum allocation size supported.
     static constexpr size_type max_size() noexcept
     {
