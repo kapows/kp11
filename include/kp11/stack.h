@@ -23,7 +23,7 @@ namespace kp11
 
   public: // capacity
     /// @returns Number of allocated indexes.
-    size_type size() const noexcept
+    size_type count() const noexcept
     {
       return first;
     }
@@ -32,13 +32,13 @@ namespace kp11
     {
       return N;
     }
-    /// The max_alloc is always `max_size() - size()` for this structure.
+    /// The max_alloc is always `max_size() - count()` for this structure.
     /// * Complexity `O(1)`
     ///
     /// @returns The largest number of consecutive unallocated indexes.
     size_type max_alloc() const noexcept
     {
-      return max_size() - size();
+      return max_size() - count();
     }
 
   public: // modifiers
@@ -54,7 +54,7 @@ namespace kp11
     ///
     /// @post [`(return value)`, `(return value) + n`) will not returned again from any subsequent
     /// call to `allocate` unless properly deallocated.
-    /// @post `size() == (previous) size() + n`
+    /// @post `count() == (previous) count() + n`
     size_type allocate(size_type n) noexcept
     {
       assert(n > 0);
@@ -70,7 +70,7 @@ namespace kp11
     /// @param n Corresponding parameter in the call to `allocate`.
     ///
     /// @post (success) [`index`, `index + n`) can be returned by a call to `allocate`.
-    /// @post (success) `size() == (previous) size() - n`
+    /// @post (success) `count() == (previous) count() - n`
     void deallocate(size_type index, size_type n) noexcept
     {
       assert(index <= max_size());
