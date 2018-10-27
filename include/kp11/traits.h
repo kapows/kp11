@@ -87,6 +87,12 @@ namespace kp11
       return x.deallocate(ptr, size, alignment);
     }
   };
+  template<typename R>
+  auto has_resource_expressions(R r,
+    typename resource_traits<R>::pointer ptr = {},
+    typename resource_traits<R>::size_type size = {},
+    typename resource_traits<R>::size_type alignment = {})
+    -> decltype(R{}, ptr = r.allocate(size, alignment), r.deallocate(ptr, size, alignment));
   /// Checks if `T` meets the `Resource` concept.
   template<typename T, typename Enable = void>
   struct is_resource : std::false_type
@@ -95,14 +101,8 @@ namespace kp11
   /// Checks if `T` meets the `Resource` concept.
   /// @private
   template<typename T>
-  struct is_resource<T,
-    std::void_t<std::enable_if_t<std::is_default_constructible_v<T>>,
-      std::enable_if_t<std::is_same_v<typename resource_traits<T>::pointer,
-        decltype(std::declval<T>().allocate(std::declval<typename resource_traits<T>::size_type>(),
-          std::declval<typename resource_traits<T>::size_type>()))>>,
-      decltype(std::declval<T>().deallocate(std::declval<typename resource_traits<T>::pointer>(),
-        std::declval<typename resource_traits<T>::size_type>(),
-        std::declval<typename resource_traits<T>::size_type>()))>> : std::true_type
+  struct is_resource<T, std::void_t<decltype(has_resource_expressions(std::declval<T>()))>>
+      : std::true_type
   {
   };
   /// Checks if `T` meets the `Resource` concept.
