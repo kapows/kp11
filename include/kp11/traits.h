@@ -25,6 +25,7 @@ namespace kp11
   struct is_resource<T,
     std::void_t<typename T::pointer,
       typename T::size_type,
+      std::enable_if_t<std::is_default_constructible_v<T>>,
       std::enable_if_t<std::is_same_v<typename T::pointer,
         decltype(std::declval<T>().allocate(
           std::declval<typename T::size_type>(), std::declval<typename T::size_type>()))>>,
@@ -132,6 +133,7 @@ namespace kp11
   template<typename T>
   struct is_marker<T,
     std::void_t<typename T::size_type,
+      std::enable_if_t<std::is_default_constructible_v<T>>,
       std::enable_if_t<std::is_same_v<typename T::size_type, decltype(T::max_size())>>,
       std::enable_if_t<std::is_same_v<typename T::size_type, decltype(std::declval<T>().size())>>,
       std::enable_if_t<
