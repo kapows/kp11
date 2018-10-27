@@ -117,7 +117,7 @@ public:
   }
   pointer allocate(size_type size, size_type alignment) noexcept
   {
-    if(size / 32 < 4)
+    if(auto i = index_for(size); i < 4 )
     {
       auto p = std::visit([size,alignment](auto&& p) { return p.allocate(size,alignment);}, pools[size / 32]);
     }
@@ -128,7 +128,7 @@ public:
   }
   void deallocate(pointer ptr, size_type size, size_type alignment) noexcept
   {
-    if(size / 32 < 4)
+    if(auto i = index_for(size); i < 4 )
     {
       std::visit([ptr, size, alignment](auto&& p) { p.deallocate(ptr,size,alignment);}, pools[size / 32]);
     }
@@ -136,6 +136,11 @@ public:
     {
       backup.deallocate(ptr, size, alignment);
     }
+  }
+private:
+  static constexpr std::size_t index_for(size_type size) noexcept
+  {
+    return  size == 0 ? 0 : size / 32 - (size % 32 == 0);
   }
 };
 ```
