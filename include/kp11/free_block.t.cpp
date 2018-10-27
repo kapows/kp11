@@ -8,6 +8,10 @@
 
 using namespace kp11;
 
+TEST_CASE("max_size", "[max_size]")
+{
+  REQUIRE(free_block<128, 4, 2, stack<4>, heap>::max_size() == 128);
+}
 TEST_CASE("constructor", "[constructor]")
 {
   free_block<128, 4, 2, stack<4>, heap> m;
