@@ -40,6 +40,7 @@ class test_owner
 public:
   using pointer = void *;
   using size_type = std::size_t;
+  static constexpr size_type max_size() noexcept;
   pointer allocate(size_type size, size_type alignment) noexcept
   {
     return nullptr;
