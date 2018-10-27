@@ -144,7 +144,7 @@ public:
   /// @private
   template<typename R>
   auto has_owner_expressions(R r,
-    typename resource_traits<R>::pointer ptr = {},
+    typename resource_traits<R>::pointer ptr = {nullptr},
     typename resource_traits<R>::size_type size = {},
     typename resource_traits<R>::size_type alignment = {},
     bool b = {})
@@ -184,12 +184,6 @@ public:
       }
     }
   };
-
-  /// Checks if `T` meets the `Marker` concept.
-  template<typename T, typename Enable = void>
-  struct is_marker : std::false_type
-  {
-  };
   /// @private
   template<typename R>
   auto has_marker_expressions(R r, typename R::size_type i = {}, typename R::size_type n = {})
@@ -200,6 +194,11 @@ public:
       n = r.max_alloc(),
       i = r.allocate(n),
       r.deallocate(i, n));
+  /// Checks if `T` meets the `Marker` concept.
+  template<typename T, typename Enable = void>
+  struct is_marker : std::false_type
+  {
+  };
   /// Checks if `T` meets the `Marker` concept.
   /// @private
   template<typename T>
