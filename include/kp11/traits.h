@@ -38,16 +38,22 @@ private:                                                                        
                                                                                    \
 public:
 
+  // Detector Idiom
+
+  /// @private
   template<typename Enable, template<typename...> typename T, typename... Args>
   struct detector : std::false_type
   {
   };
+  /// @private
   template<template<typename...> typename T, typename... Args>
   struct detector<std::void_t<T<Args...>>, T, Args...> : std::true_type
   {
   };
+  /// @private
   template<template<typename...> typename T, typename... Args>
   using is_detected = detector<void, T, Args...>;
+  /// @private
   template<template<typename...> typename T, typename... Args>
   inline constexpr auto is_detected_v = is_detected<T, Args...>::value;
 
