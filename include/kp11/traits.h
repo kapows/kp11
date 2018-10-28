@@ -98,7 +98,7 @@ public:
   };
   /// Checks if `T` meets the `Resource` concept.
   template<typename T>
-  constexpr bool is_resource_v = is_resource<T>::value;
+  inline constexpr auto is_resource_v = is_resource<T>::value;
 
   /// @brief Provides a standardized way of accessing properties of `Owners`.
   /// Autogenerates some things if they are not provided.
@@ -162,7 +162,7 @@ public:
   };
   /// Checks if `T` meets the `Owner` concept.
   template<typename T>
-  constexpr bool is_owner_v = is_owner<T>::value;
+  inline constexpr auto is_owner_v = is_owner<T>::value;
 
   /// @brief Provides a standardized way of accessing some properties of `Markers`.
   /// Autogenerates some things if they are not provided.
@@ -208,7 +208,7 @@ public:
   };
   /// Checks if `T` meets the `Marker` concept.
   template<typename T>
-  constexpr bool is_marker_v = is_marker<T>::value;
+  inline constexpr auto is_marker_v = is_marker<T>::value;
 
 #undef KP11_TRAITS_NESTED_STATIC_FUNC
 #undef KP11_TRAITS_NESTED_TYPE
