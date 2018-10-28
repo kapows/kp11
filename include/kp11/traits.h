@@ -37,6 +37,20 @@ private:                                                                        
   static constexpr auto FUNC##_helper_v = FUNC##_helper<MY_T>::value;              \
                                                                                    \
 public:
+
+  template<typename Enable, template<typename...> typename T, typename... Args>
+  struct detector : std::false_type
+  {
+  };
+  template<template<typename...> typename T, typename... Args>
+  struct detector<std::void_t<T<Args...>>, T, Args...> : std::true_type
+  {
+  };
+  template<template<typename...> typename T, typename... Args>
+  using is_detected = detector<void, T, Args...>;
+  template<template<typename...> typename T, typename... Args>
+  inline constexpr auto is_detected_v = is_detected<T, Args...>::value;
+
   /// @brief Provides a standardized way of accessing properties of `Resources`.
   /// Autogenerates some things if they are not provided.
   template<typename T>
@@ -75,7 +89,7 @@ public:
   };
   /// @private
   template<typename R>
-  auto has_resource_expressions(R r,
+  auto IsResource_h(R r,
     typename R::pointer ptr = {nullptr},
     typename resource_traits<R>::size_type size = {},
     typename resource_traits<R>::size_type alignment = {}) -> decltype(typename R::pointer{nullptr},
@@ -85,17 +99,11 @@ public:
     ptr = r.allocate(size, alignment),
     r.deallocate(ptr, size, alignment));
   /// Checks if `T` meets the `Resource` concept.
-  template<typename T, typename Enable = void>
-  struct is_resource : std::false_type
-  {
-  };
-  /// Checks if `T` meets the `Resource` concept.
-  /// @private
   template<typename T>
-  struct is_resource<T, std::void_t<decltype(has_resource_expressions(std::declval<T>()))>>
-      : std::true_type
-  {
-  };
+  using IsResource = decltype(IsResource_h(std::declval<T>()));
+  /// Checks if `T` meets the `Resource` concept.
+  template<typename T>
+  using is_resource = is_detected<IsResource, T>;
   /// Checks if `T` meets the `Resource` concept.
   template<typename T>
   inline constexpr auto is_resource_v = is_resource<T>::value;
@@ -140,26 +148,19 @@ public:
     }
   };
   /// @private
-  template<typename R>
-  auto has_owner_expressions(R r,
+  template<typename R, typename = IsResource<R>>
+  auto IsOwner_h(R r,
     typename resource_traits<R>::pointer ptr = {nullptr},
     typename resource_traits<R>::size_type size = {},
     typename resource_traits<R>::size_type alignment = {},
     bool b = {})
     -> decltype(ptr = r[ptr], b = owner_traits<R>::deallocate(r, ptr, size, alignment));
   /// Checks if `T` meets the `Owner` concept.
-  template<typename T, typename Enable = void>
-  struct is_owner : std::false_type
-  {
-  };
+  template<typename R>
+  using IsOwner = decltype(IsOwner_h(std::declval<R>()));
   /// Checks if `T` meets the `Owner` concept.
-  /// @private
   template<typename T>
-  struct is_owner<T,
-    std::void_t<std::enable_if_t<is_resource_v<T>>,
-      decltype(has_owner_expressions(std::declval<T>()))>> : std::true_type
-  {
-  };
+  using is_owner = is_detected<IsOwner, T>;
   /// Checks if `T` meets the `Owner` concept.
   template<typename T>
   inline constexpr auto is_owner_v = is_owner<T>::value;
@@ -185,7 +186,7 @@ public:
   };
   /// @private
   template<typename R>
-  auto has_marker_expressions(R r, typename R::size_type i = {}, typename R::size_type n = {})
+  auto IsMarker_h(R r, typename R::size_type i = {}, typename R::size_type n = {})
     -> decltype(typename R::size_type{},
       R{},
       n = R::size(),
@@ -195,17 +196,11 @@ public:
       i = r.allocate(n),
       r.deallocate(i, n));
   /// Checks if `T` meets the `Marker` concept.
-  template<typename T, typename Enable = void>
-  struct is_marker : std::false_type
-  {
-  };
+  template<typename R>
+  using IsMarker = decltype(IsMarker_h(std::declval<R>()));
   /// Checks if `T` meets the `Marker` concept.
-  /// @private
   template<typename T>
-  struct is_marker<T, std::void_t<decltype(has_marker_expressions(std::declval<T>()))>>
-      : std::true_type
-  {
-  };
+  using is_marker = is_detected<IsMarker, T>;
   /// Checks if `T` meets the `Marker` concept.
   template<typename T>
   inline constexpr auto is_marker_v = is_marker<T>::value;
