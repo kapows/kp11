@@ -115,14 +115,6 @@ public:
   {
     /// If `owner` has a convertible to `bool` deallocate function then uses that. Otherwise checks
     /// to see if ptr is owned by using `operator[]` before deallocating.
-    ///
-    /// @param owner Meets the `Owner` concept.
-    /// @param ptr Pointer to deallocate if owned by `owner`.
-    /// @param size Size in bytes of the memory pointed to by `ptr`.
-    /// @param alignment Alignment in bytes of the memory pointed to by `ptr`.
-    ///
-    /// @returns (success) `true`, owned by `owner`.
-    /// @returns (failure) `false`
     static bool deallocate(T & owner,
       typename resource_traits<T>::pointer ptr,
       typename resource_traits<T>::size_type size,
