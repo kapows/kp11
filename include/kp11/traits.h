@@ -178,6 +178,20 @@ public:
   template<typename T>
   struct marker_traits
   {
+    using size_type = typename T::size_type;
+
+    /// Calls `T::size()`.
+    static constexpr auto size() noexcept
+    {
+      return T::size();
+    }
+    /// Calls `T::count()`.
+    static auto count(T const & marker) noexcept
+    {
+      auto n = marker.count();
+      assert(n <= max_size());
+      return n;
+    }
     KP11_TRAITS_NESTED_STATIC_FUNC(max_size)
     /// `T::max_size()` if present otherwise `T::size()`.
     static constexpr auto max_size() noexcept
@@ -190,6 +204,29 @@ public:
       {
         return T::size();
       }
+    }
+    /// Calls `T::max_alloc()`.
+    static auto max_alloc(T const & marker) noexcept
+    {
+      auto n = marker.max_alloc();
+      assert(n <= max_size());
+      assert(n <= size() - count());
+      return n;
+    }
+    /// Calls `T::allocate()`.
+    static auto allocate(T const & marker, size_type n) noexcept
+    {
+      assert(n <= max_alloc());
+      auto i = marker.allocate(n);
+      assert(i < max_size());
+      return i;
+    }
+    /// Calls `T::deallocate()`.
+    static auto deallocate(T const & marker, size_type i, size_type n) noexcept
+    {
+      assert(i < max_size());
+      assert(i + n <= max_size());
+      marker.deallocate(i, n);
     }
   };
   /// @private
