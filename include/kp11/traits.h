@@ -145,7 +145,7 @@ public:                                                                         
     Resource & operator=(Resource const &) = delete;
     /// Deleted because facade shouldn't be moved.
     Resource & operator=(Resource &&) = delete;
-    /// Copy assignment
+    /// Forwarding assignment
     template<typename S>
     decltype(auto) operator=(S && rhs)
     {
