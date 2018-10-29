@@ -10,37 +10,39 @@
 namespace kp11
 {
 /// @private
-#define KP11_TRAITS_NESTED_TYPE(TYPE, ALT)                     \
-private:                                                       \
-  template<typename MY_T, typename Enable = void>              \
-  struct TYPE##_helper                                         \
-  {                                                            \
-    using type = ALT;                                          \
-  };                                                           \
-  template<typename MY_T>                                      \
-  struct TYPE##_helper<MY_T, std::void_t<typename MY_T::TYPE>> \
-  {                                                            \
-    using type = typename MY_T::TYPE;                          \
-  };                                                           \
-  template<typename MY_T>                                      \
-  using TYPE##_helper_t = typename TYPE##_helper<MY_T>::type;  \
-                                                               \
-public:
+#define KP11_TRAITS_NESTED_TYPE(TYPE, ALT)                                      \
+private:                                                                        \
+  template<typename MY_T, typename Enable = void>                               \
+  struct TYPE##_picker : std::false_type                                        \
+  {                                                                             \
+    using type = ALT;                                                           \
+  };                                                                            \
+  template<typename MY_T>                                                       \
+  struct TYPE##_picker<MY_T, std::void_t<typename MY_T::TYPE>> : std::true_type \
+  {                                                                             \
+    using type = typename MY_T::TYPE;                                           \
+  };                                                                            \
+  template<typename MY_T>                                                       \
+  using TYPE##_picker_t = typename TYPE##_picker<MY_T>::type;                   \
+                                                                                \
+public:                                                                         \
+  template<typename MY_T>                                                       \
+  static constexpr auto TYPE##_provided_v = TYPE##_picker<MY_T>::value;
+
 /// @private
-#define KP11_TRAITS_NESTED_STATIC_FUNC(FUNC)                                       \
-private:                                                                           \
-  template<typename MY_T, typename Enable = void>                                  \
-  struct FUNC##_helper : std::false_type                                           \
-  {                                                                                \
-  };                                                                               \
-  template<typename MY_T>                                                          \
-  struct FUNC##_helper<MY_T, std::void_t<decltype(MY_T::FUNC())>> : std::true_type \
-  {                                                                                \
-  };                                                                               \
-  template<typename MY_T>                                                          \
-  static constexpr auto FUNC##_helper_v = FUNC##_helper<MY_T>::value;              \
-                                                                                   \
-public:
+#define KP11_TRAITS_NESTED_STATIC_FUNC(FUNC)                                         \
+  template<typename MY_T, typename Enable = void>                                    \
+  struct FUNC##_provided : std::false_type                                           \
+  {                                                                                  \
+  };                                                                                 \
+  template<typename MY_T>                                                            \
+  struct FUNC##_provided<MY_T, std::void_t<decltype(MY_T::FUNC())>> : std::true_type \
+  {                                                                                  \
+  };                                                                                 \
+                                                                                     \
+public:                                                                              \
+  template<typename MY_T>                                                            \
+  static constexpr auto FUNC##_provided_v = FUNC##_provided<MY_T>::value;
 
   // Detector Idiom
 
@@ -71,13 +73,13 @@ public:
     KP11_TRAITS_NESTED_TYPE(
       size_type, std::make_unsigned_t<typename std::pointer_traits<pointer>::difference_type>)
     /// `T::size_type` if present otherwise `std::size_t`.
-    using size_type = size_type_helper_t<T>;
+    using size_type = size_type_picker_t<T>;
     KP11_TRAITS_NESTED_STATIC_FUNC(max_size)
     /// `T::max_size()` if present otherwise `std::numeric_limits<size_type>::%max()`
     /// @returns The maximum allocation size supported.
     static constexpr size_type max_size() noexcept
     {
-      if constexpr (max_size_helper_v<T>)
+      if constexpr (max_size_provided_v<T>)
       {
         return T::max_size();
       }
@@ -198,7 +200,7 @@ public:
     /// `T::max_size()` if present otherwise `T::size()`.
     static constexpr size_type max_size() noexcept
     {
-      if constexpr (max_size_helper_v<T>)
+      if constexpr (max_size_provided_v<T>)
       {
         return T::max_size();
       }
