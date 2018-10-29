@@ -216,14 +216,9 @@ public:                                                 \
   template<typename T>
   struct owner_traits : public resource_traits<T>
   {
-    using pointer = typename resource_traits<T>::pointer;
-    using size_type = typename resource_traits<T>::size_type;
+    using typename resource_traits<T>::pointer;
+    using typename resource_traits<T>::size_type;
 
-    /// Calls `T::operator[]`.
-    static pointer owns(T & owner, pointer ptr) noexcept
-    {
-      return owner[ptr];
-    }
     /// If `owner` has a convertible to `bool` deallocate function then uses that. Otherwise checks
     /// to see if ptr is owned by using `operator[]` before deallocating.
     static bool deallocate(T & owner, pointer ptr, size_type size, size_type alignment) noexcept
@@ -238,7 +233,7 @@ public:                                                 \
       // If it is not trivial then we can still determine ownership through operator[].
       else
       {
-        if (owns(owner, ptr))
+        if (owner[ptr])
         {
           resource_traits<T>::deallocate(owner, ptr, size, alignment);
           return true;
