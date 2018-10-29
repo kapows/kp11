@@ -337,24 +337,24 @@ public:                                                                         
     }
 
   public: // concept expressions
-    /// `T::size()`.
+    /// `T::size`
     static constexpr size_type size() noexcept
     {
       return T::size();
     }
-    /// `T::count()`.
+    /// `T::count`
     size_type count() const noexcept
     {
       auto n = value.count();
       assert(n <= max_size());
       return n;
     }
-    /// `marker_traits<T>::max_size()`
+    /// `marker_traits<T>::max_size`
     static constexpr size_type max_size() noexcept
     {
       return marker_traits<T>::max_size();
     }
-    /// `T::max_alloc()`.
+    /// `T::max_alloc`.
     size_type max_alloc() const noexcept
     {
       auto n = value.max_alloc();
@@ -362,7 +362,7 @@ public:                                                                         
       assert(n <= size() - count());
       return n;
     }
-    /// `T::allocate()`
+    /// `T::allocate`
     size_type allocate(size_type n) noexcept
     {
       assert(n <= max_alloc());
@@ -370,7 +370,7 @@ public:                                                                         
       assert(i < max_size());
       return i;
     }
-    /// `T::deallocate()`
+    /// `T::deallocate`
     decltype(auto) deallocate(size_type i, size_type n) noexcept
     {
       assert(i < max_size());
