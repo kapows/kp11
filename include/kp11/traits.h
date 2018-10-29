@@ -120,14 +120,19 @@ public:
   /// @brief Provides a standardized way of accessing properties of `Owners`.
   /// Autogenerates some things if they are not provided.
   template<typename T>
-  struct owner_traits
+  struct owner_traits : public resource_traits<T>
   {
+    using pointer = typename resource_traits<T>::pointer;
+    using size_type = typename resource_traits<T>::size_type;
+
+    /// Calls `T::operator[]`.
+    static decltype(auto) owns(T & owner, pointer ptr) noexcept
+    {
+      return owner[ptr];
+    }
     /// If `owner` has a convertible to `bool` deallocate function then uses that. Otherwise checks
     /// to see if ptr is owned by using `operator[]` before deallocating.
-    static bool deallocate(T & owner,
-      typename resource_traits<T>::pointer ptr,
-      typename resource_traits<T>::size_type size,
-      typename resource_traits<T>::size_type alignment) noexcept
+    static bool deallocate(T & owner, pointer ptr, size_type size, size_type alignment) noexcept
     {
       // It may be trivial for a type to return success or failure in it's deallocate function, if
       // if is then it should do so.
@@ -139,7 +144,7 @@ public:
       // If it is not trivial then we can still determine ownership through operator[].
       else
       {
-        if (owner[ptr])
+        if (owns(owner, ptr))
         {
           resource_traits<T>::deallocate(owner, ptr, size, alignment);
           return true;
