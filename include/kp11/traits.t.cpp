@@ -121,11 +121,11 @@ public:
   using size_type = std::size_t;
   static constexpr size_type size() noexcept
   {
-    return 5;
+    return 10;
   }
-  size_type count() noexcept
+  size_type count() const noexcept
   {
-    return size();
+    return 0;
   }
   static constexpr size_type max_size() noexcept
   {
@@ -133,11 +133,11 @@ public:
   }
   size_type max_alloc() const noexcept
   {
-    return size();
+    return 10;
   }
   size_type allocate(size_type n) noexcept
   {
-    return size();
+    return 0;
   }
   void deallocate(size_type index, size_type n) noexcept
   {
@@ -151,19 +151,19 @@ public:
   using size_type = std::size_t;
   static constexpr size_type size() noexcept
   {
-    return 5;
+    return 10;
   }
-  size_type count() noexcept
+  size_type count() const noexcept
   {
-    return size();
+    return 0;
   }
   size_type max_alloc() const noexcept
   {
-    return size();
+    return 10;
   }
   size_type allocate(size_type n) noexcept
   {
-    return size();
+    return 0;
   }
   void deallocate(size_type index, size_type n) noexcept
   {
@@ -175,12 +175,24 @@ TEST_CASE("marker_traits", "[marker_traits]")
   SECTION("minimal")
   {
     using mt = marker_traits<minimal_test_marker>;
+    minimal_test_marker m;
+    REQUIRE(mt::size() == 10);
+    REQUIRE(mt::count(m) == 0);
     REQUIRE(mt::max_size() == minimal_test_marker::size());
+    REQUIRE(mt::max_alloc(m) == 10);
+    REQUIRE(mt::allocate(m, 10) == 0);
+    mt::deallocate(m, 0, 10);
   }
   SECTION("full")
   {
     using mt = marker_traits<test_marker>;
-    REQUIRE(mt::max_size() == test_marker::max_size());
+    test_marker m;
+    REQUIRE(mt::size() == 10);
+    REQUIRE(mt::count(m) == 0);
+    REQUIRE(mt::max_size() == test_marker::size());
+    REQUIRE(mt::max_alloc(m) == 10);
+    REQUIRE(mt::allocate(m, 10) == 0);
+    mt::deallocate(m, 0, 10);
   }
 }
 TEST_CASE("is_marker", "[marker_traits]")

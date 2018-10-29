@@ -178,6 +178,7 @@ public:
   template<typename T>
   struct marker_traits
   {
+    /// `T::size_type`
     using size_type = typename T::size_type;
 
     /// Calls `T::size()`.
@@ -210,19 +211,19 @@ public:
     {
       auto n = marker.max_alloc();
       assert(n <= max_size());
-      assert(n <= size() - count());
+      assert(n <= size() - count(marker));
       return n;
     }
     /// Calls `T::allocate()`.
-    static auto allocate(T const & marker, size_type n) noexcept
+    static auto allocate(T & marker, size_type n) noexcept
     {
-      assert(n <= max_alloc());
+      assert(n <= max_alloc(marker));
       auto i = marker.allocate(n);
       assert(i < max_size());
       return i;
     }
     /// Calls `T::deallocate()`.
-    static auto deallocate(T const & marker, size_type i, size_type n) noexcept
+    static auto deallocate(T & marker, size_type i, size_type n) noexcept
     {
       assert(i < max_size());
       assert(i + n <= max_size());
