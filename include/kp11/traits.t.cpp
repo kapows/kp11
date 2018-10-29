@@ -43,7 +43,10 @@ TEST_CASE("resource_traits", "[resource_traits]")
   SECTION("minimal")
   {
     minimal_test_resource y;
+    auto const & z = y;
+    [[maybe_unused]] Resource k = z;
     Resource x = y;
+    y = x;
     REQUIRE(std::is_same_v<decltype(x)::pointer, void *>);
     REQUIRE(std::is_same_v<decltype(x)::size_type,
       std::make_unsigned_t<typename std::pointer_traits<void *>::difference_type>>);

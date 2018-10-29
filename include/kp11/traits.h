@@ -105,6 +105,21 @@ public:                                                                         
   public: // variables
     T value;
   };
+#define KP11_INHERIT_BASE_VALUE_MEMBERS(BASE, ARG_TYPE) \
+public:                                                 \
+  using typename BASE<ARG_TYPE>::concept_arg_type;      \
+                                                        \
+public:                                                 \
+  using BASE<ARG_TYPE>::BASE;                           \
+  using BASE<ARG_TYPE>::operator=;                      \
+                                                        \
+public:                                                 \
+  using BASE<ARG_TYPE>::value;
+#define KP11_CONCEPT_DEDUCTION_GUIDES(X) \
+  template<typename T>                   \
+  X(T &)->X<T &>;                        \
+  template<typename T>                   \
+  X(T const &)->X<T const &>;
 
   /// @brief Provides a standardized way of accessing properties of `Resources`.
   /// Autogenerates some things if they are not provided.
@@ -168,16 +183,9 @@ public:                                                                         
   template<typename T>
   class Resource : public Value<T>
   {
+    KP11_INHERIT_BASE_VALUE_MEMBERS(Value, T)
   public: // typedefs
-    using concept_arg_type = typename Value<T>::concept_arg_type;
     static_assert(is_resource_v<concept_arg_type>);
-
-  public: // constructors
-    using Value<T>::Value;
-    using Value<T>::operator=;
-
-  public: // variables
-    using Value<T>::value;
 
   public: // expressions
     /// `T::pointer`
@@ -201,10 +209,7 @@ public:                                                                         
       return value.deallocate(ptr, size, alignment);
     }
   };
-  template<typename T>
-  Resource(T &)->Resource<T &>;
-  template<typename T>
-  Resource(T const &)->Resource<T const &>;
+  KP11_CONCEPT_DEDUCTION_GUIDES(Resource)
 
   /// @brief Provides a standardized way of accessing properties of `Owners`.
   /// Autogenerates some things if they are not provided.
@@ -263,18 +268,12 @@ public:                                                                         
   template<typename T>
   class Owner : public Resource<T>
   {
-  public: // typedefs
-    using typename Resource<T>::concept_arg_type;
+    KP11_INHERIT_BASE_VALUE_MEMBERS(Resource, T)
     static_assert(is_owner_v<concept_arg_type>);
+
+  public: // typedefs
     using typename Resource<T>::pointer;
     using typename Resource<T>::size_type;
-
-  public: // constructors
-    using Resource<T>::Resource;
-    using Resource<T>::operator=;
-
-  public: // variables
-    using Resource<T>::value;
 
   public: // expressions
     /// `T::operator[]`
@@ -288,10 +287,7 @@ public:                                                                         
       return owner_traits<concept_arg_type>::deallocate(value, ptr, size, alignment);
     }
   };
-  template<typename T>
-  Owner(T &)->Owner<T &>;
-  template<typename T>
-  Owner(T const &)->Owner<T const &>;
+  KP11_CONCEPT_DEDUCTION_GUIDES(Owner)
 
   /// @brief Provides a standardized way of accessing some properties of `Markers`.
   /// Autogenerates some things if they are not provided.
@@ -338,18 +334,11 @@ public:                                                                         
   template<typename T>
   class Marker : public Value<T>
   {
+    KP11_INHERIT_BASE_VALUE_MEMBERS(Value, T)
   public: // typedefs
-    using typename Value<T>::concept_arg_type;
     static_assert(is_marker_v<concept_arg_type>);
     /// `T::size_type`
     using size_type = typename concept_arg_type::size_type;
-
-  public: // constructors
-    using Value<T>::Value;
-    using Value<T>::operator=;
-
-  public: // variables
-    using Value<T>::value;
 
   public: // concept expressions
     /// `concept_arg_type::size`
@@ -393,11 +382,10 @@ public:                                                                         
       return value.deallocate(i, n);
     }
   };
-  template<typename T>
-  Marker(T &)->Marker<T &>;
-  template<typename T>
-  Marker(T const &)->Marker<T const &>;
+  KP11_CONCEPT_DEDUCTION_GUIDES(Marker)
 
+#undef KP11_CONCEPT_DEDUCTION_GUIDES
+#undef KP11_INHERIT_BASE_VALUE_MEMBERS
 #undef KP11_TRAITS_NESTED_STATIC_FUNC
 #undef KP11_TRAITS_NESTED_TYPE
 }
