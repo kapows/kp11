@@ -93,7 +93,8 @@ public:
       return x.allocate(size, alignment);
     }
     /// Calls `T::deallocate`.
-    static pointer deallocate(T & x, pointer ptr, size_type size, size_type alignment) noexcept
+    static decltype(auto) deallocate(
+      T & x, pointer ptr, size_type size, size_type alignment) noexcept
     {
       return x.deallocate(ptr, size, alignment);
     }
