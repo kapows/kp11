@@ -1,6 +1,7 @@
 /// @file
 #pragma once
 
+#include <cassert> // assert
 #include <cstddef> // size_t
 #include <limits> // numeric_limits
 #include <memory> // pointer_traits
@@ -88,6 +89,7 @@ public:
     /// Calls `T::allocate`.
     static auto allocate(T & x, size_type size, size_type alignment) noexcept
     {
+      assert(size <= max_size());
       return x.allocate(size, alignment);
     }
     /// Calls `T::deallocate`.
