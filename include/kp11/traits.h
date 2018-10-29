@@ -66,6 +66,46 @@ public:                                                                         
   template<typename T>
   using remove_cvref_t = std::remove_reference_t<std::remove_cv_t<T>>;
 
+  /// `Concept Value` facade
+  template<typename T, typename R = remove_cvref_t<T>>
+  struct Value
+  {
+  public: // typedefs
+    /// Concept argument type
+    using concept_arg_type = R;
+
+  public: // constructors
+    /// Forwarding ctor
+    template<typename... Args>
+    Value(Args &&... args) noexcept(std::is_nothrow_constructible_v<R, Args...>) :
+        value(std::forward<Args>(args)...)
+    {
+    }
+    /// Deleted because facade shouldn't be copied.
+    Value(Value const & x) = delete;
+    /// Deleted because facade shouldn't be moved.
+    Value(Value && x) = delete;
+    /// Deleted because facade shouldn't be copied.
+    Value & operator=(Value const &) = delete;
+    /// Deleted because facade shouldn't be moved.
+    Value & operator=(Value &&) = delete;
+    /// Forwarding assignment
+    template<typename S>
+    decltype(auto) operator=(S && rhs)
+    {
+      value = std::forward<S>(rhs);
+      return (value);
+    }
+    /// Implicit cast
+    operator decltype(auto)() noexcept
+    {
+      return (value);
+    }
+
+  public: // variables
+    T value;
+  };
+
   /// @brief Provides a standardized way of accessing properties of `Resources`.
   /// Autogenerates some things if they are not provided.
   template<typename T>
@@ -125,43 +165,29 @@ public:                                                                         
   template<typename T>
   inline constexpr auto is_resource_v = is_resource<T>::value;
   /// `Resource` facade
-  template<typename T, typename R = remove_cvref_t<T>>
-  struct Resource
+  template<typename T>
+  class Resource : public Value<T>
   {
-    static_assert(is_resource_v<R>);
+  public: // typedefs
+    using concept_arg_type = typename Value<T>::concept_arg_type;
+    static_assert(is_resource_v<concept_arg_type>);
 
   public: // constructors
-    /// Forwarding ctor
-    template<typename... Args>
-    Resource(Args &&... args) noexcept(std::is_nothrow_constructible_v<R, Args...>) :
-        value(std::forward<Args>(args)...)
-    {
-    }
-    /// Deleted because facade shouldn't be copied.
-    Resource(Resource const & x) = delete;
-    /// Deleted because facade shouldn't be moved.
-    Resource(Resource && x) = delete;
-    /// Deleted because facade shouldn't be copied.
-    Resource & operator=(Resource const &) = delete;
-    /// Deleted because facade shouldn't be moved.
-    Resource & operator=(Resource &&) = delete;
-    /// Forwarding assignment
-    template<typename S>
-    decltype(auto) operator=(S && rhs)
-    {
-      value = std::forward<S>(rhs);
-      return (value);
-    }
+    using Value<T>::Value;
+    using Value<T>::operator=;
+
+  public: // variables
+    using Value<T>::value;
 
   public: // expressions
     /// `T::pointer`
-    using pointer = typename R::pointer;
+    using pointer = typename concept_arg_type::pointer;
     /// `resource_traits<T>::size_type`
-    using size_type = typename resource_traits<R>::size_type;
+    using size_type = typename resource_traits<concept_arg_type>::size_type;
     /// `resource_traits<T>::max_size`
     static constexpr size_type max_size() noexcept
     {
-      return resource_traits<R>::max_size();
+      return resource_traits<concept_arg_type>::max_size();
     }
     /// `T::allocate`.
     pointer allocate(size_type size, size_type alignment) noexcept
@@ -174,9 +200,6 @@ public:                                                                         
     {
       return value.deallocate(ptr, size, alignment);
     }
-
-  public: // variables
-    T value;
   };
   template<typename T>
   Resource(T &)->Resource<T &>;
@@ -237,30 +260,32 @@ public:                                                                         
   template<typename T>
   inline constexpr auto is_owner_v = is_owner<T>::value;
   /// `Owner` facade
-  template<typename T, typename R = remove_cvref_t<T>>
-  struct Owner : public Resource<T>
+  template<typename T>
+  class Owner : public Resource<T>
   {
-    static_assert(is_owner_v<R>);
+  public: // typedefs
+    using typename Resource<T>::concept_arg_type;
+    static_assert(is_owner_v<concept_arg_type>);
+    using typename Resource<T>::pointer;
+    using typename Resource<T>::size_type;
 
   public: // constructors
     using Resource<T>::Resource;
+    using Resource<T>::operator=;
 
-  public: // typedefs
-    /// Pointer type
-    using pointer = typename Resource<T>::pointer;
-    /// Size type
-    using size_type = typename Resource<T>::size_type;
+  public: // variables
+    using Resource<T>::value;
 
   public: // expressions
     /// `T::operator[]`
     pointer operator[](pointer ptr) noexcept
     {
-      return Resource<T>::value[ptr];
+      return value[ptr];
     }
-    /// `owner_traits<T>::deallocate`
+    /// `owner_traits<concept_arg_type>::deallocate`
     bool deallocate(pointer ptr, size_type size, size_type alignment) noexcept
     {
-      return owner_traits<R>::deallocate(Resource<T>::value, ptr, size, alignment);
+      return owner_traits<concept_arg_type>::deallocate(value, ptr, size, alignment);
     }
   };
   template<typename T>
@@ -310,63 +335,41 @@ public:                                                                         
   inline constexpr auto is_marker_v = is_marker<T>::value;
 
   /// `Marker` facade
-  template<typename T, typename R = remove_cvref_t<T>>
-  class Marker
+  template<typename T>
+  class Marker : public Value<T>
   {
-    static_assert(is_marker_v<R>);
-
   public: // typedefs
+    using typename Value<T>::concept_arg_type;
+    static_assert(is_marker_v<concept_arg_type>);
     /// `T::size_type`
-    using size_type = typename R::size_type;
+    using size_type = typename concept_arg_type::size_type;
 
   public: // constructors
-    /// Forwarding ctor
-    template<typename... Args>
-    Marker(Args &&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>) :
-        value(std::forward<Args>(args)...)
-    {
-    }
-    /// Deleted because facade shouldn't be copied.
-    Marker(Marker const & x) = delete;
-    /// Deleted because facade shouldn't be moved.
-    Marker(Marker && x) = delete;
-    /// Deleted because facade shouldn't be copied.
-    Marker & operator=(Marker const &) = delete;
-    /// Deleted because facade shouldn't be moved.
-    Marker & operator=(Marker &&) = delete;
-    /// Copy assignment
-    template<typename S>
-    decltype(auto) operator=(S && rhs)
-    {
-      value = std::forward<S>(rhs);
-      return (value);
-    }
+    using Value<T>::Value;
+    using Value<T>::operator=;
 
-  public: // accessors
-    operator decltype(auto)() noexcept
-    {
-      return (value);
-    }
+  public: // variables
+    using Value<T>::value;
 
   public: // concept expressions
-    /// `R::size`
+    /// `concept_arg_type::size`
     static constexpr size_type size() noexcept
     {
-      return R::size();
+      return concept_arg_type::size();
     }
-    /// `R::count`
+    /// `T::count`
     size_type count() const noexcept
     {
       auto n = value.count();
       assert(n <= max_size());
       return n;
     }
-    /// `marker_traits<R>::max_size`
+    /// `marker_traits<concept_arg_type>::max_size`
     static constexpr size_type max_size() noexcept
     {
-      return marker_traits<R>::max_size();
+      return marker_traits<concept_arg_type>::max_size();
     }
-    /// `R::max_alloc`.
+    /// `T::max_alloc`.
     size_type max_alloc() const noexcept
     {
       auto n = value.max_alloc();
@@ -374,7 +377,7 @@ public:                                                                         
       assert(n <= size() - count());
       return n;
     }
-    /// `R::allocate`
+    /// `T::allocate`
     size_type allocate(size_type n) noexcept
     {
       assert(n <= max_alloc());
@@ -389,9 +392,6 @@ public:                                                                         
       assert(i + n <= max_size());
       return value.deallocate(i, n);
     }
-
-  public: // variables
-    T value;
   };
   template<typename T>
   Marker(T &)->Marker<T &>;
