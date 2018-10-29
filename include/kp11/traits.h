@@ -87,13 +87,13 @@ public:
       }
     }
     /// Calls `T::allocate`.
-    static auto allocate(T & x, size_type size, size_type alignment) noexcept
+    static pointer allocate(T & x, size_type size, size_type alignment) noexcept
     {
       assert(size <= max_size());
       return x.allocate(size, alignment);
     }
     /// Calls `T::deallocate`.
-    static auto deallocate(T & x, pointer ptr, size_type size, size_type alignment) noexcept
+    static pointer deallocate(T & x, pointer ptr, size_type size, size_type alignment) noexcept
     {
       return x.deallocate(ptr, size, alignment);
     }
@@ -128,7 +128,7 @@ public:
     using size_type = typename resource_traits<T>::size_type;
 
     /// Calls `T::operator[]`.
-    static decltype(auto) owns(T & owner, pointer ptr) noexcept
+    static pointer owns(T & owner, pointer ptr) noexcept
     {
       return owner[ptr];
     }
