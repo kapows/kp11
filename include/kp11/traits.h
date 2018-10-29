@@ -63,6 +63,9 @@ public:                                                                         
   template<template<typename...> typename T, typename... Args>
   inline constexpr auto is_detected_v = is_detected<T, Args...>::value;
 
+  template<typename T>
+  using remove_cvref_t = std::remove_reference_t<std::remove_cv_t<T>>;
+
   /// @brief Provides a standardized way of accessing properties of `Resources`.
   /// Autogenerates some things if they are not provided.
   template<typename T>
@@ -122,15 +125,15 @@ public:                                                                         
   template<typename T>
   inline constexpr auto is_resource_v = is_resource<T>::value;
   /// `Resource` facade
-  template<typename T>
+  template<typename T, typename R = remove_cvref_t<T>>
   struct Resource
   {
-    static_assert(is_resource_v<T>);
+    static_assert(is_resource_v<R>);
 
   public: // constructors
     /// Forwarding ctor
     template<typename... Args>
-    Resource(Args &&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>) :
+    Resource(Args &&... args) noexcept(std::is_nothrow_constructible_v<R, Args...>) :
         value(std::forward<Args>(args)...)
     {
     }
@@ -143,22 +146,22 @@ public:                                                                         
     /// Deleted because facade shouldn't be moved.
     Resource & operator=(Resource &&) = delete;
     /// Copy assignment
-    template<typename R>
-    decltype(auto) operator=(R && rhs)
+    template<typename S>
+    decltype(auto) operator=(S && rhs)
     {
-      value = std::forward<R>(rhs);
+      value = std::forward<S>(rhs);
       return (value);
     }
 
   public: // expressions
     /// `T::pointer`
-    using pointer = typename T::pointer;
+    using pointer = typename R::pointer;
     /// `resource_traits<T>::size_type`
-    using size_type = typename resource_traits<T>::size_type;
+    using size_type = typename resource_traits<R>::size_type;
     /// `resource_traits<T>::max_size`
     static constexpr size_type max_size() noexcept
     {
-      return resource_traits<T>::max_size();
+      return resource_traits<R>::max_size();
     }
     /// `T::allocate`.
     pointer allocate(size_type size, size_type alignment) noexcept
@@ -230,10 +233,10 @@ public:                                                                         
   template<typename T>
   inline constexpr auto is_owner_v = is_owner<T>::value;
   /// `Owner` facade
-  template<typename T>
+  template<typename T, typename R = remove_cvref_t<T>>
   struct Owner : public Resource<T>
   {
-    static_assert(is_owner_v<T>);
+    static_assert(is_owner_v<R>);
 
   public: // constructors
     using Resource<T>::Resource;
@@ -253,7 +256,7 @@ public:                                                                         
     /// `owner_traits<T>::deallocate`
     bool deallocate(pointer ptr, size_type size, size_type alignment) noexcept
     {
-      return owner_traits<T>::deallocate(Resource<T>::value, ptr, size, alignment);
+      return owner_traits<R>::deallocate(Resource<T>::value, ptr, size, alignment);
     }
   };
   /// @brief Provides a standardized way of accessing some properties of `Markers`.
@@ -298,14 +301,14 @@ public:                                                                         
   inline constexpr auto is_marker_v = is_marker<T>::value;
 
   /// `Marker` facade
-  template<typename T>
+  template<typename T, typename R = remove_cvref_t<T>>
   class Marker
   {
-    static_assert(is_marker_v<T>);
+    static_assert(is_marker_v<R>);
 
   public: // typedefs
     /// `T::size_type`
-    using size_type = typename T::size_type;
+    using size_type = typename R::size_type;
 
   public: // constructors
     /// Forwarding ctor
@@ -323,10 +326,10 @@ public:                                                                         
     /// Deleted because facade shouldn't be moved.
     Marker & operator=(Marker &&) = delete;
     /// Copy assignment
-    template<typename R>
-    decltype(auto) operator=(R && rhs)
+    template<typename S>
+    decltype(auto) operator=(S && rhs)
     {
-      value = std::forward<R>(rhs);
+      value = std::forward<S>(rhs);
       return (value);
     }
 
@@ -337,24 +340,24 @@ public:                                                                         
     }
 
   public: // concept expressions
-    /// `T::size`
+    /// `R::size`
     static constexpr size_type size() noexcept
     {
-      return T::size();
+      return R::size();
     }
-    /// `T::count`
+    /// `R::count`
     size_type count() const noexcept
     {
       auto n = value.count();
       assert(n <= max_size());
       return n;
     }
-    /// `marker_traits<T>::max_size`
+    /// `marker_traits<R>::max_size`
     static constexpr size_type max_size() noexcept
     {
-      return marker_traits<T>::max_size();
+      return marker_traits<R>::max_size();
     }
-    /// `T::max_alloc`.
+    /// `R::max_alloc`.
     size_type max_alloc() const noexcept
     {
       auto n = value.max_alloc();
@@ -362,7 +365,7 @@ public:                                                                         
       assert(n <= size() - count());
       return n;
     }
-    /// `T::allocate`
+    /// `R::allocate`
     size_type allocate(size_type n) noexcept
     {
       assert(n <= max_alloc());
