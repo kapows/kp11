@@ -1,3 +1,4 @@
+/// @file
 #pragma once
 
 #include <cstddef> // size_t
@@ -7,6 +8,7 @@
 
 namespace kp11
 {
+/// @private
 #define KP11_TRAITS_NESTED_TYPE(TYPE, ALT)                     \
 private:                                                       \
   template<typename MY_T, typename Enable = void>              \
@@ -23,6 +25,7 @@ private:                                                       \
   using TYPE##_helper_t = typename TYPE##_helper<MY_T>::type;  \
                                                                \
 public:
+/// @private
 #define KP11_TRAITS_NESTED_STATIC_FUNC(FUNC)                                       \
 private:                                                                           \
   template<typename MY_T, typename Enable = void>                                  \
