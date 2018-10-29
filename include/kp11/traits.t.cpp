@@ -14,7 +14,7 @@ public:
   using size_type = std::size_t;
   static constexpr size_type max_size() noexcept
   {
-    return 10;
+    return 12;
   }
   pointer allocate(size_type size, size_type alignment) noexcept
   {
