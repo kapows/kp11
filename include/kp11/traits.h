@@ -121,6 +121,60 @@ public:                                                                         
   /// Checks if `T` meets the `Resource` concept.
   template<typename T>
   inline constexpr auto is_resource_v = is_resource<T>::value;
+  /// `Resource` facade
+  template<typename T>
+  struct Resource
+  {
+    static_assert(is_resource_v<T>);
+
+  public: // constructors
+    /// Forwarding ctor
+    template<typename... Args>
+    Resource(Args &&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>) :
+        value(std::forward<Args>(args)...)
+    {
+    }
+    /// Deleted because facade shouldn't be copied.
+    Resource(Resource const & x) = delete;
+    /// Deleted because facade shouldn't be moved.
+    Resource(Resource && x) = delete;
+    /// Deleted because facade shouldn't be copied.
+    Resource & operator=(Resource const &) = delete;
+    /// Deleted because facade shouldn't be moved.
+    Resource & operator=(Resource &&) = delete;
+    /// Copy assignment
+    template<typename R>
+    decltype(auto) operator=(R && rhs)
+    {
+      value = std::forward<R>(rhs);
+      return (value);
+    }
+
+  public: // expressions
+    /// `T::pointer`
+    using pointer = typename T::pointer;
+    /// `resource_traits<T>::size_type`
+    using size_type = typename resource_traits<T>::size_type;
+    /// `resource_traits<T>::max_size`
+    static constexpr size_type max_size() noexcept
+    {
+      return resource_traits<T>::max_size();
+    }
+    /// `T::allocate`.
+    pointer allocate(size_type size, size_type alignment) noexcept
+    {
+      assert(size <= max_size());
+      return value.allocate(size, alignment);
+    }
+    /// `T::deallocate`.
+    decltype(auto) deallocate(pointer ptr, size_type size, size_type alignment) noexcept
+    {
+      return value.deallocate(ptr, size, alignment);
+    }
+
+  public: // variables
+    T value;
+  };
 
   /// @brief Provides a standardized way of accessing properties of `Owners`.
   /// Autogenerates some things if they are not provided.
@@ -175,7 +229,33 @@ public:                                                                         
   /// Checks if `T` meets the `Owner` concept.
   template<typename T>
   inline constexpr auto is_owner_v = is_owner<T>::value;
+  /// `Owner` facade
+  template<typename T>
+  struct Owner : public Resource<T>
+  {
+    static_assert(is_owner_v<T>);
 
+  public: // constructors
+    using Resource<T>::Resource;
+
+  public: // typedefs
+    /// Pointer type
+    using pointer = typename Resource<T>::pointer;
+    /// Size type
+    using size_type = typename Resource<T>::size_type;
+
+  public: // expressions
+    /// `T::operator[]`
+    pointer operator[](pointer ptr) noexcept
+    {
+      return Resource<T>::value[ptr];
+    }
+    /// `owner_traits<T>::deallocate`
+    bool deallocate(pointer ptr, size_type size, size_type alignment) noexcept
+    {
+      return owner_traits<T>::deallocate(Resource<T>::value, ptr, size, alignment);
+    }
+  };
   /// @brief Provides a standardized way of accessing some properties of `Markers`.
   /// Autogenerates some things if they are not provided.
   template<typename T>
