@@ -181,21 +181,7 @@ public:                                                                         
   template<typename T>
   struct marker_traits
   {
-    /// `T::size_type`
     using size_type = typename T::size_type;
-
-    /// Calls `T::size()`.
-    static constexpr size_type size() noexcept
-    {
-      return T::size();
-    }
-    /// Calls `T::count()`.
-    static size_type count(T const & marker) noexcept
-    {
-      auto n = marker.count();
-      assert(n <= max_size());
-      return n;
-    }
     KP11_TRAITS_NESTED_STATIC_FUNC(max_size)
     /// `T::max_size()` if present otherwise `T::size()`.
     static constexpr size_type max_size() noexcept
@@ -208,29 +194,6 @@ public:                                                                         
       {
         return T::size();
       }
-    }
-    /// Calls `T::max_alloc()`.
-    static size_type max_alloc(T const & marker) noexcept
-    {
-      auto n = marker.max_alloc();
-      assert(n <= max_size());
-      assert(n <= size() - count(marker));
-      return n;
-    }
-    /// Calls `T::allocate()`.
-    static size_type allocate(T & marker, size_type n) noexcept
-    {
-      assert(n <= max_alloc(marker));
-      auto i = marker.allocate(n);
-      assert(i < max_size());
-      return i;
-    }
-    /// Calls `T::deallocate()`.
-    static decltype(auto) deallocate(T & marker, size_type i, size_type n) noexcept
-    {
-      assert(i < max_size());
-      assert(i + n <= max_size());
-      return marker.deallocate(i, n);
     }
   };
   /// @private
@@ -253,6 +216,91 @@ public:                                                                         
   /// Checks if `T` meets the `Marker` concept.
   template<typename T>
   inline constexpr auto is_marker_v = is_marker<T>::value;
+
+  /// `Marker` facade
+  template<typename T>
+  class Marker
+  {
+    static_assert(is_marker_v<T>);
+
+  public: // typedefs
+    /// `T::size_type`
+    using size_type = typename T::size_type;
+
+  public: // constructors
+    /// Forwarding ctor
+    template<typename... Args>
+    Marker(Args &&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>) :
+        value(std::forward<Args>(args)...)
+    {
+    }
+    /// Deleted because facade shouldn't be copied.
+    Marker(Marker const & x) = delete;
+    /// Deleted because facade shouldn't be moved.
+    Marker(Marker && x) = delete;
+    /// Deleted because facade shouldn't be copied.
+    Marker & operator=(Marker const &) = delete;
+    /// Deleted because facade shouldn't be moved.
+    Marker & operator=(Marker &&) = delete;
+    /// Copy assignment
+    template<typename R>
+    decltype(auto) operator=(R && rhs)
+    {
+      value = std::forward<R>(rhs);
+      return (value);
+    }
+
+  public: // accessors
+    operator decltype(auto)() noexcept
+    {
+      return (value);
+    }
+
+  public: // concept expressions
+    /// `T::size()`.
+    static constexpr size_type size() noexcept
+    {
+      return T::size();
+    }
+    /// `T::count()`.
+    size_type count() const noexcept
+    {
+      auto n = value.count();
+      assert(n <= max_size());
+      return n;
+    }
+    /// `marker_traits<T>::max_size()`
+    static constexpr size_type max_size() noexcept
+    {
+      return marker_traits<T>::max_size();
+    }
+    /// `T::max_alloc()`.
+    size_type max_alloc() const noexcept
+    {
+      auto n = value.max_alloc();
+      assert(n <= max_size());
+      assert(n <= size() - count());
+      return n;
+    }
+    /// `T::allocate()`
+    size_type allocate(size_type n) noexcept
+    {
+      assert(n <= max_alloc());
+      auto i = value.allocate(n);
+      assert(i < max_size());
+      return i;
+    }
+    /// `T::deallocate()`
+    decltype(auto) deallocate(size_type i, size_type n) noexcept
+    {
+      assert(i < max_size());
+      assert(i + n <= max_size());
+      return value.deallocate(i, n);
+    }
+
+  public: // variables
+    T value;
+  };
 
 #undef KP11_TRAITS_NESTED_STATIC_FUNC
 #undef KP11_TRAITS_NESTED_TYPE

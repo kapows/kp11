@@ -174,25 +174,27 @@ TEST_CASE("marker_traits", "[marker_traits]")
 {
   SECTION("minimal")
   {
-    using mt = marker_traits<minimal_test_marker>;
-    minimal_test_marker m;
-    REQUIRE(mt::size() == 10);
-    REQUIRE(mt::count(m) == 0);
-    REQUIRE(mt::max_size() == minimal_test_marker::size());
-    REQUIRE(mt::max_alloc(m) == 10);
-    REQUIRE(mt::allocate(m, 10) == 0);
-    mt::deallocate(m, 0, 10);
+    Marker<minimal_test_marker> m;
+    m = minimal_test_marker{};
+    [[maybe_unused]] minimal_test_marker n = m;
+    REQUIRE(m.size() == 10);
+    REQUIRE(m.count() == 0);
+    REQUIRE(m.max_size() == minimal_test_marker::size());
+    REQUIRE(m.max_alloc() == 10);
+    REQUIRE(m.allocate(10) == 0);
+    m.deallocate(0, 10);
   }
   SECTION("full")
   {
-    using mt = marker_traits<test_marker>;
-    test_marker m;
-    REQUIRE(mt::size() == 10);
-    REQUIRE(mt::count(m) == 0);
-    REQUIRE(mt::max_size() == test_marker::size());
-    REQUIRE(mt::max_alloc(m) == 10);
-    REQUIRE(mt::allocate(m, 10) == 0);
-    mt::deallocate(m, 0, 10);
+    Marker<test_marker> m;
+    m = test_marker{};
+    [[maybe_unused]] test_marker n = m;
+    REQUIRE(m.size() == 10);
+    REQUIRE(m.count() == 0);
+    REQUIRE(m.max_size() == test_marker::size());
+    REQUIRE(m.max_alloc() == 10);
+    REQUIRE(m.allocate(10) == 0);
+    m.deallocate(0, 10);
   }
 }
 TEST_CASE("is_marker", "[marker_traits]")
