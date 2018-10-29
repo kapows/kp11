@@ -183,12 +183,12 @@ public:
     using size_type = typename T::size_type;
 
     /// Calls `T::size()`.
-    static constexpr auto size() noexcept
+    static constexpr size_type size() noexcept
     {
       return T::size();
     }
     /// Calls `T::count()`.
-    static auto count(T const & marker) noexcept
+    static size_type count(T const & marker) noexcept
     {
       auto n = marker.count();
       assert(n <= max_size());
@@ -196,7 +196,7 @@ public:
     }
     KP11_TRAITS_NESTED_STATIC_FUNC(max_size)
     /// `T::max_size()` if present otherwise `T::size()`.
-    static constexpr auto max_size() noexcept
+    static constexpr size_type max_size() noexcept
     {
       if constexpr (max_size_helper_v<T>)
       {
@@ -208,7 +208,7 @@ public:
       }
     }
     /// Calls `T::max_alloc()`.
-    static auto max_alloc(T const & marker) noexcept
+    static size_type max_alloc(T const & marker) noexcept
     {
       auto n = marker.max_alloc();
       assert(n <= max_size());
@@ -216,7 +216,7 @@ public:
       return n;
     }
     /// Calls `T::allocate()`.
-    static auto allocate(T & marker, size_type n) noexcept
+    static size_type allocate(T & marker, size_type n) noexcept
     {
       assert(n <= max_alloc(marker));
       auto i = marker.allocate(n);
@@ -224,11 +224,11 @@ public:
       return i;
     }
     /// Calls `T::deallocate()`.
-    static auto deallocate(T & marker, size_type i, size_type n) noexcept
+    static decltype(auto) deallocate(T & marker, size_type i, size_type n) noexcept
     {
       assert(i < max_size());
       assert(i + n <= max_size());
-      marker.deallocate(i, n);
+      return marker.deallocate(i, n);
     }
   };
   /// @private
