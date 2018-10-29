@@ -178,6 +178,10 @@ public:                                                                         
   public: // variables
     T value;
   };
+  template<typename T>
+  Resource(T &)->Resource<T &>;
+  template<typename T>
+  Resource(T const &)->Resource<T const &>;
 
   /// @brief Provides a standardized way of accessing properties of `Owners`.
   /// Autogenerates some things if they are not provided.
@@ -259,6 +263,11 @@ public:                                                                         
       return owner_traits<R>::deallocate(Resource<T>::value, ptr, size, alignment);
     }
   };
+  template<typename T>
+  Owner(T &)->Owner<T &>;
+  template<typename T>
+  Owner(T const &)->Owner<T const &>;
+
   /// @brief Provides a standardized way of accessing some properties of `Markers`.
   /// Autogenerates some things if they are not provided.
   template<typename T>
@@ -384,6 +393,10 @@ public:                                                                         
   public: // variables
     T value;
   };
+  template<typename T>
+  Marker(T &)->Marker<T &>;
+  template<typename T>
+  Marker(T const &)->Marker<T const &>;
 
 #undef KP11_TRAITS_NESTED_STATIC_FUNC
 #undef KP11_TRAITS_NESTED_TYPE
