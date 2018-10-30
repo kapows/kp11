@@ -58,6 +58,7 @@ public:
   template<template<typename...> typename T, typename... Args>
   inline constexpr auto is_detected_v = is_detected<T, Args...>::value;
 
+  /// @private
   template<typename T>
   using remove_cvref_t = std::remove_reference_t<std::remove_cv_t<T>>;
 
