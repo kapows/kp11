@@ -152,18 +152,6 @@ public:
         return std::numeric_limits<size_type>::max();
       }
     }
-    /// Calls `T::allocate`.
-    static pointer allocate(T & x, size_type size, size_type alignment) noexcept
-    {
-      assert(size <= max_size());
-      return x.allocate(size, alignment);
-    }
-    /// Calls `T::deallocate`.
-    static decltype(auto) deallocate(
-      T & x, pointer ptr, size_type size, size_type alignment) noexcept
-    {
-      return x.deallocate(ptr, size, alignment);
-    }
   };
   /// @private
   template<typename R>
@@ -287,12 +275,13 @@ public:
     {
       return value()[ptr];
     }
-    /// `owner_traits<concept_arg_type>::deallocate`
+    /// `owner_traits<T>::deallocate`
     bool deallocate(pointer ptr, size_type size, size_type alignment) noexcept
     {
       return owner_traits<T>::deallocate(value(), ptr, size, alignment);
     }
   };
+  /// Owner Concept
   template<typename T, typename R = std::remove_reference_t<T>>
   KP11_CONCEPT(Owner, T, OwnerConcept<R>)
 
@@ -352,7 +341,7 @@ public:
     using size_type = typename T::size_type;
 
   public: // concept expressions
-    /// `concept_arg_type::size`
+    /// `T::size`
     static constexpr size_type size() noexcept
     {
       return T::size();
@@ -364,7 +353,7 @@ public:
       assert(n <= max_size());
       return n;
     }
-    /// `marker_traits<concept_arg_type>::max_size`
+    /// `marker_traits<T>::max_size`
     static constexpr size_type max_size() noexcept
     {
       return marker_traits<T>::max_size();
