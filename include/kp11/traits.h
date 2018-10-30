@@ -86,10 +86,10 @@ public:
     Concept & operator=(Concept &&) = delete;
     /// Forwarding assignment
     template<typename S>
-    decltype(auto) operator=(S && rhs)
+    Concept & operator=(S && rhs)
     {
       value() = std::forward<S>(rhs);
-      return value();
+      return *this;
     }
     /// Implicit cast
     operator decltype(auto)() noexcept
