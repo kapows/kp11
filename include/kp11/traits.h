@@ -62,60 +62,52 @@ public:
   template<typename T>
   using remove_cvref_t = std::remove_reference_t<std::remove_cv_t<T>>;
 
-  /// `Concept Value` facade
-  template<typename T, typename R = remove_cvref_t<T>>
-  struct Value
+  template<typename T, typename... Cs>
+  struct Concept : Cs...
   {
   public: // typedefs
     /// Concept argument type
-    using concept_arg_type = R;
+    using concept_arg_type = std::remove_reference_t<T>;
 
   public: // constructors
     /// Forwarding ctor
     template<typename... Args>
-    Value(Args &&... args) noexcept(std::is_nothrow_constructible_v<R, Args...>) :
-        value(std::forward<Args>(args)...)
+    Concept(Args &&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>) :
+        my_value(std::forward<Args>(args)...)
     {
     }
     /// Deleted because facade shouldn't be copied.
-    Value(Value const & x) = delete;
+    Concept(Concept const & x) = delete;
     /// Deleted because facade shouldn't be moved.
-    Value(Value && x) = delete;
+    Concept(Concept && x) = delete;
     /// Deleted because facade shouldn't be copied.
-    Value & operator=(Value const &) = delete;
+    Concept & operator=(Concept const &) = delete;
     /// Deleted because facade shouldn't be moved.
-    Value & operator=(Value &&) = delete;
+    Concept & operator=(Concept &&) = delete;
     /// Forwarding assignment
     template<typename S>
     decltype(auto) operator=(S && rhs)
     {
-      value = std::forward<S>(rhs);
-      return (value);
+      value() = std::forward<S>(rhs);
+      return value();
     }
     /// Implicit cast
     operator decltype(auto)() noexcept
     {
-      return (value);
+      return value();
+    }
+    concept_arg_type & value() noexcept
+    {
+      return my_value;
+    }
+    std::add_const_t<concept_arg_type> & value() const noexcept
+    {
+      return my_value;
     }
 
   public: // variables
-    T value;
+    T my_value;
   };
-#define KP11_INHERIT_BASE_VALUE_MEMBERS(BASE, ARG_TYPE) \
-public:                                                 \
-  using typename BASE<ARG_TYPE>::concept_arg_type;      \
-                                                        \
-public:                                                 \
-  using BASE<ARG_TYPE>::BASE;                           \
-  using BASE<ARG_TYPE>::operator=;                      \
-                                                        \
-public:                                                 \
-  using BASE<ARG_TYPE>::value;
-#define KP11_CONCEPT_DEDUCTION_GUIDES(X) \
-  template<typename T>                   \
-  X(T &)->X<T &>;                        \
-  template<typename T>                   \
-  X(T const &)->X<T const &>;
 
   /// @brief Provides a standardized way of accessing properties of `Resources`.
   /// Autogenerates some things if they are not present.
@@ -181,35 +173,46 @@ public:                                                 \
   inline constexpr auto is_resource_v = is_resource<T>::value;
   /// `Resource` facade
   template<typename T>
-  class Resource : public Value<T>
+  class ResourceConcept
   {
-    KP11_INHERIT_BASE_VALUE_MEMBERS(Value, T)
   public: // typedefs
-    static_assert(is_resource_v<concept_arg_type>);
+    static_assert(is_resource_v<T>);
+    virtual T & value() noexcept = 0;
+    virtual T const & value() const noexcept = 0;
 
   public: // expressions
     /// `T::pointer`
-    using pointer = typename concept_arg_type::pointer;
+    using pointer = typename T::pointer;
     /// `resource_traits<T>::size_type`
-    using size_type = typename resource_traits<concept_arg_type>::size_type;
+    using size_type = typename resource_traits<T>::size_type;
     /// `resource_traits<T>::max_size`
     static constexpr size_type max_size() noexcept
     {
-      return resource_traits<concept_arg_type>::max_size();
+      return resource_traits<T>::max_size();
     }
     /// `T::allocate`.
     pointer allocate(size_type size, size_type alignment) noexcept
     {
       assert(size <= max_size());
-      return value.allocate(size, alignment);
+      return value().allocate(size, alignment);
     }
     /// `T::deallocate`.
     decltype(auto) deallocate(pointer ptr, size_type size, size_type alignment) noexcept
     {
-      return value.deallocate(ptr, size, alignment);
+      return value().deallocate(ptr, size, alignment);
     }
   };
-  KP11_CONCEPT_DEDUCTION_GUIDES(Resource)
+  template<typename T, typename R = std::remove_reference_t<T>>
+  class Resource : public Concept<T, ResourceConcept<R>>
+  {
+  public:
+    using Concept<T, ResourceConcept<R>>::Concept;
+    using Concept<T, ResourceConcept<R>>::operator=;
+  };
+  template<typename T>
+  Resource(T &)->Resource<T &>;
+  template<typename T>
+  Resource(T const &)->Resource<T const &>;
 
   /// @brief Provides a standardized way of accessing properties of `Owners`.
   /// Autogenerates some things if they are not present.
@@ -261,28 +264,41 @@ public:                                                 \
   inline constexpr auto is_owner_v = is_owner<T>::value;
   /// `Owner` facade
   template<typename T>
-  class Owner : public Resource<T>
+  class OwnerConcept : public ResourceConcept<T>
   {
-    KP11_INHERIT_BASE_VALUE_MEMBERS(Resource, T)
-    static_assert(is_owner_v<concept_arg_type>);
+    static_assert(is_owner_v<T>);
+
+  public:
+    virtual T & value() noexcept = 0;
+    virtual T const & value() const noexcept = 0;
 
   public: // typedefs
-    using typename Resource<T>::pointer;
-    using typename Resource<T>::size_type;
+    using typename ResourceConcept<T>::pointer;
+    using typename ResourceConcept<T>::size_type;
 
   public: // expressions
     /// `T::operator[]`
     pointer operator[](pointer ptr) noexcept
     {
-      return value[ptr];
+      return value()[ptr];
     }
     /// `owner_traits<concept_arg_type>::deallocate`
     bool deallocate(pointer ptr, size_type size, size_type alignment) noexcept
     {
-      return owner_traits<concept_arg_type>::deallocate(value, ptr, size, alignment);
+      return owner_traits<T>::deallocate(value(), ptr, size, alignment);
     }
   };
-  KP11_CONCEPT_DEDUCTION_GUIDES(Owner)
+  template<typename T, typename R = std::remove_reference_t<T>>
+  class Owner : public Concept<T, OwnerConcept<R>>
+  {
+  public:
+    using Concept<T, OwnerConcept<R>>::Concept;
+    using Concept<T, OwnerConcept<R>>::operator=;
+  };
+  template<typename T>
+  Owner(T &)->Owner<T &>;
+  template<typename T>
+  Owner(T const &)->Owner<T const &>;
 
   /// @brief Provides a standardized way of accessing some properties of `Markers`.
   /// Autogenerates some things if they are not present.
@@ -328,36 +344,39 @@ public:                                                 \
 
   /// `Marker` facade
   template<typename T>
-  class Marker : public Value<T>
+  class MarkerConcept
   {
-    KP11_INHERIT_BASE_VALUE_MEMBERS(Value, T)
+  public:
+    virtual T & value() noexcept = 0;
+    virtual T const & value() const noexcept = 0;
+
   public: // typedefs
-    static_assert(is_marker_v<concept_arg_type>);
+    static_assert(is_marker_v<T>);
     /// `T::size_type`
-    using size_type = typename concept_arg_type::size_type;
+    using size_type = typename T::size_type;
 
   public: // concept expressions
     /// `concept_arg_type::size`
     static constexpr size_type size() noexcept
     {
-      return concept_arg_type::size();
+      return T::size();
     }
     /// `T::count`
     size_type count() const noexcept
     {
-      auto n = value.count();
+      auto n = value().count();
       assert(n <= max_size());
       return n;
     }
     /// `marker_traits<concept_arg_type>::max_size`
     static constexpr size_type max_size() noexcept
     {
-      return marker_traits<concept_arg_type>::max_size();
+      return marker_traits<T>::max_size();
     }
     /// `T::max_alloc`.
     size_type max_alloc() const noexcept
     {
-      auto n = value.max_alloc();
+      auto n = value().max_alloc();
       assert(n <= max_size());
       assert(n <= size() - count());
       return n;
@@ -366,7 +385,7 @@ public:                                                 \
     size_type allocate(size_type n) noexcept
     {
       assert(n <= max_alloc());
-      auto i = value.allocate(n);
+      auto i = value().allocate(n);
       assert(i < max_size());
       return i;
     }
@@ -375,13 +394,21 @@ public:                                                 \
     {
       assert(i < max_size());
       assert(i + n <= max_size());
-      return value.deallocate(i, n);
+      return value().deallocate(i, n);
     }
   };
-  KP11_CONCEPT_DEDUCTION_GUIDES(Marker)
+  template<typename T, typename R = std::remove_reference_t<T>>
+  class Marker : public Concept<T, MarkerConcept<R>>
+  {
+  public:
+    using Concept<T, MarkerConcept<R>>::Concept;
+    using Concept<T, MarkerConcept<R>>::operator=;
+  };
+  template<typename T>
+  MarkerConcept(T &)->MarkerConcept<T &>;
+  template<typename T>
+  MarkerConcept(T const &)->MarkerConcept<T const &>;
 
-#undef KP11_CONCEPT_DEDUCTION_GUIDES
-#undef KP11_INHERIT_BASE_VALUE_MEMBERS
 #undef KP11_TRAITS_NESTED_STATIC_FUNC
 #undef KP11_TRAITS_NESTED_TYPE
 }
