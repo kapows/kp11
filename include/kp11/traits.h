@@ -108,6 +108,20 @@ public:
   public: // variables
     T my_value;
   };
+/// @param Name Concept name
+/// @param Type Concept type
+/// @param ... Concepts
+#define KP11_CONCEPT(NAME, TYPE, ...)            \
+  class NAME : public Concept<TYPE, __VA_ARGS__> \
+  {                                              \
+  public:                                        \
+    using Concept<TYPE, __VA_ARGS__>::Concept;   \
+    using Concept<TYPE, __VA_ARGS__>::operator=; \
+  };                                             \
+  template<typename T>                           \
+  NAME(T &)->NAME<T &>;                          \
+  template<typename T>                           \
+  NAME(T const &)->NAME<T const &>;
 
   /// @brief Provides a standardized way of accessing properties of `Resources`.
   /// Autogenerates some things if they are not present.
@@ -203,16 +217,7 @@ public:
     }
   };
   template<typename T, typename R = std::remove_reference_t<T>>
-  class Resource : public Concept<T, ResourceConcept<R>>
-  {
-  public:
-    using Concept<T, ResourceConcept<R>>::Concept;
-    using Concept<T, ResourceConcept<R>>::operator=;
-  };
-  template<typename T>
-  Resource(T &)->Resource<T &>;
-  template<typename T>
-  Resource(T const &)->Resource<T const &>;
+  KP11_CONCEPT(Resource, T, ResourceConcept<R>)
 
   /// @brief Provides a standardized way of accessing properties of `Owners`.
   /// Autogenerates some things if they are not present.
@@ -289,16 +294,7 @@ public:
     }
   };
   template<typename T, typename R = std::remove_reference_t<T>>
-  class Owner : public Concept<T, OwnerConcept<R>>
-  {
-  public:
-    using Concept<T, OwnerConcept<R>>::Concept;
-    using Concept<T, OwnerConcept<R>>::operator=;
-  };
-  template<typename T>
-  Owner(T &)->Owner<T &>;
-  template<typename T>
-  Owner(T const &)->Owner<T const &>;
+  KP11_CONCEPT(Owner, T, OwnerConcept<R>)
 
   /// @brief Provides a standardized way of accessing some properties of `Markers`.
   /// Autogenerates some things if they are not present.
@@ -398,17 +394,9 @@ public:
     }
   };
   template<typename T, typename R = std::remove_reference_t<T>>
-  class Marker : public Concept<T, MarkerConcept<R>>
-  {
-  public:
-    using Concept<T, MarkerConcept<R>>::Concept;
-    using Concept<T, MarkerConcept<R>>::operator=;
-  };
-  template<typename T>
-  MarkerConcept(T &)->MarkerConcept<T &>;
-  template<typename T>
-  MarkerConcept(T const &)->MarkerConcept<T const &>;
+  KP11_CONCEPT(Marker, T, MarkerConcept<R>)
 
+#undef KP11_CONCEPT
 #undef KP11_TRAITS_NESTED_STATIC_FUNC
 #undef KP11_TRAITS_NESTED_TYPE
 }
