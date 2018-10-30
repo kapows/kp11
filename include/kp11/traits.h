@@ -84,13 +84,7 @@ public:
     Concept & operator=(Concept const &) = delete;
     /// Deleted because facade shouldn't be moved.
     Concept & operator=(Concept &&) = delete;
-    /// Forwarding assignment
-    template<typename S>
-    Concept & operator=(S && rhs)
-    {
-      value() = std::forward<S>(rhs);
-      return *this;
-    }
+    using Cs::operator=...;
     /// Implicit cast
     operator decltype(auto)() noexcept
     {
@@ -221,17 +215,16 @@ public:
     {
       // It may be trivial for a type to return success or failure in it's deallocate function, if
       // if is then it should do so.
-      if constexpr (std::is_convertible_v<bool,
-                      decltype(resource_traits<T>::deallocate(owner, ptr, size, alignment))>)
+      if constexpr (std::is_convertible_v<bool, decltype(owner.deallocate(ptr, size, alignment))>)
       {
-        return resource_traits<T>::deallocate(owner, ptr, size, alignment);
+        return owner.deallocate(ptr, size, alignment);
       }
       // If it is not trivial then we can still determine ownership through operator[].
       else
       {
         if (owner[ptr])
         {
-          resource_traits<T>::deallocate(owner, ptr, size, alignment);
+          owner.deallocate(ptr, size, alignment);
           return true;
         }
         return false;

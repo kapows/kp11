@@ -180,7 +180,6 @@ TEST_CASE("marker_traits", "[marker_traits]")
   SECTION("minimal")
   {
     Marker<minimal_test_marker> m;
-    m = minimal_test_marker{};
     [[maybe_unused]] minimal_test_marker n = m;
     REQUIRE(m.size() == 10);
     REQUIRE(m.count() == 0);
@@ -192,7 +191,6 @@ TEST_CASE("marker_traits", "[marker_traits]")
   SECTION("full")
   {
     Marker<test_marker> m;
-    m = test_marker{};
     [[maybe_unused]] test_marker n = m;
     REQUIRE(m.size() == 10);
     REQUIRE(m.count() == 0);
