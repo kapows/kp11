@@ -117,6 +117,11 @@ public:
   template<typename T>                           \
   NAME(T const &)->NAME<T const &>;
 
+#define KP11_CONCEPT_VALUE()        \
+public:                             \
+  virtual T & value() noexcept = 0; \
+  virtual T const & value() const noexcept = 0;
+
   /// @brief Provides a standardized way of accessing properties of `Resources`.
   /// Autogenerates some things if they are not present.
   template<typename T>
@@ -171,10 +176,8 @@ public:
   template<typename T>
   class ResourceConcept
   {
-  public: // typedefs
     static_assert(is_resource_v<T>);
-    virtual T & value() noexcept = 0;
-    virtual T const & value() const noexcept = 0;
+    KP11_CONCEPT_VALUE()
 
   public: // expressions
     /// `T::pointer`
@@ -253,10 +256,7 @@ public:
   class OwnerConcept : public ResourceConcept<T>
   {
     static_assert(is_owner_v<T>);
-
-  public:
-    virtual T & value() noexcept = 0;
-    virtual T const & value() const noexcept = 0;
+    KP11_CONCEPT_VALUE()
 
   public: // typedefs
     using typename ResourceConcept<T>::pointer;
@@ -324,12 +324,10 @@ public:
   template<typename T>
   class MarkerConcept
   {
-  public:
-    virtual T & value() noexcept = 0;
-    virtual T const & value() const noexcept = 0;
+    static_assert(is_marker_v<T>);
+    KP11_CONCEPT_VALUE()
 
   public: // typedefs
-    static_assert(is_marker_v<T>);
     /// `T::size_type`
     using size_type = typename T::size_type;
 
@@ -378,6 +376,7 @@ public:
   template<typename T, typename R = std::remove_reference_t<T>>
   KP11_CONCEPT(Marker, T, MarkerConcept<R>)
 
+#undef KP11_CONCEPT_VALUE
 #undef KP11_CONCEPT
 #undef KP11_TRAITS_NESTED_STATIC_FUNC
 #undef KP11_TRAITS_NESTED_TYPE
