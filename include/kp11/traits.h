@@ -100,7 +100,7 @@ public:
     {
       return my_value;
     }
-    std::add_const_t<concept_arg_type> & value() const noexcept
+    concept_arg_type const & value() const noexcept
     {
       return my_value;
     }
