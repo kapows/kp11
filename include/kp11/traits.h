@@ -62,6 +62,7 @@ public:
   template<typename T>
   using remove_cvref_t = std::remove_reference_t<std::remove_cv_t<T>>;
 
+  /// @private
   template<typename T, typename... Cs>
   struct Concept : Cs...
   {
@@ -84,27 +85,33 @@ public:
     Concept & operator=(Concept const &) = delete;
     /// Deleted because facade shouldn't be moved.
     Concept & operator=(Concept &&) = delete;
+    /// Inherit all assignment operators.
     using Cs::operator=...;
     /// Implicit cast
-    operator decltype(auto)() noexcept
+    operator concept_arg_type &() noexcept
     {
       return value();
     }
+    /// Implicit cast
+    operator concept_arg_type const &() const noexcept
+    {
+      return value();
+    }
+    /// @returns Reference to inner value.
     concept_arg_type & value() noexcept
     {
       return my_value;
     }
+    /// @returns Reference to inner value.
     concept_arg_type const & value() const noexcept
     {
       return my_value;
     }
 
-  public: // variables
+  private: // variables
     T my_value;
   };
-/// @param Name Concept name
-/// @param Type Concept type
-/// @param ... Concepts
+/// @private
 #define KP11_CONCEPT(NAME, TYPE, ...)            \
   class NAME : public Concept<TYPE, __VA_ARGS__> \
   {                                              \
@@ -117,6 +124,7 @@ public:
   template<typename T>                           \
   NAME(T const &)->NAME<T const &>;
 
+/// @private
 #define KP11_CONCEPT_VALUE()        \
 public:                             \
   virtual T & value() noexcept = 0; \
@@ -182,20 +190,20 @@ public:                             \
   public: // expressions
     /// `T::pointer`
     using pointer = typename T::pointer;
-    /// `resource_traits<T>::size_type`
+    /// `resource_traits<T>::%size_type`
     using size_type = typename resource_traits<T>::size_type;
-    /// `resource_traits<T>::max_size`
+    /// `resource_traits<T>::%max_size`
     static constexpr size_type max_size() noexcept
     {
       return resource_traits<T>::max_size();
     }
-    /// `T::allocate`.
+    /// `T::allocate`
     pointer allocate(size_type size, size_type alignment) noexcept
     {
       assert(size <= max_size());
       return value().allocate(size, alignment);
     }
-    /// `T::deallocate`.
+    /// `T::deallocate`
     decltype(auto) deallocate(pointer ptr, size_type size, size_type alignment) noexcept
     {
       return value().deallocate(ptr, size, alignment);
@@ -268,7 +276,7 @@ public:                             \
     {
       return value()[ptr];
     }
-    /// `owner_traits<T>::deallocate`
+    /// `owner_traits<T>::%deallocate`
     bool deallocate(pointer ptr, size_type size, size_type alignment) noexcept
     {
       return owner_traits<T>::deallocate(value(), ptr, size, alignment);
@@ -283,8 +291,10 @@ public:                             \
   template<typename T>
   struct marker_traits
   {
+    /// `T::size_type`
     using size_type = typename T::size_type;
     KP11_TRAITS_NESTED_STATIC_FUNC(max_size)
+    /// `true` if present otherwise `false`.
     static constexpr auto max_size_present_v = max_size_picker<T>::value;
     /// `T::max_size()` if present otherwise `T::size()`.
     static constexpr size_type max_size() noexcept
@@ -344,7 +354,7 @@ public:                             \
       assert(n <= max_size());
       return n;
     }
-    /// `marker_traits<T>::max_size`
+    /// `marker_traits<T>::%max_size`
     static constexpr size_type max_size() noexcept
     {
       return marker_traits<T>::max_size();
