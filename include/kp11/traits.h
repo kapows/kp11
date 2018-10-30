@@ -22,27 +22,22 @@ private:                                                                        
   {                                                                             \
     using type = typename MY_T::TYPE;                                           \
   };                                                                            \
-  template<typename MY_T>                                                       \
-  using TYPE##_picker_t = typename TYPE##_picker<MY_T>::type;                   \
                                                                                 \
-public:                                                                         \
-  template<typename MY_T>                                                       \
-  static constexpr auto TYPE##_present_v = TYPE##_picker<MY_T>::value;
+public:
 
 /// @private
-#define KP11_TRAITS_NESTED_STATIC_FUNC(FUNC)                                        \
-  template<typename MY_T, typename Enable = void>                                   \
-  struct FUNC##_present : std::false_type                                           \
-  {                                                                                 \
-  };                                                                                \
-  template<typename MY_T>                                                           \
-  struct FUNC##_present<MY_T, std::void_t<decltype(MY_T::FUNC())>> : std::true_type \
-  {                                                                                 \
-  };                                                                                \
-                                                                                    \
-public:                                                                             \
-  template<typename MY_T>                                                           \
-  static constexpr auto FUNC##_present_v = FUNC##_present<MY_T>::value;
+#define KP11_TRAITS_NESTED_STATIC_FUNC(FUNC)                                       \
+private:                                                                           \
+  template<typename MY_T, typename Enable = void>                                  \
+  struct FUNC##_picker : std::false_type                                           \
+  {                                                                                \
+  };                                                                               \
+  template<typename MY_T>                                                          \
+  struct FUNC##_picker<MY_T, std::void_t<decltype(MY_T::FUNC())>> : std::true_type \
+  {                                                                                \
+  };                                                                               \
+                                                                                   \
+public:
 
   // Detector Idiom
 
@@ -130,14 +125,18 @@ public:                                                 \
     using pointer = typename T::pointer;
     KP11_TRAITS_NESTED_TYPE(
       size_type, std::make_unsigned_t<typename std::pointer_traits<pointer>::difference_type>)
+    /// `true` if present otherwise `false`.
+    static constexpr auto size_type_present_v = size_type_picker<T>::value;
     /// `T::size_type` if present otherwise `std::size_t`.
-    using size_type = size_type_picker_t<T>;
+    using size_type = typename size_type_picker<T>::type;
     KP11_TRAITS_NESTED_STATIC_FUNC(max_size)
+    /// `true` if present otherwise `false`.
+    static constexpr auto max_size_present_v = max_size_picker<T>::value;
     /// `T::max_size()` if present otherwise `std::numeric_limits<size_type>::%max()`
     /// @returns The maximum allocation size supported.
     static constexpr size_type max_size() noexcept
     {
-      if constexpr (max_size_present_v<T>)
+      if constexpr (max_size_present_v)
       {
         return T::max_size();
       }
@@ -291,10 +290,11 @@ public:                                                 \
   {
     using size_type = typename T::size_type;
     KP11_TRAITS_NESTED_STATIC_FUNC(max_size)
+    static constexpr auto max_size_present_v = max_size_picker<T>::value;
     /// `T::max_size()` if present otherwise `T::size()`.
     static constexpr size_type max_size() noexcept
     {
-      if constexpr (max_size_present_v<T>)
+      if constexpr (max_size_present_v)
       {
         return T::max_size();
       }
