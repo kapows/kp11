@@ -25,20 +25,6 @@ private:                                                                        
                                                                                 \
 public:
 
-/// @private
-#define KP11_TRAITS_NESTED_STATIC_FUNC(FUNC)                                       \
-private:                                                                           \
-  template<typename MY_T, typename Enable = void>                                  \
-  struct FUNC##_picker : std::false_type                                           \
-  {                                                                                \
-  };                                                                               \
-  template<typename MY_T>                                                          \
-  struct FUNC##_picker<MY_T, std::void_t<decltype(MY_T::FUNC())>> : std::true_type \
-  {                                                                                \
-  };                                                                               \
-                                                                                   \
-public:
-
   // Detector Idiom
 
   /// @private
@@ -143,11 +129,14 @@ public:                             \
     static constexpr auto size_type_present_v = size_type_picker<T>::value;
     /// `T::size_type` if present otherwise `std::size_t`.
     using size_type = typename size_type_picker<T>::type;
-    KP11_TRAITS_NESTED_STATIC_FUNC(max_size)
-    /// `true` if present otherwise `false`.
-    static constexpr auto max_size_present_v = max_size_picker<T>::value;
+
+    template<typename R>
+    static auto MaxSizePresent_h(R r, size_type n = {}) -> decltype(n = R::max_size());
+    template<typename R>
+    using MaxSizePresent = decltype(MaxSizePresent_h(std::declval<R>()));
+    using max_size_present = is_detected<MaxSizePresent, T>;
+    static constexpr auto max_size_present_v = max_size_present::value;
     /// `T::max_size()` if present otherwise `std::numeric_limits<size_type>::%max()`
-    /// @returns The maximum allocation size supported.
     static constexpr size_type max_size() noexcept
     {
       if constexpr (max_size_present_v)
@@ -293,9 +282,13 @@ public:                             \
   {
     /// `T::size_type`
     using size_type = typename T::size_type;
-    KP11_TRAITS_NESTED_STATIC_FUNC(max_size)
-    /// `true` if present otherwise `false`.
-    static constexpr auto max_size_present_v = max_size_picker<T>::value;
+
+    template<typename R>
+    static auto MaxSizePresent_h(R r, size_type n = {}) -> decltype(n = R::max_size());
+    template<typename R>
+    using MaxSizePresent = decltype(MaxSizePresent_h(std::declval<R>()));
+    using max_size_present = is_detected<MaxSizePresent, T>;
+    static inline constexpr auto max_size_present_v = max_size_present::value;
     /// `T::max_size()` if present otherwise `T::size()`.
     static constexpr size_type max_size() noexcept
     {
@@ -388,6 +381,5 @@ public:                             \
 
 #undef KP11_CONCEPT_VALUE
 #undef KP11_CONCEPT
-#undef KP11_TRAITS_NESTED_STATIC_FUNC
 #undef KP11_TRAITS_NESTED_TYPE
 }
