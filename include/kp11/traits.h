@@ -27,22 +27,22 @@ private:                                                                        
                                                                                 \
 public:                                                                         \
   template<typename MY_T>                                                       \
-  static constexpr auto TYPE##_provided_v = TYPE##_picker<MY_T>::value;
+  static constexpr auto TYPE##_present_v = TYPE##_picker<MY_T>::value;
 
 /// @private
-#define KP11_TRAITS_NESTED_STATIC_FUNC(FUNC)                                         \
-  template<typename MY_T, typename Enable = void>                                    \
-  struct FUNC##_provided : std::false_type                                           \
-  {                                                                                  \
-  };                                                                                 \
-  template<typename MY_T>                                                            \
-  struct FUNC##_provided<MY_T, std::void_t<decltype(MY_T::FUNC())>> : std::true_type \
-  {                                                                                  \
-  };                                                                                 \
-                                                                                     \
-public:                                                                              \
-  template<typename MY_T>                                                            \
-  static constexpr auto FUNC##_provided_v = FUNC##_provided<MY_T>::value;
+#define KP11_TRAITS_NESTED_STATIC_FUNC(FUNC)                                        \
+  template<typename MY_T, typename Enable = void>                                   \
+  struct FUNC##_present : std::false_type                                           \
+  {                                                                                 \
+  };                                                                                \
+  template<typename MY_T>                                                           \
+  struct FUNC##_present<MY_T, std::void_t<decltype(MY_T::FUNC())>> : std::true_type \
+  {                                                                                 \
+  };                                                                                \
+                                                                                    \
+public:                                                                             \
+  template<typename MY_T>                                                           \
+  static constexpr auto FUNC##_present_v = FUNC##_present<MY_T>::value;
 
   // Detector Idiom
 
@@ -122,7 +122,7 @@ public:                                                 \
   X(T const &)->X<T const &>;
 
   /// @brief Provides a standardized way of accessing properties of `Resources`.
-  /// Autogenerates some things if they are not provided.
+  /// Autogenerates some things if they are not present.
   template<typename T>
   struct resource_traits
   {
@@ -137,7 +137,7 @@ public:                                                 \
     /// @returns The maximum allocation size supported.
     static constexpr size_type max_size() noexcept
     {
-      if constexpr (max_size_provided_v<T>)
+      if constexpr (max_size_present_v<T>)
       {
         return T::max_size();
       }
@@ -212,7 +212,7 @@ public:                                                 \
   KP11_CONCEPT_DEDUCTION_GUIDES(Resource)
 
   /// @brief Provides a standardized way of accessing properties of `Owners`.
-  /// Autogenerates some things if they are not provided.
+  /// Autogenerates some things if they are not present.
   template<typename T>
   struct owner_traits : public resource_traits<T>
   {
@@ -285,7 +285,7 @@ public:                                                 \
   KP11_CONCEPT_DEDUCTION_GUIDES(Owner)
 
   /// @brief Provides a standardized way of accessing some properties of `Markers`.
-  /// Autogenerates some things if they are not provided.
+  /// Autogenerates some things if they are not present.
   template<typename T>
   struct marker_traits
   {
@@ -294,7 +294,7 @@ public:                                                 \
     /// `T::max_size()` if present otherwise `T::size()`.
     static constexpr size_type max_size() noexcept
     {
-      if constexpr (max_size_provided_v<T>)
+      if constexpr (max_size_present_v<T>)
       {
         return T::max_size();
       }
