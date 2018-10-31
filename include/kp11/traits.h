@@ -9,7 +9,9 @@
 
 namespace kp11
 {
-/// @private
+/// Defines TYPE_picker that returns T::TYPE if it exists otherwise ALT
+/// @param TYPE Type to check for the prescence of.
+/// @param ALT Alternative type if TYPE is not present.
 #define KP11_TRAITS_NESTED_TYPE(TYPE, ALT)                                      \
 private:                                                                        \
   template<typename MY_T, typename Enable = void>                               \
@@ -97,7 +99,11 @@ public:
   private: // variables
     T my_value;
   };
-/// @private
+/// Create a full concept out of functionality concepts.
+///
+/// @param NAME Concept Name
+/// @param TYPE Type that the concept will hold as its value.
+/// @param ... Functionality Concepts
 #define KP11_CONCEPT(NAME, TYPE, ...)            \
   class NAME : public Concept<TYPE, __VA_ARGS__> \
   {                                              \
@@ -110,7 +116,7 @@ public:
   template<typename T>                           \
   NAME(T const &)->NAME<T const &>;
 
-/// @private
+/// Adds value declarations to Functionality Concepts
 #define KP11_CONCEPT_VALUE()        \
 public:                             \
   virtual T & value() noexcept = 0; \
@@ -154,7 +160,7 @@ public:                             \
       }
     }
   };
-  /// @private
+  /// Something
   template<typename R>
   auto IsResource_h(R r,
     typename R::pointer ptr = {nullptr},
