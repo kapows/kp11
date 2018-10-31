@@ -123,6 +123,7 @@ public:                             \
   {
     /// `T::pointer`
     using pointer = typename T::pointer;
+
     KP11_TRAITS_NESTED_TYPE(
       size_type, std::make_unsigned_t<typename std::pointer_traits<pointer>::difference_type>)
     /// `true` if present otherwise `false`.
@@ -130,11 +131,15 @@ public:                             \
     /// `T::size_type` if present otherwise `std::size_t`.
     using size_type = typename size_type_picker<T>::type;
 
+  private: // max size detector
     template<typename R>
     static auto MaxSizePresent_h(R r, size_type n = {}) -> decltype(n = R::max_size());
     template<typename R>
     using MaxSizePresent = decltype(MaxSizePresent_h(std::declval<R>()));
     using max_size_present = is_detected<MaxSizePresent, T>;
+
+  public:
+    /// `true` if present otherwise `false`.
     static constexpr auto max_size_present_v = max_size_present::value;
     /// `T::max_size()` if present otherwise `std::numeric_limits<size_type>::%max()`
     static constexpr size_type max_size() noexcept
@@ -169,7 +174,7 @@ public:                             \
   /// Checks if `T` meets the `Resource` concept.
   template<typename T>
   inline constexpr auto is_resource_v = is_resource<T>::value;
-  /// `Resource` facade
+  /// Provides a standardized way of accessing properties of `Resources`.
   template<typename T>
   class ResourceConcept
   {
@@ -248,7 +253,7 @@ public:                             \
   /// Checks if `T` meets the `Owner` concept.
   template<typename T>
   inline constexpr auto is_owner_v = is_owner<T>::value;
-  /// `Owner` facade
+  /// Provides a standardized way of accessing properties of `Owners`.
   template<typename T>
   class OwnerConcept : public ResourceConcept<T>
   {
@@ -283,11 +288,15 @@ public:                             \
     /// `T::size_type`
     using size_type = typename T::size_type;
 
+  private: // max_size detector
     template<typename R>
     static auto MaxSizePresent_h(R r, size_type n = {}) -> decltype(n = R::max_size());
     template<typename R>
     using MaxSizePresent = decltype(MaxSizePresent_h(std::declval<R>()));
     using max_size_present = is_detected<MaxSizePresent, T>;
+
+  public:
+    /// `true` if present otherwise `false`.
     static inline constexpr auto max_size_present_v = max_size_present::value;
     /// `T::max_size()` if present otherwise `T::size()`.
     static constexpr size_type max_size() noexcept
@@ -323,7 +332,7 @@ public:                             \
   template<typename T>
   inline constexpr auto is_marker_v = is_marker<T>::value;
 
-  /// `Marker` facade
+  /// Provides a standardized way of accessing some properties of `Markers`.
   template<typename T>
   class MarkerConcept
   {
