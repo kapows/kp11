@@ -134,11 +134,11 @@ public:
   }
   static constexpr size_type max_size() noexcept
   {
-    return size();
+    return 5;
   }
   size_type max_alloc() const noexcept
   {
-    return 10;
+    return 5;
   }
   size_type allocate(size_type n) noexcept
   {
@@ -194,10 +194,10 @@ TEST_CASE("marker_traits", "[marker_traits]")
     [[maybe_unused]] test_marker n = m;
     REQUIRE(m.size() == 10);
     REQUIRE(m.count() == 0);
-    REQUIRE(m.max_size() == test_marker::size());
-    REQUIRE(m.max_alloc() == 10);
-    REQUIRE(m.allocate(10) == 0);
-    m.deallocate(0, 10);
+    REQUIRE(m.max_size() == test_marker::max_size());
+    REQUIRE(m.max_alloc() == 5);
+    REQUIRE(m.allocate(5) == 0);
+    m.deallocate(0, 5);
   }
 }
 TEST_CASE("is_marker", "[marker_traits]")
