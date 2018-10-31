@@ -137,11 +137,14 @@ public:                             \
     /// `T::size_type` if present otherwise `std::size_t`.
     using size_type = typename size_type_picker<T>::type;
 
-  private: // max size detector
+  public: // max size detector
+    /// @private
     template<typename R>
     static auto MaxSizePresent_h(R r, size_type n = {}) -> decltype(n = R::max_size());
+    /// Check if `R::max_size()` is present.
     template<typename R>
     using MaxSizePresent = decltype(MaxSizePresent_h(std::declval<R>()));
+    /// Check if `T::max_size()` is present.
     using max_size_present = is_detected<MaxSizePresent, T>;
 
   public:
@@ -294,11 +297,14 @@ public:                             \
     /// `T::size_type`
     using size_type = typename T::size_type;
 
-  private: // max_size detector
+  public: // max_size detector
+    /// @private
     template<typename R>
     static auto MaxSizePresent_h(R r, size_type n = {}) -> decltype(n = R::max_size());
+    /// Check if `R::max_size()` is present.
     template<typename R>
     using MaxSizePresent = decltype(MaxSizePresent_h(std::declval<R>()));
+    /// Check if `T::max_size()` is present.
     using max_size_present = is_detected<MaxSizePresent, T>;
 
   public:
