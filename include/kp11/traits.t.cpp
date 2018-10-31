@@ -14,7 +14,7 @@ public:
   using size_type = std::size_t;
   static constexpr size_type max_size() noexcept
   {
-    return 10;
+    return 12;
   }
   pointer allocate(size_type size, size_type alignment) noexcept
   {
@@ -42,22 +42,27 @@ TEST_CASE("resource_traits", "[resource_traits]")
 {
   SECTION("minimal")
   {
-    minimal_test_resource x;
-    using rt = resource_traits<minimal_test_resource>;
-    REQUIRE(std::is_same_v<rt::pointer, void *>);
-    REQUIRE(std::is_same_v<rt::size_type,
+    minimal_test_resource y;
+    auto const & z = y;
+    [[maybe_unused]] Resource k = z;
+    Resource x = y;
+    y = x;
+    REQUIRE(std::is_same_v<decltype(x)::pointer, void *>);
+    REQUIRE(std::is_same_v<decltype(x)::size_type,
       std::make_unsigned_t<typename std::pointer_traits<void *>::difference_type>>);
-    REQUIRE(rt::max_size() == std::numeric_limits<std::size_t>::max());
-    REQUIRE(rt::allocate(x, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) == nullptr);
-    rt::deallocate(x, nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4));
+    REQUIRE(decltype(x)::max_size() == std::numeric_limits<std::size_t>::max());
+    REQUIRE(x.allocate(static_cast<std::size_t>(12), static_cast<std::size_t>(4)) == nullptr);
+    x.deallocate(nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4));
   }
   SECTION("full")
   {
-    test_resource x;
-    using rt = resource_traits<test_resource>;
-    REQUIRE(rt::max_size() == test_resource::max_size());
-    REQUIRE(rt::allocate(x, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) == nullptr);
-    rt::deallocate(x, nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4));
+    Resource<test_resource> x;
+    REQUIRE(std::is_same_v<decltype(x)::pointer, void *>);
+    REQUIRE(std::is_same_v<decltype(x)::size_type,
+      std::make_unsigned_t<typename std::pointer_traits<void *>::difference_type>>);
+    REQUIRE(decltype(x)::max_size() == test_resource::max_size());
+    REQUIRE(x.allocate(static_cast<std::size_t>(12), static_cast<std::size_t>(4)) == nullptr);
+    x.deallocate(nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4));
   }
 }
 TEST_CASE("is_resource", "[resource_traits]")
@@ -94,17 +99,17 @@ TEST_CASE("owner_traits", "[owner_traits]")
 {
   SECTION("minimal")
   {
-    minimal_test_owner x;
-    using ot = owner_traits<minimal_test_owner>;
-    REQUIRE(ot::deallocate(x, nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) ==
-            false);
+    Owner<minimal_test_owner> x;
+    REQUIRE(x[nullptr] == nullptr);
+    REQUIRE(
+      x.deallocate(nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) == false);
   }
   SECTION("full")
   {
-    test_owner x;
-    using ot = owner_traits<test_owner>;
-    REQUIRE(ot::deallocate(x, nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) ==
-            false);
+    Owner<test_owner> x;
+    REQUIRE(x[nullptr] == nullptr);
+    REQUIRE(
+      x.deallocate(nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) == false);
   }
 }
 TEST_CASE("is_owner", "[owner_traits]")
@@ -121,23 +126,23 @@ public:
   using size_type = std::size_t;
   static constexpr size_type size() noexcept
   {
-    return 5;
+    return 10;
   }
-  size_type count() noexcept
+  size_type count() const noexcept
   {
-    return size();
+    return 0;
   }
   static constexpr size_type max_size() noexcept
   {
-    return size();
+    return 5;
   }
   size_type max_alloc() const noexcept
   {
-    return size();
+    return 5;
   }
   size_type allocate(size_type n) noexcept
   {
-    return size();
+    return 0;
   }
   void deallocate(size_type index, size_type n) noexcept
   {
@@ -151,19 +156,19 @@ public:
   using size_type = std::size_t;
   static constexpr size_type size() noexcept
   {
-    return 5;
+    return 10;
   }
-  size_type count() noexcept
+  size_type count() const noexcept
   {
-    return size();
+    return 0;
   }
   size_type max_alloc() const noexcept
   {
-    return size();
+    return 10;
   }
   size_type allocate(size_type n) noexcept
   {
-    return size();
+    return 0;
   }
   void deallocate(size_type index, size_type n) noexcept
   {
@@ -174,13 +179,25 @@ TEST_CASE("marker_traits", "[marker_traits]")
 {
   SECTION("minimal")
   {
-    using mt = marker_traits<minimal_test_marker>;
-    REQUIRE(mt::max_size() == minimal_test_marker::size());
+    Marker<minimal_test_marker> m;
+    [[maybe_unused]] minimal_test_marker n = m;
+    REQUIRE(m.size() == 10);
+    REQUIRE(m.count() == 0);
+    REQUIRE(m.max_size() == minimal_test_marker::size());
+    REQUIRE(m.max_alloc() == 10);
+    REQUIRE(m.allocate(10) == 0);
+    m.deallocate(0, 10);
   }
   SECTION("full")
   {
-    using mt = marker_traits<test_marker>;
-    REQUIRE(mt::max_size() == test_marker::max_size());
+    Marker<test_marker> m;
+    [[maybe_unused]] test_marker n = m;
+    REQUIRE(m.size() == 10);
+    REQUIRE(m.count() == 0);
+    REQUIRE(m.max_size() == test_marker::max_size());
+    REQUIRE(m.max_alloc() == 5);
+    REQUIRE(m.allocate(5) == 0);
+    m.deallocate(0, 5);
   }
 }
 TEST_CASE("is_marker", "[marker_traits]")
