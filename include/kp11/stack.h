@@ -37,14 +37,6 @@ namespace kp11
     {
       return size();
     }
-    /// The max_alloc is always `size() - count()` for this structure.
-    /// * Complexity `O(1)`
-    ///
-    /// @returns The largest number of consecutive unallocated indexes.
-    size_type max_alloc() const noexcept
-    {
-      return size() - count();
-    }
 
   public: // modifiers
     /// Increases our index by `n` and returns the previous index.
@@ -52,10 +44,11 @@ namespace kp11
     ///
     /// @param n Number of indexes to allocate.
     ///
-    /// @returns Index of the start of the `n` indexes allocated.
+    /// @returns (success) Index of the start of the `n` indexes allocated.
+    /// @returns (failure) `size()`
     ///
     /// @pre `n > 0`.
-    /// @pre `n <= max_alloc()`
+    /// @pre `n <= max_size()`
     ///
     /// @post [`(return value)`, `(return value) + n`) will not returned again from any subsequent
     /// call to `allocate` unless properly deallocated.
@@ -63,8 +56,12 @@ namespace kp11
     size_type allocate(size_type n) noexcept
     {
       assert(n > 0);
-      assert(n <= max_alloc());
-      return std::exchange(first, first + n);
+      assert(n <= max_size());
+      if (size() - first >= n)
+      {
+        return std::exchange(first, first + n);
+      }
+      return size();
     }
     /// The `index + n` is checked to see whether it is adjacent to our number. If it is then our
     /// number becomes `index` and thus our first unallocated index will start at `index`. If it is
