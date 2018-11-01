@@ -23,45 +23,6 @@ TEST_CASE("size", "[size]")
     REQUIRE(m.count() == 0);
   }
 }
-TEST_CASE("max_alloc", "[max_alloc]")
-{
-  bitset<10> m;
-  SECTION("initial")
-  {
-    REQUIRE(m.max_alloc() == 10);
-  }
-  SECTION("end unset")
-  {
-    [[maybe_unused]] auto a = m.allocate(3);
-    REQUIRE(m.max_alloc() == 7);
-  }
-  SECTION("start unset")
-  {
-    auto a = m.allocate(3);
-    [[maybe_unused]] auto b = m.allocate(7);
-    m.deallocate(a, 3);
-    REQUIRE(m.max_alloc() == 3);
-  }
-  SECTION("middle unset")
-  {
-    [[maybe_unused]] auto a = m.allocate(3);
-    auto b = m.allocate(4);
-    [[maybe_unused]] auto c = m.allocate(3);
-    m.deallocate(b, 4);
-    REQUIRE(m.max_alloc() == 4);
-  }
-  SECTION("merges")
-  {
-    auto a = m.allocate(3);
-    auto b = m.allocate(4);
-    auto c = m.allocate(3);
-    m.deallocate(a, 3);
-    m.deallocate(b, 4);
-    REQUIRE(m.max_alloc() == 7);
-    m.deallocate(c, 3);
-    REQUIRE(m.max_alloc() == 10);
-  }
-}
 TEST_CASE("allocate", "[allocate]")
 {
   bitset<10> m;
