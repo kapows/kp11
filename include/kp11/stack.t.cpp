@@ -39,6 +39,11 @@ TEST_CASE("allocate", "[allocate]")
       REQUIRE(m.count() == 10);
     }
   }
+  SECTION("failure")
+  {
+    m.allocate(10);
+    REQUIRE(m.allocate(1) == m.size());
+  }
 }
 TEST_CASE("deallocate", "[deallocate]")
 {
