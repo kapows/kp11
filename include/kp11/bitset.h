@@ -81,17 +81,22 @@ namespace kp11
     size_type allocate_one() noexcept
     {
       size_type first = 0;
-      for (; bits[first]; ++first)
+      for (; first != size() && bits[first]; ++first)
       {
       }
-      bits.set(first);
-      return first;
+      if (first != size())
+      {
+        bits.set(first);
+        return first;
+      }
+      return size();
     }
     size_type allocate_many(size_type n) noexcept
     {
       assert(n > 1);
       size_type first = 0;
-      for (size_type count = 0; count < n; ++first)
+      size_type count = 0;
+      for (; first != size() && count != n; ++first)
       {
         if (bits[first])
         {
@@ -102,11 +107,15 @@ namespace kp11
           ++count;
         }
       }
-      for (auto count = n; count; --count)
+      if (count == n)
       {
-        bits.set(--first);
+        for (auto count = n; count; --count)
+        {
+          bits.set(--first);
+        }
+        return first;
       }
-      return first;
+      return size();
     }
 
   private: // variables
