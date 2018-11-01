@@ -76,6 +76,11 @@ TEST_CASE("set", "[set]")
       REQUIRE(m.count() == 7);
     }
   }
+  SECTION("failure")
+  {
+    m.allocate(10);
+    REQUIRE(m.allocate(1) == m.size());
+  }
 }
 TEST_CASE("reset", "[reset]")
 {
