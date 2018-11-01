@@ -56,11 +56,6 @@ namespace kp11
     {
       return 1;
     }
-    /// @returns `1` if there are unallocated indexes otherwise `0`.
-    size_type max_alloc() const noexcept
-    {
-      return head != size() ? static_cast<size_type>(1) : static_cast<size_type>(0);
-    }
 
   public: // modifiers
     /// The next node becomes the head of the linked list. Returns the index of the previous head
@@ -69,10 +64,11 @@ namespace kp11
     ///
     /// @param n Number of indexes to allocate.
     ///
-    /// @returns Index of the start of the `n` indexes to allocate.
+    /// @returns (success) Index of the start of the `n` indexes to allocate.
+    /// @returns (failure) `size()`
     ///
     /// @pre `n == 1`
-    /// @pre `n <= max_alloc()`
+    /// @pre `n <= max_size()`
     ///
     /// @post `(return value)` will not returned again from any subsequent call to `allocate`
     /// unless `deallocate` has been called on it.
@@ -80,9 +76,13 @@ namespace kp11
     size_type allocate(size_type n) noexcept
     {
       assert(n == 1);
-      assert(n <= max_alloc());
-      ++num_occupied;
-      return std::exchange(head, next[head]);
+      assert(n <= max_size());
+      if (head != size())
+      {
+        ++num_occupied;
+        return std::exchange(head, next[head]);
+      }
+      return size();
     }
     /// The node at `index` becomes the new head node and the head node is pointed at the previous
     /// head node.
