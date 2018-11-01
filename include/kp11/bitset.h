@@ -95,31 +95,29 @@ namespace kp11
     {
       assert(n > 1);
       size_type first = 0;
-      size_type count = 0;
-      for (; first != size() && count != n; ++first)
+      for (size_type count = 0; first != size(); ++first)
       {
         if (bits[first])
         {
           count = 0;
         }
-        else
+        else if (++count == n)
         {
-          ++count;
+          // have to increment first before we can decrement the count since we're off by 1
+          ++first;
+          for (auto count = n; count; --count)
+          {
+            bits.set(--first);
+          }
+          return first;
         }
-      }
-      if (count == n)
-      {
-        for (auto count = n; count; --count)
-        {
-          bits.set(--first);
-        }
-        return first;
       }
       return size();
     }
 
   private: // variables
-    /// `true` if allocated, `false` if not allocated, this is to be consistent with `bitset::set`.
+    /// `true` if allocated, `false` if not allocated, this is to be consistent with
+    /// `bitset::set`.
     std::bitset<N> bits;
   };
 }
