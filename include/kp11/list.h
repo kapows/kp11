@@ -86,23 +86,6 @@ namespace kp11
     {
       return size();
     }
-    /// Forward iterates through the free list to find the largest number of consecutive unallocated
-    /// indexes.
-    /// * Complexity `O(n)`
-    ///
-    /// @returns The largest number of consecutive unallocated indexes.
-    size_type max_alloc() const noexcept
-    {
-      size_type largest = 0;
-      for (auto && node : free_list)
-      {
-        if (largest < node.size)
-        {
-          largest = node.size;
-        }
-      }
-      return largest;
-    }
 
   public: // modifiers
     /// Forward iterate through the free list to find the best fit node for `n`. If the size of the
@@ -112,10 +95,11 @@ namespace kp11
     ///
     /// @param n Number of indexes to allocate.
     ///
-    /// @returns Index of the start of the `n` indexes allocated.
+    /// @returns (success) Index of the start of the `n` indexes allocated.
+    /// @returns (failure) `size()`
     ///
     /// @pre `n > 0`.
-    /// @pre `n <= max_alloc()`
+    /// @pre `n <= max_size()`
     ///
     /// @post [`(return value)`, `(return value) + n`) will not returned again from
     /// any subsequent call to `allocate` unless deallocated.
@@ -123,9 +107,12 @@ namespace kp11
     size_type allocate(size_type n) noexcept
     {
       assert(n > 0);
-      assert(n <= max_alloc());
-      auto const index = find_best_fit(n);
-      return take_front(index, n);
+      assert(n <= max_size());
+      if (auto const index = find_best_fit(n); index != size())
+      {
+        return take_front(index, n);
+      }
+      return size();
     }
     /// If the node has adjacent nodes then they are checked to see whether or not they are
     /// unallocated. If there are two unallocated adjacent nodes then merge them into one node
@@ -194,13 +181,14 @@ namespace kp11
     /// Forward iterate through the free list to find the best fit indexes for `n`.
     ///
     /// @pre `n > 0`
-    /// @pre `n <= max_alloc()`
+    /// @pre `n <= max_size()`
     ///
-    /// @returns Index of `n` unallocated indexes.
+    /// @returns (success) Index of `n` unallocated indexes.
+    /// @returns (failure) `size()`.
     size_type find_best_fit(size_type n) const noexcept
     {
       assert(n > 0);
-      assert(n <= max_alloc());
+      assert(n <= max_size());
       size_type node_index = size();
       for (size_type i = 0, last = static_cast<size_type>(free_list.size()); i != last; ++i)
       {
@@ -215,8 +203,11 @@ namespace kp11
           }
         }
       }
-      assert(node_index != size());
-      return free_list[node_index].index;
+      if (node_index != size())
+      {
+        return free_list[node_index].index;
+      }
+      return size();
     }
     /// Takes `size` indexes out of the front of the free list node belonging to `index` and sets
     /// the cache to size(). If the number of indexes in the free list node not zero, the cache
