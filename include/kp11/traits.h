@@ -58,21 +58,21 @@ public:                                                                     \
   template<typename... Args>    \
   NAME(Args &...)->NAME<Args &...>;
 /// Adds concept variable declarations
-#define KP11_CONCEPT_VAR_DECL(TYPE, NAME) \
-private:                                  \
-  virtual TYPE & NAME() noexcept = 0;     \
-  virtual TYPE const & NAME() const noexcept = 0;
+#define KP11_CONCEPT_VAR_DECL(TYPE, NAME)                      \
+private:                                                       \
+  virtual std::remove_reference_t<TYPE> & NAME() noexcept = 0; \
+  virtual std::remove_reference_t<TYPE> const & NAME() const noexcept = 0;
 /// Adds concept variable definitions
-#define KP11_CONCEPT_VAR_DEF(TYPE, NAME, PRIVATE_NAME) \
-private:                                               \
-  TYPE PRIVATE_NAME;                                   \
-  TYPE & NAME() noexcept                               \
-  {                                                    \
-    return PRIVATE_NAME;                               \
-  };                                                   \
-  TYPE const & NAME() const noexcept                   \
-  {                                                    \
-    return PRIVATE_NAME;                               \
+#define KP11_CONCEPT_VAR_DEF(TYPE, NAME, PRIVATE_NAME)        \
+private:                                                      \
+  TYPE PRIVATE_NAME;                                          \
+  std::remove_reference_t<TYPE> & NAME() noexcept             \
+  {                                                           \
+    return PRIVATE_NAME;                                      \
+  };                                                          \
+  std::remove_reference_t<TYPE> const & NAME() const noexcept \
+  {                                                           \
+    return PRIVATE_NAME;                                      \
   };
 /// Adds concept variable implicit cast
 #define KP11_CONCEPT_VAR_IMPLICIT_CAST(TYPE, NAME) \
