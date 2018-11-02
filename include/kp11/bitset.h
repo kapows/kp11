@@ -57,20 +57,20 @@ namespace kp11
       assert(n <= max_size());
       return n == 1 ? allocate_one() : allocate_many(n);
     }
-    /// Forward iterate through the bitset from `index` to `index + n` and deallocate them.
+    /// Forward iterate through the bitset from `i` to `i + n` and deallocate them.
     /// * Complexity `O(n)`
     ///
-    /// @param index Return value of a call to `allocate`.
+    /// @param i Return value of a call to `allocate`.
     /// @param n Corresponding parameter in the call to `allocate`.
     ///
-    /// @post [`index`, `index + n`) may be returned by a call to `allocate`.
+    /// @post [`i`, `i + n`) may be returned by a call to `allocate`.
     /// @post `count() == (previous) count() - n`
-    void deallocate(size_type index, size_type n) noexcept
+    void deallocate(size_type i, size_type n) noexcept
     {
       assert(n <= size());
-      assert(index < size());
-      assert(index + n <= size());
-      for (auto first = index, last = index + n; first < last; ++first)
+      assert(i < size());
+      assert(i + n <= size());
+      for (auto first = i, last = i + n; first < last; ++first)
       {
         bits.reset(first);
       }
