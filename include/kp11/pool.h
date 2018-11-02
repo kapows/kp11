@@ -54,7 +54,7 @@ namespace kp11
     /// @returns The maximum allocation size supported. This is always `1`.
     static constexpr size_type max_size() noexcept
     {
-      return 1;
+      return static_cast<size_type>(1);
     }
 
   public: // modifiers
@@ -84,24 +84,24 @@ namespace kp11
       }
       return size();
     }
-    /// The node at `index` becomes the new head node and the head node is pointed at the previous
+    /// The node at `i` becomes the new head node and the head node is pointed at the previous
     /// head node.
     /// * Complexity `O(1)`
     ///
-    /// @param index Returned by a call to `allocate`.
+    /// @param i Returned by a call to `allocate`.
     /// @param n Corresponding parameter in the call to `allocate`.
     ///
     /// @pre `n == 1`
     ///
-    /// @post `index` may be returned by a call to `allocate`.
+    /// @post `i` may be returned by a call to `allocate`.
     /// @post `count() == (previous) count() - n`
-    void deallocate(size_type index, size_type n) noexcept
+    void deallocate(size_type i, size_type n) noexcept
     {
       assert(n == 1);
-      assert(index < size());
+      assert(i < size());
       --num_occupied;
-      next[index] = head;
-      head = index;
+      next[i] = head;
+      head = i;
     }
 
   private: // variables
