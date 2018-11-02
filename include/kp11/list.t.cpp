@@ -190,7 +190,7 @@ TEST_CASE("best fit", "[bestfit]")
     [[maybe_unused]] auto k = m.allocate(2);
   }
 }
-TEST_CASE("max free list", "[max_free_list]")
+TEST_CASE("max separate", "[max_separate]")
 {
   list<11> m;
   auto a = m.allocate(1);
