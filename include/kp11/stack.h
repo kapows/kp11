@@ -25,7 +25,7 @@ namespace kp11
     /// @returns Number of allocated indexes.
     size_type count() const noexcept
     {
-      return first;
+      return index;
     }
     /// @returns Total number of indexes (`N`).
     static constexpr size_type size() noexcept
@@ -57,9 +57,9 @@ namespace kp11
     {
       assert(n > 0);
       assert(n <= max_size());
-      if (size() - first >= n)
+      if (size() - index >= n)
       {
-        return std::exchange(first, first + n);
+        return std::exchange(index, index + n);
       }
       return size();
     }
@@ -76,15 +76,15 @@ namespace kp11
     {
       assert(i <= size());
       assert(i + n <= size());
-      assert(i < first);
-      if (i + n == first)
+      assert(i < index);
+      if (i + n == index)
       {
-        first = i;
+        index = i;
       }
     }
 
   private: // variables
     /// Current index.
-    size_type first = 0;
+    size_type index = 0;
   };
 }
