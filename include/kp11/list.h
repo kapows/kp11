@@ -108,9 +108,9 @@ namespace kp11
     {
       assert(n > 0);
       assert(n <= max_size());
-      if (auto const index = find_best_fit(n); index != size())
+      if (auto const i = find_best_fit(n); i != size())
       {
-        return take_front(index, n);
+        return take_front(i, n);
       }
       return size();
     }
@@ -120,47 +120,47 @@ namespace kp11
     /// node. If there are no unallocated adjacent nodes then add a new node to the free list.
     /// * Complexity `O(1)`
     ///
-    /// @param index Returned by a call to `allocate`.
+    /// @param i Returned by a call to `allocate`.
     /// @param n Corresponding parameter in the call to `allocate`.
     ///
-    /// @post [`index`, `index + n`) may be returned by a call to `allocate`.
+    /// @post [`i`, `i + n`) may be returned by a call to `allocate`.
     /// @post `count() == (previous) count() - n`.
-    void deallocate(size_type index, size_type n) noexcept
+    void deallocate(size_type i, size_type n) noexcept
     {
-      assert(index < size());
+      assert(i < size());
       assert(n > 0);
-      assert(index + n <= size());
-      auto const previous_is_vacant = index > 0 && cache[index - 1] != size();
-      auto const next_is_vacant = index + n < size() && cache[index + n] != size();
+      assert(i + n <= size());
+      auto const previous_is_vacant = i > 0 && cache[i - 1] != size();
+      auto const next_is_vacant = i + n < size() && cache[i + n] != size();
       if (previous_is_vacant)
       {
-        auto const previous_index = free_list[cache[index - 1]].index;
-        add_back(previous_index, n);
+        auto const j = free_list[cache[i - 1]].index;
+        add_back(j, n);
         if (next_is_vacant)
         {
-          auto const next = free_list[cache[index + n]];
+          auto const next = free_list[cache[i + n]];
           take_front(next.index, next.size);
-          add_back(previous_index, next.size);
+          add_back(j, next.size);
         }
       }
       else if (next_is_vacant)
       {
-        add_front(index + n, n);
+        add_front(i + n, n);
       }
       else
       {
-        push_back(index, n);
+        push_back(i, n);
       }
     }
 
   private: // helpers
     /// Cache set helper because both the start and end must be set.
-    void set_cache(size_type index, size_type size, size_type node_index) noexcept
+    void set_cache(size_type i, size_type n, size_type node_index) noexcept
     {
-      assert(index < this->size());
-      assert(size > 0);
-      assert(index + size <= this->size());
-      cache[index + (size - 1)] = cache[index] = node_index;
+      assert(i < size());
+      assert(n > 0);
+      assert(i + n <= size());
+      cache[i + (n - 1)] = cache[i] = node_index;
     }
     /// Node removal helper because the cache needs to be kept in sync.
     /// Move and pop with back.
@@ -209,21 +209,21 @@ namespace kp11
       }
       return size();
     }
-    /// Takes `size` indexes out of the front of the free list node belonging to `index` and sets
+    /// Takes `n` indexes out of the front of the free list node belonging to `i` and sets
     /// the cache to size(). If the number of indexes in the free list node not zero, the cache
-    /// for the new `index` is updated, otherwise, the node is removed. Invalidates the beginning
+    /// for the new `i` is updated, otherwise, the node is removed. Invalidates the beginning
     /// index in the cache.
-    size_type take_front(size_type index, size_type size) noexcept
+    size_type take_front(size_type i, size_type n) noexcept
     {
-      assert(index < this->size());
-      assert(size > 0);
-      assert(cache[index] != this->size());
-      auto node_index = cache[index];
+      assert(i < this->size());
+      assert(n > 0);
+      assert(cache[i] != this->size());
+      auto node_index = cache[i];
       auto && node = free_list[node_index];
-      assert(node.size >= size);
-      node.size -= size;
-      auto const taken_index = std::exchange(node.index, node.index + size);
-      set_cache(taken_index, size, this->size());
+      assert(node.size >= n);
+      node.size -= n;
+      auto const taken_index = std::exchange(node.index, node.index + n);
+      set_cache(taken_index, n, this->size());
       if (node.size)
       {
         set_cache(node.index, node.size, node_index);
@@ -234,37 +234,37 @@ namespace kp11
       }
       return taken_index;
     }
-    /// Adds `size` unallocated indexes to the back of the free list node belonging to `index` and
+    /// Adds `n` unallocated indexes to the back of the free list node belonging to `index` and
     /// sets the cache. Invalidates the end index in the cache.
-    void add_back(size_type index, size_type size) noexcept
+    void add_back(size_type i, size_type n) noexcept
     {
-      assert(index < this->size());
-      assert(cache[index] != this->size());
-      auto node_index = cache[index];
-      auto && node = free_list[node_index];
-      node.size += size;
-      set_cache(node.index, node.size, node_index);
+      assert(i < size());
+      assert(cache[i] != size());
+      auto const a = cache[i];
+      auto && node = free_list[a];
+      node.size += n;
+      set_cache(node.index, node.size, a);
     }
     /// Adds `size` unallocated indexes to the front of the free list node belonging to `index` and
     /// sets the cache. Invalidates the beginning index in the cache.
-    void add_front(size_type index, size_type size) noexcept
+    void add_front(size_type i, size_type n) noexcept
     {
-      assert(index < this->size());
-      assert(cache[index] != this->size());
-      auto node_index = cache[index];
-      auto && node = free_list[node_index];
-      node.size += size;
-      node.index -= size;
-      set_cache(node.index, node.size, node_index);
+      assert(i < size());
+      assert(cache[i] != size());
+      auto const a = cache[i];
+      auto && node = free_list[a];
+      node.size += n;
+      node.index -= n;
+      set_cache(node.index, node.size, a);
     }
     /// Add a node to the back of the free list and sets the cache for the new node.
-    void push_back(size_type index, size_type size) noexcept
+    void push_back(size_type i, size_type n) noexcept
     {
-      assert(index < this->size());
-      assert(size > 0);
-      free_list.emplace_back(size, index);
-      auto const node_index = static_cast<size_type>(free_list.size() - 1);
-      set_cache(free_list[node_index].index, free_list[node_index].size, node_index);
+      assert(i < this->size());
+      assert(n > 0);
+      free_list.emplace_back(n, i);
+      auto const a = static_cast<size_type>(free_list.size() - 1);
+      set_cache(free_list[a].index, free_list[a].size, a);
     }
 
   private: // variables
