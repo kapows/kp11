@@ -70,7 +70,7 @@ TEST_CASE("global using the same resource", "[global]")
   x.allocate(1);
   y.allocate(1);
 
-  REQUIRE(allocator_singleton<resource>().allocations == 2);
+  REQUIRE(resource_singleton<resource>().allocations == 2);
 }
 TEST_CASE("local relation", "[relation][local]")
 {

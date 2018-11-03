@@ -69,7 +69,7 @@ namespace kp11
   }
   /// Resource that `allocator<T, Resource>` uses.
   template<typename Resource>
-  static Resource & allocator_singleton()
+  static Resource & resource_singleton()
   {
     static Resource resource;
     return resource;
@@ -104,7 +104,7 @@ namespace kp11
   private: // accessors
     virtual Resource & resource() noexcept override
     {
-      return allocator_singleton<Resource>();
+      return resource_singleton<Resource>();
     }
   };
   template<typename T, typename U, typename R>
