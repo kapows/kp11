@@ -107,12 +107,6 @@ namespace kp11
     {
       return allocator_singleton<Resource>();
     }
-
-  public: // accessors
-    static Resource * get_resource() noexcept
-    {
-      return &allocator_singleton<Resource>();
-    }
   };
   template<typename T, typename U, typename R>
   bool operator==(allocator<T, R> const & lhs, allocator<U, R> const & rhs) noexcept
