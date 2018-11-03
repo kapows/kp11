@@ -74,7 +74,7 @@ namespace kp11
     static Resource resource;
     return resource;
   }
-  /// @brief Adaptor that uses a `resource_singleton<Resource>`.
+  /// @brief Adaptor that uses a `resource_singleton<R>`.
   ///
   /// Use this when you want to make a stateless global allocator.
   ///
