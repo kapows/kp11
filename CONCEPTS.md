@@ -20,7 +20,7 @@ The following expressions must be valid and meet their specified requirements:
 
 | Expression | Requirements | Return Type |
 | ---------- | ------------ | ----------- | 
-| `R::pointer` (optional) |  Satisfies `NullablePointer` and `RandomAccessIterator` | | 
+| `R::pointer` |  Satisfies `NullablePointer` and `RandomAccessIterator` | | 
 | `R::size_type` (optional) | Can represent the size of the largest object `r` can allocate. | |
 | `R r()` | | |
 | `ptr = r.allocate(size, alignment)` | Unless `ptr` is `nullptr` it is not returned again unless it has been passed to `r.deallocate(ptr, size, alignment)`. | `R::pointer` |
@@ -99,8 +99,7 @@ The following expressions must be valid and meet their specified requirements:
 | `n = R::size()` | | `R::size_type` | 
 | `n = r.count()` | `n <= R::size()` | `R::size_type` | 
 | `n = R::max_size()` (optional) | `n <= R::size()` | `R::size_type` | 
-| `n = r.max_alloc()` | `n <= min(R::max_size(), R::size() - r.count())` | `R::size_type` | 
-| `i = r.allocate(n)` | `n <= r.max_alloc()`. `i < R::max_size()`. `[i,i+n)` is not returned until a call to `r.deallocate(i, n)`. | `R::size_type` | 
+| `i = r.allocate(n)` | `n <= r.max_size()`. `i < R::size()`. `[i, i + n)` is not returned until a call to `r.deallocate(i, n)`. | `R::size_type` | 
 | `r.deallocate(i, n)` | | unused | 
 
 ### Exemplar
