@@ -42,8 +42,8 @@ Steps:
 1. Choose `free_block` or `monotonic`. 
 2. Pick a `Marker` (if using `free_block`).
 3. Pick an "Upstream" `Resource`.
-4. Possibly guard against the allocation limitation with `fallback`.
-5. Possibly guard against the `Marker`'s or `monotonic` limitations with a `segregator`.
+4. Possibly guard against the out of memory limitation with `fallback`.
+5. Possibly guard against the `max_size()` limitation with a `segregator`.
 
 ```cpp
 #include <kp11/allocator.h> // Adaptor
