@@ -25,7 +25,7 @@ namespace kp11
     /// @returns Number of allocated indexes.
     size_type count() const noexcept
     {
-      return first;
+      return index;
     }
     /// @returns Total number of indexes (`N`).
     static constexpr size_type size() noexcept
@@ -37,14 +37,6 @@ namespace kp11
     {
       return size();
     }
-    /// The max_alloc is always `size() - count()` for this structure.
-    /// * Complexity `O(1)`
-    ///
-    /// @returns The largest number of consecutive unallocated indexes.
-    size_type max_alloc() const noexcept
-    {
-      return size() - count();
-    }
 
   public: // modifiers
     /// Increases our index by `n` and returns the previous index.
@@ -52,10 +44,11 @@ namespace kp11
     ///
     /// @param n Number of indexes to allocate.
     ///
-    /// @returns Index of the start of the `n` indexes allocated.
+    /// @returns (success) Index of the start of the `n` indexes allocated.
+    /// @returns (failure) `size()`
     ///
     /// @pre `n > 0`.
-    /// @pre `n <= max_alloc()`
+    /// @pre `n <= max_size()`
     ///
     /// @post [`(return value)`, `(return value) + n`) will not returned again from any subsequent
     /// call to `allocate` unless properly deallocated.
@@ -63,32 +56,35 @@ namespace kp11
     size_type allocate(size_type n) noexcept
     {
       assert(n > 0);
-      assert(n <= max_alloc());
-      return std::exchange(first, first + n);
+      assert(n <= max_size());
+      if (size() - index >= n)
+      {
+        return std::exchange(index, index + n);
+      }
+      return size();
     }
-    /// The `index + n` is checked to see whether it is adjacent to our number. If it is then our
-    /// number becomes `index` and thus our first unallocated index will start at `index`. If it is
-    /// not then it is a no-op and the indexes are not recovered.
+    /// The `i + n` is checked to see whether it is adjacent to our unallocated index. If it is
+    /// then our unallocated index will start at `i`. If not then it is a no-op and the indexes
+    /// are not recovered.
     /// * Complexity `O(1)`
     ///
-    /// @param index Returned by a call to `allocate`.
+    /// @param i Returned by a call to `allocate`.
     /// @param n Corresponding parameter in the call to `allocate`.
     ///
-    /// @post (success) [`index`, `index + n`) can be returned by a call to `allocate`.
-    /// @post (success) `count() == (previous) count() - n`
-    void deallocate(size_type index, size_type n) noexcept
+    /// @post (success) [`i`, `i + n`) can be returned by a call to `allocate`.
+    void deallocate(size_type i, size_type n) noexcept
     {
-      assert(index <= size());
-      assert(index + n <= size());
-      assert(index < first);
-      if (index + n == first)
+      assert(i <= size());
+      assert(i + n <= size());
+      assert(i < index);
+      if (i + n == index)
       {
-        first = index;
+        index = i;
       }
     }
 
   private: // variables
     /// Current index.
-    size_type first = 0;
+    size_type index = 0;
   };
 }

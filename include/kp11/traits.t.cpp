@@ -136,10 +136,6 @@ public:
   {
     return 5;
   }
-  size_type max_alloc() const noexcept
-  {
-    return 5;
-  }
   size_type allocate(size_type n) noexcept
   {
     return 0;
@@ -162,10 +158,6 @@ public:
   {
     return 0;
   }
-  size_type max_alloc() const noexcept
-  {
-    return 10;
-  }
   size_type allocate(size_type n) noexcept
   {
     return 0;
@@ -184,7 +176,6 @@ TEST_CASE("marker_traits", "[marker_traits]")
     REQUIRE(m.size() == 10);
     REQUIRE(m.count() == 0);
     REQUIRE(m.max_size() == minimal_test_marker::size());
-    REQUIRE(m.max_alloc() == 10);
     REQUIRE(m.allocate(10) == 0);
     m.deallocate(0, 10);
   }
@@ -195,7 +186,6 @@ TEST_CASE("marker_traits", "[marker_traits]")
     REQUIRE(m.size() == 10);
     REQUIRE(m.count() == 0);
     REQUIRE(m.max_size() == test_marker::max_size());
-    REQUIRE(m.max_alloc() == 5);
     REQUIRE(m.allocate(5) == 0);
     m.deallocate(0, 5);
   }

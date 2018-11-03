@@ -331,7 +331,6 @@ public:                             \
       n = R::size(),
       n = r.count(),
       n = marker_traits<R>::max_size(),
-      n = r.max_alloc(),
       i = r.allocate(n),
       r.deallocate(i, n));
   /// Checks if `T` meets the `Marker` concept.
@@ -373,18 +372,10 @@ public:                             \
     {
       return marker_traits<T>::max_size();
     }
-    /// `T::max_alloc`.
-    size_type max_alloc() const noexcept
-    {
-      auto n = value().max_alloc();
-      assert(n <= max_size());
-      assert(n <= size() - count());
-      return n;
-    }
     /// `T::allocate`
     size_type allocate(size_type n) noexcept
     {
-      assert(n <= max_alloc());
+      assert(n <= max_size());
       auto i = value().allocate(n);
       assert(i < max_size());
       return i;

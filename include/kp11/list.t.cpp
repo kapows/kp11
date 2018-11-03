@@ -23,38 +23,6 @@ TEST_CASE("size", "[size]")
     REQUIRE(m.count() == 0);
   }
 }
-TEST_CASE("max_alloc", "[max_alloc]")
-{
-  list<10> m;
-  SECTION("initial")
-  {
-    REQUIRE(m.max_alloc() == 10);
-  }
-  SECTION("out of spots")
-  {
-    [[maybe_unused]] auto a = m.allocate(10);
-    REQUIRE(m.max_alloc() == 0);
-  }
-  SECTION("set")
-  {
-    [[maybe_unused]] auto a = m.allocate(3);
-    auto b = m.allocate(4);
-    [[maybe_unused]] auto c = m.allocate(3);
-    m.deallocate(b, 4);
-    REQUIRE(m.max_alloc() == 4);
-  }
-  SECTION("merge")
-  {
-    auto a = m.allocate(3);
-    auto b = m.allocate(4);
-    auto c = m.allocate(3);
-    m.deallocate(b, 4);
-    m.deallocate(c, 3);
-    REQUIRE(m.max_alloc() == 7);
-    m.deallocate(a, 3);
-    REQUIRE(m.max_alloc() == 10);
-  }
-}
 TEST_CASE("set", "[set]")
 {
   list<10> m;
@@ -64,13 +32,11 @@ TEST_CASE("set", "[set]")
     {
       SECTION("less than size")
       {
-        REQUIRE(m.max_alloc() >= 5);
         [[maybe_unused]] auto a = m.allocate(5);
         REQUIRE(m.count() == 5);
       }
       SECTION("exact size")
       {
-        REQUIRE(m.max_alloc() >= 10);
         [[maybe_unused]] auto a = m.allocate(10);
         REQUIRE(m.count() == 10);
       }
@@ -80,14 +46,12 @@ TEST_CASE("set", "[set]")
       auto a = m.allocate(3);
       SECTION("less than size")
       {
-        REQUIRE(m.max_alloc() >= 3);
         auto b = m.allocate(3);
         REQUIRE(b != a);
         REQUIRE(m.count() == 6);
       }
       SECTION("exact size")
       {
-        REQUIRE(m.max_alloc() >= 7);
         auto b = m.allocate(7);
         REQUIRE(b != a);
         REQUIRE(m.count() == 10);
@@ -103,16 +67,19 @@ TEST_CASE("set", "[set]")
     m.deallocate(c, 4);
     SECTION("less than size")
     {
-      REQUIRE(m.max_alloc() >= 2);
       [[maybe_unused]] auto d = m.allocate(2);
       REQUIRE(m.count() == 5);
     }
     SECTION("exact size")
     {
-      REQUIRE(m.max_alloc() >= 4);
       [[maybe_unused]] auto d = m.allocate(4);
       REQUIRE(m.count() == 7);
     }
+  }
+  SECTION("failure")
+  {
+    m.allocate(10);
+    REQUIRE(m.allocate(1) == m.size());
   }
 }
 TEST_CASE("reset", "[reset]")
@@ -123,7 +90,6 @@ TEST_CASE("reset", "[reset]")
     auto a = m.allocate(10);
     m.deallocate(a, 10);
     REQUIRE(m.count() == 0);
-    REQUIRE(m.max_alloc() == 10);
   }
   SECTION("boundary, occupied")
   {
@@ -131,7 +97,6 @@ TEST_CASE("reset", "[reset]")
     [[maybe_unused]] auto b = m.allocate(5);
     m.deallocate(a, 5);
     REQUIRE(m.count() == 5);
-    REQUIRE(m.max_alloc() == 5);
   }
   SECTION("occupied, boundary")
   {
@@ -139,7 +104,6 @@ TEST_CASE("reset", "[reset]")
     auto b = m.allocate(5);
     m.deallocate(b, 5);
     REQUIRE(m.count() == 5);
-    REQUIRE(m.max_alloc() == 5);
   }
   SECTION("boundary, vacant")
   {
@@ -148,7 +112,6 @@ TEST_CASE("reset", "[reset]")
     m.deallocate(b, 5);
     m.deallocate(a, 5);
     REQUIRE(m.count() == 0);
-    REQUIRE(m.max_alloc() == 10);
   }
   SECTION("vacant, boundary")
   {
@@ -157,7 +120,6 @@ TEST_CASE("reset", "[reset]")
     m.deallocate(a, 5);
     m.deallocate(b, 5);
     REQUIRE(m.count() == 0);
-    REQUIRE(m.max_alloc() == 10);
   }
   SECTION("occupied, occupied")
   {
@@ -166,7 +128,6 @@ TEST_CASE("reset", "[reset]")
     [[maybe_unused]] auto c = m.allocate(3);
     m.deallocate(b, 4);
     REQUIRE(m.count() == 6);
-    REQUIRE(m.max_alloc() == 4);
   }
   SECTION("vacant, vacant")
   {
@@ -179,7 +140,6 @@ TEST_CASE("reset", "[reset]")
     REQUIRE(m.count() == 4);
     m.deallocate(b, 4);
     REQUIRE(m.count() == 0);
-    REQUIRE(m.max_alloc() == 10);
   }
   SECTION("occupied, vacant")
   {
@@ -190,7 +150,6 @@ TEST_CASE("reset", "[reset]")
     REQUIRE(m.count() == 7);
     m.deallocate(b, 4);
     REQUIRE(m.count() == 3);
-    REQUIRE(m.max_alloc() == 7);
   }
   SECTION("vacant, occupied")
   {
@@ -201,7 +160,6 @@ TEST_CASE("reset", "[reset]")
     REQUIRE(m.count() == 7);
     m.deallocate(b, 4);
     REQUIRE(m.count() == 3);
-    REQUIRE(m.max_alloc() == 7);
   }
 }
 TEST_CASE("best fit", "[bestfit]")
@@ -232,7 +190,7 @@ TEST_CASE("best fit", "[bestfit]")
     [[maybe_unused]] auto k = m.allocate(2);
   }
 }
-TEST_CASE("max free list", "[max_free_list]")
+TEST_CASE("max separate", "[max_separate]")
 {
   list<11> m;
   auto a = m.allocate(1);

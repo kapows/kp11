@@ -34,35 +34,6 @@ namespace kp11
     {
       return size();
     }
-    /// Forward iterate through the bitset and count consecutive bits.
-    /// * Complexity `O(n)`
-    ///
-    /// @returns The largest number of consecutive unallocated indexes.
-    size_type max_alloc() const noexcept
-    {
-      size_type max = 0;
-      size_type count = 0;
-      for (std::size_t i = 0; i < N; ++i)
-      {
-        if (bits[i])
-        {
-          if (max < count)
-          {
-            max = count;
-          }
-          count = 0;
-        }
-        else
-        {
-          ++count;
-        }
-      }
-      if (max < count)
-      {
-        max = count;
-      }
-      return max;
-    }
 
   public: // modifiers
     /// Forward iterate through the bitset to find `n` adjacent unallocated indexes to allocate. The
@@ -71,10 +42,11 @@ namespace kp11
     ///
     /// @param n Number of indexes to allocate.
     ///
-    /// @returns Index of the start of the `n` indexes allocated.
+    /// @returns (success) Index of the start of the `n` indexes allocated.
+    /// @returns (failure) `size()`
     ///
     /// @pre `n > 0`
-    /// @pre `n <= max_alloc()`
+    /// @pre `n <= max_size()`
     ///
     /// @post [`(return value)`, `(return value) + n`) will not returned again from any subsequent
     /// call to `allocate` unless it has been `deallocate`d.
@@ -82,23 +54,23 @@ namespace kp11
     size_type allocate(size_type n) noexcept
     {
       assert(n > 0);
-      assert(n <= max_alloc());
+      assert(n <= max_size());
       return n == 1 ? allocate_one() : allocate_many(n);
     }
-    /// Forward iterate through the bitset from `index` to `index + n` and deallocate them.
+    /// Forward iterate through the bitset from `i` to `i + n` and deallocate them.
     /// * Complexity `O(n)`
     ///
-    /// @param index Return value of a call to `allocate`.
+    /// @param i Return value of a call to `allocate`.
     /// @param n Corresponding parameter in the call to `allocate`.
     ///
-    /// @post [`index`, `index + n`) may be returned by a call to `allocate`.
+    /// @post [`i`, `i + n`) may be returned by a call to `allocate`.
     /// @post `count() == (previous) count() - n`
-    void deallocate(size_type index, size_type n) noexcept
+    void deallocate(size_type i, size_type n) noexcept
     {
       assert(n <= size());
-      assert(index < size());
-      assert(index + n <= size());
-      for (auto first = index, last = index + n; first < last; ++first)
+      assert(i < size());
+      assert(i + n <= size());
+      for (auto first = i, last = i + n; first < last; ++first)
       {
         bits.reset(first);
       }
@@ -109,36 +81,43 @@ namespace kp11
     size_type allocate_one() noexcept
     {
       size_type first = 0;
-      for (; bits[first]; ++first)
+      for (; first != size() && bits[first]; ++first)
       {
       }
-      bits.set(first);
-      return first;
+      if (first != size())
+      {
+        bits.set(first);
+        return first;
+      }
+      return size();
     }
     size_type allocate_many(size_type n) noexcept
     {
       assert(n > 1);
       size_type first = 0;
-      for (size_type count = 0; count < n; ++first)
+      for (size_type count = 0; first != size(); ++first)
       {
         if (bits[first])
         {
           count = 0;
         }
-        else
+        else if (++count == n)
         {
-          ++count;
+          // have to increment first before we can decrement the count since we're off by 1
+          ++first;
+          for (auto count = n; count; --count)
+          {
+            bits.set(--first);
+          }
+          return first;
         }
       }
-      for (auto count = n; count; --count)
-      {
-        bits.set(--first);
-      }
-      return first;
+      return size();
     }
 
   private: // variables
-    /// `true` if allocated, `false` if not allocated, this is to be consistent with `bitset::set`.
+    /// `true` if allocated, `false` if not allocated, this is to be consistent with
+    /// `bitset::set`.
     std::bitset<N> bits;
   };
 }

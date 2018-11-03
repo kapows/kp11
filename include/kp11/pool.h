@@ -54,12 +54,7 @@ namespace kp11
     /// @returns The maximum allocation size supported. This is always `1`.
     static constexpr size_type max_size() noexcept
     {
-      return 1;
-    }
-    /// @returns `1` if there are unallocated indexes otherwise `0`.
-    size_type max_alloc() const noexcept
-    {
-      return head != size() ? static_cast<size_type>(1) : static_cast<size_type>(0);
+      return static_cast<size_type>(1);
     }
 
   public: // modifiers
@@ -69,10 +64,11 @@ namespace kp11
     ///
     /// @param n Number of indexes to allocate.
     ///
-    /// @returns Index of the start of the `n` indexes to allocate.
+    /// @returns (success) Index of the start of the `n` indexes to allocate.
+    /// @returns (failure) `size()`
     ///
     /// @pre `n == 1`
-    /// @pre `n <= max_alloc()`
+    /// @pre `n <= max_size()`
     ///
     /// @post `(return value)` will not returned again from any subsequent call to `allocate`
     /// unless `deallocate` has been called on it.
@@ -80,28 +76,32 @@ namespace kp11
     size_type allocate(size_type n) noexcept
     {
       assert(n == 1);
-      assert(n <= max_alloc());
-      ++num_occupied;
-      return std::exchange(head, next[head]);
+      assert(n <= max_size());
+      if (head != size())
+      {
+        ++num_occupied;
+        return std::exchange(head, next[head]);
+      }
+      return size();
     }
-    /// The node at `index` becomes the new head node and the head node is pointed at the previous
+    /// The node at `i` becomes the new head node and the head node is pointed at the previous
     /// head node.
     /// * Complexity `O(1)`
     ///
-    /// @param index Returned by a call to `allocate`.
+    /// @param i Returned by a call to `allocate`.
     /// @param n Corresponding parameter in the call to `allocate`.
     ///
     /// @pre `n == 1`
     ///
-    /// @post `index` may be returned by a call to `allocate`.
+    /// @post `i` may be returned by a call to `allocate`.
     /// @post `count() == (previous) count() - n`
-    void deallocate(size_type index, size_type n) noexcept
+    void deallocate(size_type i, size_type n) noexcept
     {
       assert(n == 1);
-      assert(index < size());
+      assert(i < size());
       --num_occupied;
-      next[index] = head;
-      head = index;
+      next[i] = head;
+      head = i;
     }
 
   private: // variables
