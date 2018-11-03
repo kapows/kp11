@@ -112,7 +112,6 @@ public:
   static constexpr size_type size() noexcept;
   size_type count() const noexcept;
   static constexpr size_type max_size() noexcept;
-  size_type max_alloc() const noexcept;
   size_type allocate(size_type n) noexcept;
   void deallocate(size_type i, size_type n) noexcept;
 };
