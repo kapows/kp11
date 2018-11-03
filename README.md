@@ -35,6 +35,9 @@ If more complex construction is required, then it has to be done in the two-phas
 
 ## Use
 
+**Caution:** Standard containers may allocate additional/different things depending on the config (debug/release).
+So if you're using an alignment other than `std::max_align_t` you might want to consider segregating on the alignment.
+
 Steps:
 1. Choose `free_block` or `monotonic`. 
 2. Pick a `Marker` (if using `free_block`).
