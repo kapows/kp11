@@ -74,10 +74,9 @@ namespace kp11
     static Resource resource;
     return resource;
   }
-  /// @brief Adaptor that wraps a `Resource` so that it can be used as an allocator.
+  /// @brief Adaptor that uses a `resource_singleton<Resource>`.
   ///
-  /// Makes `Resource` a static variable and uses that to allocate/deallocate. Use this when you
-  /// want to make a stateless global allocator.
+  /// Use this when you want to make a stateless global allocator.
   ///
   /// @tparam T Value type.
   /// @tparam Resource Meets the `Resource` concept.
@@ -118,11 +117,9 @@ namespace kp11
     return false;
   }
 
-  /// @brief Adaptor that wraps a `Resource` so that it can be used as an allocator. This is a
-  /// pointer specialization on `Resource`.
+  /// @brief Adaptor that stores a `Resource` as a pointer.
   ///
-  /// Makes `Resource` a pointer variable and uses that to allocate/deallocate. Use this when you
-  /// want to make a stateful local allocator.
+  /// Use this when you want to make a stateful local allocator.
   ///
   /// @tparam T Value type.
   /// @tparam Resource Meets the `Resource` concept.
