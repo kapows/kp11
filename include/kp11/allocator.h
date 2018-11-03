@@ -8,16 +8,13 @@
 
 namespace kp11
 {
+  /// @private
   namespace allocator_detail
   {
-    /// @brief Adaptor that wraps a `Resource` so that it can be used as an allocator.
-    ///
-    /// Makes `Resource` a static variable and uses that to allocate/deallocate. Use this when you
-    /// want to make a stateless global allocator.
-    ///
+    /// @private
     /// @tparam T Value type.
-    /// @tparam Resource Meets the `Resource` concept.
-    template<typename T, typename Resource>
+    /// @tparam R Meets the `Resource` concept.
+    template<typename T, typename R>
     class base
     {
     public: // typedefs
@@ -25,22 +22,23 @@ namespace kp11
       using value_type = T;
       /// Pointer type.
       using pointer =
-        typename std::pointer_traits<typename Resource::pointer>::template rebind<value_type>;
+        typename std::pointer_traits<typename R::pointer>::template rebind<value_type>;
       /// Void pointer type.
-      using void_pointer = typename Resource::pointer;
+      using void_pointer = typename R::pointer;
       /// Size type.
-      using size_type = typename Resource::size_type;
+      using size_type = typename R::size_type;
 
     public: // capacity
+      /// @returns The maximum allocation size supported.
       static constexpr size_type max_size() noexcept
       {
-        return Resource::max_size();
+        return R::max_size();
       }
 
     public: // modifiers
-      /// Forwards the request of `sizeof(T) * n` to `Resource::allocate`.
+      /// Calls `Resource::allocate` with `sizeof(T) * n` as size and `align(T)` as alignment.
       ///
-      /// @param n Number of `sizeof(T)` bytes to allocate.
+      /// @param n Number of `sizeof(T)` blocks to allocate.
       ///
       /// @returns Pointer to a memory block of size `sizeof(T) * n` bytes aligned to `alignof(T)`.
       ///
@@ -54,7 +52,8 @@ namespace kp11
         }
         return static_cast<pointer>(ptr);
       }
-      /// Forwards the request to deallocate to `Resource::deallocate`.
+      /// Calls `Resource::deallocate` with `ptr`, `sizeof(T) * n` as size and `align(T)` as
+      /// alignment.
       ///
       /// @param ptr Pointer to memory returned by `allocate`.
       /// @param n Corresponding parameter in the call to `allocate`.
@@ -65,10 +64,10 @@ namespace kp11
       }
 
     private: // accessors
-      virtual Resource & resource() noexcept = 0;
+      virtual R & resource() noexcept = 0;
     };
   }
-  /// Resource that `allocator<T,Resource>` uses.
+  /// Resource that `allocator<T, Resource>` uses.
   template<typename Resource>
   static Resource & allocator_singleton()
   {
@@ -109,12 +108,12 @@ namespace kp11
     }
   };
   template<typename T, typename U, typename R>
-  bool operator==(allocator<T, R> const & lhs, allocator<U, R> const & rhs) noexcept
+  constexpr bool operator==(allocator<T, R> const &, allocator<U, R> const &) noexcept
   {
     return true;
   }
   template<typename T, typename U, typename R>
-  bool operator!=(allocator<T, R> const & lhs, allocator<U, R> const & rhs) noexcept
+  constexpr bool operator!=(allocator<T, R> const &, allocator<U, R> const &) noexcept
   {
     return false;
   }
@@ -141,11 +140,10 @@ namespace kp11
     };
 
   public: // constructors
-    /// If `resource` is `nullptr` calling `allocate` or `deallocate` is undefined.
-    ///
     /// @param resource Pointer to a `Resource`.
     allocator(Resource * resource) noexcept : my_resource(resource)
     {
+      assert(resource != nullptr);
     }
     /// Rebind constructor.
     template<typename U>
