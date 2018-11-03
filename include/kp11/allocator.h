@@ -1,6 +1,6 @@
 #pragma once
 
-#include "traits.h" // is_resource_v
+#include "traits.h" // is_resource_v, resource_traits
 
 #include <cstddef> // size_t
 #include <memory> // pointer_traits
@@ -26,13 +26,13 @@ namespace kp11
       /// Void pointer type.
       using void_pointer = typename R::pointer;
       /// Size type.
-      using size_type = typename R::size_type;
+      using size_type = typename resource_traits<R>::size_type;
 
     public: // capacity
       /// @returns The maximum allocation size supported.
       static constexpr size_type max_size() noexcept
       {
-        return R::max_size();
+        return resource_traits<R>::max_size();
       }
 
     public: // modifiers
