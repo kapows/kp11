@@ -43,18 +43,19 @@ Steps:
 5. Possibly guard against the `Marker`'s or `monotonic` limitations with a `segregator`.
 
 ```cpp
-#include <kp11/free_block.h> // Our main block splitting class
-#include <kp11/pool.h> // One of our `Marker`s
-#include <kp11/heap.h> // An Upstream resource
-#include <kp11/segregator.h> // A control structure to deal with the limitations of the pool 
-#include <kp11/fallback.h> // A control structure to deal free_block allocation limitations
 #include <kp11/allocator.h> // Adaptor
+#include <kp11/fallback.h> // A control structure to deal free_block allocation limitations
+#include <kp11/free_block.h> // Our main block splitting class
+#include <kp11/heap.h> // An Upstream resource
+#include <kp11/pool.h> // One of our `Marker`s
+#include <kp11/segregator.h> // A control structure to deal with the limitations of the pool
+
 #include <string>
 
 using namespace kp11;
 // This resource uses a pool allocation strategy.
 // It allocates 10 256 byte blocks from heap in a single allocation (2560 bytes) (up to 5 times).
-using pool_256 = free_block<256*10, alignof(char), 5, pool<10>, heap>;
+using pool_256 = free_block<256 * 10, alignof(std::max_align_t), 5, pool<10>, heap>;
 
 // This resource allocates from the heap when all the small blocks run out.
 // In this case it is 10 * 5 small block allocations without deallocations.
@@ -73,32 +74,34 @@ using string = std::basic_string<char, std::char_traits<char>, alloc<char>>;
 int main()
 {
   // Allocates from our pool
-  string s = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+  string s = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor "
+             "incididunt ut labore et dolore magna aliqua.";
   return 0;
 }
 ```
 
-Though the control structures are provided, you don't have to use them and can just use regular C++.
+Though control structures are provided, you don't have to use them and can just use regular C++.
 
 ```cpp
-#include <kp11/free_block.h> // Our main block splitting class
-#include <kp11/pool.h> // One of our `Marker`s
-#include <kp11/heap.h> // An Upstream resource
 #include <kp11/fallback.h> // A control structure to deal free_block allocation limitations
+#include <kp11/free_block.h> // Our main block splitting class
+#include <kp11/heap.h> // An Upstream resource
+#include <kp11/pool.h> // One of our `Marker`s
+
 #include <cstddef>
 #include <variant>
 
 using namespace kp11;
 
-class resource 
+class resource
 {
-  // if you don't use `fallback` you'll want to use `owner_traits` to deal with ownership.
-  using pool_32 = fallback<free_block<32*10, alignof(std::max_align_t), 10, pool<10>, heap>,heap>;
-  using pool_64 = fallback<free_block<64*10, alignof(std::max_align_t), 10, pool<10>, heap>,heap>;
-  using pool_96 = fallback<free_block<96*10, alignof(std::max_align_t), 10, pool<10>, heap>,heap>;
-  using pool_128 = fallback<free_block<128*10, alignof(std::max_align_t), 5, pool<10>, heap>,heap>;
-  std::variant<std::monostate, pool_32, pool_64, pool_96, pool_128> pools[4]; 
-  heap backup;
+  using pool_32 = free_block<32 * 10, alignof(std::max_align_t), 10, pool<10>, heap>;
+  using pool_64 = free_block<64 * 10, alignof(std::max_align_t), 10, pool<10>, heap>;
+  using pool_96 = free_block<96 * 10, alignof(std::max_align_t), 10, pool<10>, heap>;
+  using pool_128 = free_block<128 * 10, alignof(std::max_align_t), 5, pool<10>, heap>;
+  std::variant<pool_32, pool_64, pool_96, pool_128> pools[4];
+  heap my_heap;
+
 public:
   using pointer = typename heap::pointer;
   using size_type = typename heap::size_type;
@@ -112,30 +115,39 @@ public:
   }
   pointer allocate(size_type size, size_type alignment) noexcept
   {
-    if(auto i = index_for(size); i < 4 )
+    if (auto i = index_for(size); i < 4)
     {
-      auto p = std::visit([size,alignment](auto&& p) { return p.allocate(size,alignment);}, pools[size / 32]);
+      auto p = std::visit(
+        [size, alignment](auto && p) { return p.allocate(size, alignment); }, pools[size / 32]);
+      if (p == nullptr)
+      {
+        p = my_heap.allocate(size, alignment);
+      }
+      return p;
     }
-    else
-    {
-      return backup.allocate(size,alignment);
-    }
+    return my_heap.allocate(size, alignment);
   }
   void deallocate(pointer ptr, size_type size, size_type alignment) noexcept
   {
-    if(auto i = index_for(size); i < 4 )
+    if (auto i = index_for(size); i < 4)
     {
-      std::visit([ptr, size, alignment](auto&& p) { p.deallocate(ptr,size,alignment);}, pools[size / 32]);
+      if (!std::visit(
+            [ptr, size, alignment](auto && p) { return p.deallocate(ptr, size, alignment); },
+            pools[size / 32]))
+      {
+        my_heap.deallocate(ptr, size, alignment);
+      };
     }
     else
     {
-      backup.deallocate(ptr, size, alignment);
+      my_heap.deallocate(ptr, size, alignment);
     }
   }
+
 private:
   static constexpr std::size_t index_for(size_type size) noexcept
   {
-    return  size == 0 ? 0 : size / 32 - (size % 32 == 0);
+    return size == 0 ? 0 : size / 32 - (size % 32 == 0);
   }
 };
 ```
