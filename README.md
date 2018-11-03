@@ -28,11 +28,6 @@ Allows the user to know exactly how much memory will be allocated.
 A limitation here is that, along with the above, there is a strict allocation limit.
 The size of the resource itself could get also too big.
 Resolving this would require heap allocation of the resource itself, but the user would know about it.
-* **Unchecked allocations.**
-Requires the user to segregate allocations that resources cannot handle, it is undefined behaviour if these allocations go through.
-This is only checked with asserts.
-This allows the user to know that allocation failure is the result of some limitation being met (out of memory, out of small blocks, out of big blocks), rather than as a result of requesting memory that the resource could never have fulfilled.
-i.e. You can't order a Big Mac from KFC.
 * **Easy to use.**
 The policy based, composable nature, make creating and adapting different resources easy.
 If more complex control structures than the ones provided are needed, then the user should create a new resource class.
