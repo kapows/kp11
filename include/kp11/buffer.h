@@ -3,6 +3,7 @@
 #include <cassert> // assert
 #include <cstddef> // size_t
 #include <functional> // less, less_equal
+#include <limits> // numeric_limits
 #include <memory> // pointer_traits
 
 namespace kp11
@@ -36,6 +37,13 @@ namespace kp11
     basic_buffer(pointer ptr, size_type size, size_type alignment) noexcept :
         ptr(static_cast<byte_pointer>(ptr)), size(size), alignment(alignment)
     {
+    }
+
+  public: // capacity
+    /// @returns The maximum allocation size supported.
+    static constexpr size_type max_size() noexcept
+    {
+      return std::numeric_limits<size_type>::max();
     }
 
   public: // modifiers

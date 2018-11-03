@@ -6,6 +6,11 @@
 
 using namespace kp11;
 
+TEST_CASE("max_size", "[max_size]")
+{
+  REQUIRE(local<128, 4>::max_size() == 128);
+  REQUIRE(local<256, 4>::max_size() == 256);
+}
 TEST_CASE("allocate", "[allocate]")
 {
   local<128, 4> m;

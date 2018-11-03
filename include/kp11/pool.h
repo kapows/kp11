@@ -34,7 +34,7 @@ namespace kp11
   public: // constructors
     pool() noexcept
     {
-      for (size_type i = 0, last = max_size(); i < last; ++i)
+      for (size_type i = 0, last = size(); i < last; ++i)
       {
         next[i] = i + 1;
       }
@@ -42,19 +42,19 @@ namespace kp11
 
   public: // capacity
     /// @returns Number of allocated indexes.
-    size_type size() const noexcept
+    size_type count() const noexcept
     {
       return num_occupied;
     }
     /// @returns Total number of indexes (`N`).
-    static constexpr size_type max_size() noexcept
+    static constexpr size_type size() noexcept
     {
       return static_cast<size_type>(N);
     }
-    /// @returns `1` if there are unallocated indexes otherwise `0`.
-    size_type biggest() const noexcept
+    /// @returns The maximum allocation size supported. This is always `1`.
+    static constexpr size_type max_size() noexcept
     {
-      return head != max_size() ? static_cast<size_type>(1) : static_cast<size_type>(0);
+      return static_cast<size_type>(1);
     }
 
   public: // modifiers
@@ -64,39 +64,44 @@ namespace kp11
     ///
     /// @param n Number of indexes to allocate.
     ///
-    /// @returns Index of the start of the `n` indexes to allocate.
+    /// @returns (success) Index of the start of the `n` indexes to allocate.
+    /// @returns (failure) `size()`
     ///
     /// @pre `n == 1`
-    /// @pre `n <= biggest()`
+    /// @pre `n <= max_size()`
     ///
     /// @post `(return value)` will not returned again from any subsequent call to `allocate`
     /// unless `deallocate` has been called on it.
-    /// @post `size() == (previous) size() + n`
+    /// @post `count() == (previous) count() + n`
     size_type allocate(size_type n) noexcept
     {
       assert(n == 1);
-      assert(n <= biggest());
-      ++num_occupied;
-      return std::exchange(head, next[head]);
+      assert(n <= max_size());
+      if (head != size())
+      {
+        ++num_occupied;
+        return std::exchange(head, next[head]);
+      }
+      return size();
     }
-    /// The node at `index` becomes the new head node and the head node is pointed at the previous
+    /// The node at `i` becomes the new head node and the head node is pointed at the previous
     /// head node.
     /// * Complexity `O(1)`
     ///
-    /// @param index Returned by a call to `allocate`.
+    /// @param i Returned by a call to `allocate`.
     /// @param n Corresponding parameter in the call to `allocate`.
     ///
     /// @pre `n == 1`
     ///
-    /// @post `index` may be returned by a call to `allocate`.
-    /// @post `size() == (previous) size() - n`
-    void deallocate(size_type index, size_type n) noexcept
+    /// @post `i` may be returned by a call to `allocate`.
+    /// @post `count() == (previous) count() - n`
+    void deallocate(size_type i, size_type n) noexcept
     {
       assert(n == 1);
-      assert(index < max_size());
+      assert(i < size());
       --num_occupied;
-      next[index] = head;
-      head = index;
+      next[i] = head;
+      head = i;
     }
 
   private: // variables

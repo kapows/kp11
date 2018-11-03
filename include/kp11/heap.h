@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef> // size_t
+#include <limits> // numeric_limits
 
 namespace kp11
 {
@@ -12,6 +13,13 @@ namespace kp11
     using pointer = void *;
     /// Size type is the same type used by `new`.
     using size_type = std::size_t;
+
+  public: // capacity
+    /// @returns The maximum allocation size supported.
+    static constexpr size_type max_size() noexcept
+    {
+      return std::numeric_limits<size_type>::max();
+    }
 
   public: // modifiers
     /// Allocate memory by calling `new`.

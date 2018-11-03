@@ -4,8 +4,14 @@
 
 #include <catch.hpp>
 
+#include <limits>
+
 using namespace kp11;
 
+TEST_CASE("max_size", "[max_size]")
+{
+  REQUIRE(heap::max_size() == std::numeric_limits<typename heap::size_type>::max());
+}
 // We'll have to combine allocate and deallocate so we don't leak.
 TEST_CASE("allocate/deallocate", "[allocate/deallocate]")
 {

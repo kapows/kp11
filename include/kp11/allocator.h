@@ -1,6 +1,6 @@
 #pragma once
 
-#include "traits.h" // is_resource_v
+#include "traits.h" // is_resource_v, resource_traits
 
 #include <cstddef> // size_t
 #include <memory> // pointer_traits
@@ -8,38 +8,87 @@
 
 namespace kp11
 {
-  /// Resource that `allocator<T,Resource>` uses.
+  /// @private
+  namespace allocator_detail
+  {
+    /// @private
+    /// @tparam T Value type.
+    /// @tparam R Meets the `Resource` concept.
+    template<typename T, typename R>
+    class base
+    {
+    public: // typedefs
+      /// Value type.
+      using value_type = T;
+      /// Pointer type.
+      using pointer =
+        typename std::pointer_traits<typename R::pointer>::template rebind<value_type>;
+      /// Void pointer type.
+      using void_pointer = typename R::pointer;
+      /// Size type.
+      using size_type = typename resource_traits<R>::size_type;
+
+    public: // capacity
+      /// @returns The maximum allocation size supported.
+      static constexpr size_type max_size() noexcept
+      {
+        return resource_traits<R>::max_size();
+      }
+
+    public: // modifiers
+      /// Calls `Resource::allocate` with `sizeof(T) * n` as size and `align(T)` as alignment.
+      ///
+      /// @param n Number of `sizeof(T)` blocks to allocate.
+      ///
+      /// @returns Pointer to a memory block of size `sizeof(T) * n` bytes aligned to `alignof(T)`.
+      ///
+      /// @throws (failure) std::bad_alloc
+      pointer allocate(size_type n)
+      {
+        auto ptr = resource().allocate(static_cast<size_type>(sizeof(T) * n), alignof(T));
+        if (!ptr)
+        {
+          throw std::bad_alloc();
+        }
+        return static_cast<pointer>(ptr);
+      }
+      /// Calls `Resource::deallocate` with `ptr`, `sizeof(T) * n` as size and `align(T)` as
+      /// alignment.
+      ///
+      /// @param ptr Pointer to memory returned by `allocate`.
+      /// @param n Corresponding parameter in the call to `allocate`.
+      void deallocate(pointer ptr, size_type n) noexcept
+      {
+        resource().deallocate(
+          static_cast<void_pointer>(ptr), static_cast<size_type>(sizeof(T) * n), alignof(T));
+      }
+
+    private: // accessors
+      virtual R & resource() noexcept = 0;
+    };
+  }
+  /// Resource that `allocator<T, Resource>` uses.
   template<typename Resource>
-  static Resource & allocator_singleton()
+  static Resource & resource_singleton()
   {
     static Resource resource;
     return resource;
   }
-  /// @brief Adaptor that wraps a `Resource` so that it can be used as an allocator.
+  /// @brief Adaptor that uses a `resource_singleton<R>`.
   ///
-  /// Makes `Resource` a static variable and uses that to allocate/deallocate. Use this when you
-  /// want to make a stateless global allocator.
+  /// Use this when you want to make a stateless global allocator.
   ///
   /// @tparam T Value type.
-  /// @tparam Resource Meets the `Resource` concept.
-  template<typename T, typename Resource>
-  class allocator
+  /// @tparam R Meets the `Resource` concept.
+  template<typename T, typename R>
+  class allocator : public allocator_detail::base<T, R>
   {
   public: // typedefs
-    /// Value type.
-    using value_type = T;
-    /// Pointer type.
-    using pointer =
-      typename std::pointer_traits<typename Resource::pointer>::template rebind<value_type>;
-    /// Void pointer type.
-    using void_pointer = typename Resource::pointer;
-    /// Size type.
-    using size_type = typename Resource::size_type;
     /// Rebind type.
     template<typename U>
     struct rebind
     {
-      using other = allocator<U, Resource>;
+      using other = allocator<U, R>;
     };
 
   public: // constructors
@@ -47,134 +96,73 @@ namespace kp11
     allocator() noexcept = default;
     /// Rebind constructor.
     template<typename U>
-    allocator(allocator<U, Resource> const & x) noexcept
+    allocator(allocator<U, R> const & x) noexcept
     {
     }
 
-  public: // modifiers
-    /// Forwards the request of `sizeof(T) * n` to `Resource::allocate`.
-    ///
-    /// @param n Number of `sizeof(T)` bytes to allocate.
-    ///
-    /// @returns Pointer to a memory block of size `sizeof(T) * n` bytes aligned to `alignof(T)`.
-    ///
-    /// @throws (failure) std::bad_alloc
-    pointer allocate(size_type n)
+  private: // accessors
+    virtual R & resource() noexcept override
     {
-      auto ptr = get_resource().allocate(static_cast<size_type>(sizeof(T) * n), alignof(T));
-      if (!ptr)
-      {
-        throw std::bad_alloc();
-      }
-      return static_cast<pointer>(ptr);
-    }
-    /// Forwards the request to deallocate to `Resource::deallocate`.
-    ///
-    /// @param ptr Pointer to memory returned by `allocate`.
-    /// @param n Corresponding parameter in the call to `allocate`.
-    void deallocate(pointer ptr, size_type n) noexcept
-    {
-      get_resource().deallocate(
-        static_cast<void_pointer>(ptr), static_cast<size_type>(sizeof(T) * n), alignof(T));
-    }
-
-  public: // accessors
-    /// @returns Pointer to the `Resource` which was passed into the constructor.
-    static Resource & get_resource() noexcept
-    {
-      return allocator_singleton<Resource>();
+      return resource_singleton<R>();
     }
   };
   template<typename T, typename U, typename R>
-  bool operator==(allocator<T, R> const & lhs, allocator<U, R> const & rhs) noexcept
+  constexpr bool operator==(allocator<T, R> const &, allocator<U, R> const &) noexcept
   {
     return true;
   }
   template<typename T, typename U, typename R>
-  bool operator!=(allocator<T, R> const & lhs, allocator<U, R> const & rhs) noexcept
+  constexpr bool operator!=(allocator<T, R> const &, allocator<U, R> const &) noexcept
   {
     return false;
   }
 
-  /// @brief Adaptor that wraps a `Resource` so that it can be used as an allocator. This is a
-  /// pointer specialization on `Resource`.
+  /// @brief Adaptor that stores a `Resource` as a pointer.
   ///
-  /// Makes `Resource` a pointer variable and uses that to allocate/deallocate. Use this when you
-  /// want to make a stateful local allocator.
+  /// Use this when you want to make a stateful local allocator.
   ///
   /// @tparam T Value type.
-  /// @tparam Resource Meets the `Resource` concept.
-  template<typename T, typename Resource>
-  class allocator<T, Resource *>
+  /// @tparam R Meets the `Resource` concept.
+  template<typename T, typename R>
+  class allocator<T, R *> : public allocator_detail::base<T, R>
   {
-    static_assert(is_resource_v<Resource>);
+    static_assert(is_resource_v<R>);
 
   public: // typedefs
-    /// Value type.
-    using value_type = T;
-    /// Pointer type.
-    using pointer =
-      typename std::pointer_traits<typename Resource::pointer>::template rebind<value_type>;
-    /// Void pointer type.
-    using void_pointer = typename Resource::pointer;
-    /// Size type.
-    using size_type = typename Resource::size_type;
     /// Rebind type.
     template<typename U>
     struct rebind
     {
-      using other = allocator<U, Resource *>;
+      using other = allocator<U, R *>;
     };
 
   public: // constructors
-    /// If `resource` is `nullptr` calling `allocate` or `deallocate` is undefined.
-    ///
     /// @param resource Pointer to a `Resource`.
-    allocator(Resource * resource) noexcept : resource(resource)
+    allocator(R * resource) noexcept : my_resource(resource)
     {
+      assert(resource != nullptr);
     }
     /// Rebind constructor.
     template<typename U>
-    allocator(allocator<U, Resource *> const & x) noexcept : resource(x.get_resource())
+    allocator(allocator<U, R *> const & x) noexcept : my_resource(x.get_resource())
     {
     }
 
-  public: // modifiers
-    /// Forwards the request of `sizeof(T) * n` to `Resource::allocate`.
-    ///
-    /// @param n Number of `sizeof(T)` bytes to allocate.
-    ///
-    /// @returns Pointer to a memory block of size `sizeof(T) * n` bytes aligned to `alignof(T)`.
-    ///
-    /// @throws (failure) std::bad_alloc
-    pointer allocate(size_type n)
+  private: // accessors
+    virtual R & resource() noexcept override
     {
-      auto ptr = resource->allocate(static_cast<size_type>(sizeof(T) * n), alignof(T));
-      if (!ptr)
-      {
-        throw std::bad_alloc();
-      }
-      return static_cast<pointer>(ptr);
-    }
-    /// Forwards the request to deallocate to `Resource::deallocate`.
-    ///
-    /// @param ptr Pointer to memory returned by `allocate`.
-    /// @param n Corresponding parameter in the call to `allocate`.
-    void deallocate(pointer ptr, size_type n) noexcept
-    {
-      resource->deallocate(
-        static_cast<void_pointer>(ptr), static_cast<size_type>(sizeof(T) * n), alignof(T));
+      return *my_resource;
     }
 
   public: // accessors
     /// @returns Pointer to the `Resource` which was passed into the constructor.
-    Resource * get_resource() const noexcept
+    R * get_resource() const noexcept
     {
-      return resource;
+      return my_resource;
     }
 
   private: // variables
-    Resource * resource;
+    R * my_resource;
   };
   template<typename T, typename U, typename R>
   bool operator==(allocator<T, R *> const & lhs, allocator<U, R *> const & rhs) noexcept

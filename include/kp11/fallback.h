@@ -2,6 +2,8 @@
 
 #include "traits.h" // is_resource_v, is_owner_v
 
+#include <cassert> // assert
+
 namespace kp11
 {
   /// @brief Allocate from `Primary`. On failure allocate from `Secondary`.
@@ -20,16 +22,26 @@ namespace kp11
     /// Size type
     using size_type = typename Primary::size_type;
 
+  public: // capacity
+    /// @returns The maximum allocation size supported. This is `Primary::max_size()`.
+    static constexpr size_type max_size() noexcept
+    {
+      return Primary::max_size();
+    }
+
   public: // modifiers
     /// Call `Primary::allocate`. On failure call `Secondary::allocate`.
     ///
     /// @param size Size in bytes of memory to allocate.
     /// @param alignment Alignment of memory to allocate.
     ///
+    /// @pre `size <= max_size()`
+    ///
     /// @returns (success) Pointer to the beginning of a suitable memory block.
     /// @returns (failure) `nullptr`
     pointer allocate(size_type size, size_type alignment) noexcept
     {
+      assert(size <= max_size());
       if (auto ptr = primary.allocate(size, alignment))
       {
         return ptr;

@@ -4,8 +4,14 @@
 
 #include <catch.hpp>
 
+#include <limits> // numeric_limits
+
 using namespace kp11;
 
+TEST_CASE("max_size", "[max_size]")
+{
+  REQUIRE(buffer::max_size() == std::numeric_limits<typename buffer::size_type>::max());
+}
 TEST_CASE("allocate", "[allocate]")
 {
   alignas(4) char buf[128];

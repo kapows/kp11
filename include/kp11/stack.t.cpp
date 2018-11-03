@@ -6,45 +6,21 @@
 
 using namespace kp11;
 
-TEST_CASE("max_size", "[max_size]")
+TEST_CASE("size", "[size]")
 {
   SECTION("1")
   {
     stack<10> m;
+    REQUIRE(m.size() == 10);
     REQUIRE(m.max_size() == 10);
-    REQUIRE(m.size() == 0);
+    REQUIRE(m.count() == 0);
   }
   SECTION("2")
   {
     stack<101581> m;
+    REQUIRE(m.size() == 101581);
     REQUIRE(m.max_size() == 101581);
-    REQUIRE(m.size() == 0);
-  }
-}
-TEST_CASE("biggest", "[biggest]")
-{
-  stack<10> m;
-  SECTION("initial")
-  {
-    REQUIRE(m.biggest() == 10);
-  }
-  SECTION("empty")
-  {
-    [[maybe_unused]] auto a = m.allocate(10);
-    REQUIRE(m.biggest() == 0);
-  }
-  SECTION("set")
-  {
-    [[maybe_unused]] auto a = m.allocate(3);
-    REQUIRE(m.biggest() == 7);
-  }
-  SECTION("reset")
-  {
-    auto a = m.allocate(3);
-    auto b = m.allocate(7);
-    m.deallocate(b, 7);
-    m.deallocate(a, 3);
-    REQUIRE(m.biggest() == 10);
+    REQUIRE(m.count() == 0);
   }
 }
 TEST_CASE("allocate", "[allocate]")
@@ -54,14 +30,19 @@ TEST_CASE("allocate", "[allocate]")
   {
     auto a = m.allocate(5);
     REQUIRE(a == 0);
-    REQUIRE(m.size() == 5);
+    REQUIRE(m.count() == 5);
     SECTION("post condition")
     {
       auto b = m.allocate(5);
       REQUIRE(b == 5);
       REQUIRE(b != a);
-      REQUIRE(m.size() == 10);
+      REQUIRE(m.count() == 10);
     }
+  }
+  SECTION("failure")
+  {
+    m.allocate(10);
+    REQUIRE(m.allocate(1) == m.size());
   }
 }
 TEST_CASE("deallocate", "[deallocate]")
@@ -71,7 +52,7 @@ TEST_CASE("deallocate", "[deallocate]")
   {
     auto a = m.allocate(5);
     m.deallocate(a, 5);
-    REQUIRE(m.size() == 0);
+    REQUIRE(m.count() == 0);
     auto b = m.allocate(10);
     REQUIRE(b == a);
   }
@@ -80,7 +61,7 @@ TEST_CASE("deallocate", "[deallocate]")
     auto a = m.allocate(3);
     m.allocate(4);
     m.deallocate(a, 3);
-    REQUIRE(m.size() == 7);
+    REQUIRE(m.count() == 7);
     auto c = m.allocate(3);
     REQUIRE(c != a);
   }
