@@ -1,6 +1,6 @@
 #pragma once
 
-#include "traits.h" // is_resource_v, is_owner_v
+#include "traits.h" // is_resource_v, resource_traits, is_owner_v, owner_traits
 
 #include <cassert> // assert
 
@@ -20,13 +20,13 @@ namespace kp11
     /// Pointer type
     using pointer = typename Primary::pointer;
     /// Size type
-    using size_type = typename Primary::size_type;
+    using size_type = typename resource_traits<Primary>::size_type;
 
   public: // capacity
     /// @returns The maximum allocation size supported. This is `Primary::max_size()`.
     static constexpr size_type max_size() noexcept
     {
-      return Primary::max_size();
+      return resource_traits<Primary>::max_size();
     }
 
   public: // modifiers
