@@ -299,15 +299,13 @@ public:                                            \
     }
   };
   /// @private
-  template<typename R>
-  auto IsMarker_h(R r, typename R::size_type i = {}, typename R::size_type n = {})
-    -> decltype(typename R::size_type{},
-      R{},
-      n = R::size(),
-      n = r.count(),
-      n = marker_traits<R>::max_size(),
-      i = r.allocate(n),
-      r.deallocate(i, n));
+  template<typename R, typename = typename R::size_type>
+  auto IsMarker_h(R r, typename R::size_type i = {}, typename R::size_type n = {}) -> decltype(R{},
+    n = R::size(),
+    n = r.count(),
+    n = marker_traits<R>::max_size(),
+    i = r.allocate(n),
+    r.deallocate(i, n));
   /// Checks if `T` meets the `Marker` concept.
   template<typename R>
   using IsMarker = decltype(IsMarker_h(std::declval<R>()));
