@@ -23,7 +23,8 @@ The following expressions must be valid and meet their specified requirements:
 | `R::pointer` |  Satisfies `NullablePointer` and `RandomAccessIterator` |  
 | `R::size_type` (optional) | Can represent the size of the largest object `r` can allocate. |
 | `R r()` | |
-| `ptr = r.allocate(size, alignment)` | Unless `ptr` is `nullptr` it is not returned again unless it has been passed to `r.deallocate(ptr, size, alignment)`. |
+| `size = R::max_size()` | |
+| `ptr = r.allocate(size, alignment)` | `size <= R::max_size()`. Unless `ptr` is `nullptr` it is not returned again unless it has been passed to `r.deallocate(ptr, size, alignment)`. |
 | `r.deallocate(ptr, size, alignment)` | |
 
 ### Exemplar
