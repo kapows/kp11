@@ -147,6 +147,7 @@ namespace kp11
     {
       assert(i < size());
       assert(i + n <= size());
+      assert(n > 0);
       runs[i] = runs[i + (n - 1)] = {a, n};
     }
     /// Forward iterate through the list to find the first unallocated run for `n`.
