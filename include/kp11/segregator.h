@@ -1,6 +1,6 @@
 #pragma once
 
-#include "traits.h" // is_resource_v
+#include "traits.h" // is_resource_v, resource_traits
 
 #include <cassert> // assert
 #include <cstddef> // size_t
@@ -23,7 +23,7 @@ namespace kp11
     /// Pointer type
     using pointer = typename Small::pointer;
     /// Size type
-    using size_type = typename Small::size_type;
+    using size_type = typename resource_traits<Small>::size_type;
 
   public: // constants
     /// Threshold size in bytes.
@@ -33,7 +33,7 @@ namespace kp11
     /// @returns The maximum allocation size supported. This is `Large::max_size()`.
     static constexpr size_type max_size() noexcept
     {
-      return Large::max_size();
+      return resource_traits<Large>::max_size();
     }
 
   public: // modifier
