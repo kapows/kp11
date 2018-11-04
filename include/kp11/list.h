@@ -24,7 +24,7 @@ namespace kp11
       size_type allocated;
     };
   }
-  /// @brief FIFO best fit marker. Iterates through a free list.
+  /// @brief FIFO first fit marker. Iterates through a free list.
   ///
   /// Unallocated indexes will be merged on a `deallocate` if they are adjacent to each other.
   /// Merges are `O(1)`.
@@ -49,7 +49,7 @@ namespace kp11
     {
       if constexpr (size() > 0)
       {
-        set_run(0, size(), false);
+        set_run(0, size(), 0);
       }
     }
 
@@ -82,8 +82,8 @@ namespace kp11
     }
 
   public: // modifiers
-    /// Forward iterate through the runs to find the first unallocated best fit node for `n`. If
-    /// there are leftovers the run will be split and they will remain unallocated.
+    /// Forward iterate through the runs to find the first unallocated run for `n`. If there are
+    /// leftovers the run will be split and they will remain unallocated.
     /// * Complexity `O(n)`.
     ///
     /// @param n Number of indexes to allocate.
@@ -101,16 +101,16 @@ namespace kp11
     {
       assert(n > 0);
       assert(n <= max_size());
-      if (auto const i = find_best_fit(n); i != size())
+      if (auto const i = find_first_fit(n); i != size())
       {
         auto const m = runs[i].size - n;
         // leftover
         if (m)
         {
-          set_run(i, m, false);
+          set_run(i, m, 0);
         }
         auto const j = i + m;
-        set_run(j, n, true);
+        set_run(j, n, 1);
         return j;
       }
       return size();
@@ -141,7 +141,7 @@ namespace kp11
       {
         n += runs[next].size;
       }
-      set_run(i, n, false);
+      set_run(i, n, 0);
     }
 
   private: // helpers
@@ -152,34 +152,25 @@ namespace kp11
       assert(i + n <= size());
       runs[i] = runs[i + (n - 1)] = {n, allocated};
     }
-    /// Forward iterate through the list to find the first unallocated best fit run for `n`.
+    /// Forward iterate through the list to find the first unallocated run for `n`.
     ///
     /// @pre `n > 0`
     /// @pre `n <= max_size()`
     ///
     /// @returns (success) Index of `n` unallocated indexes.
     /// @returns (failure) `size()`.
-    size_type find_best_fit(size_type n) const noexcept
+    size_type find_first_fit(size_type n) const noexcept
     {
       assert(n > 0);
       assert(n <= max_size());
-      size_type i = size();
-      for (size_type j = 0; j != size(); j += runs[j].size)
+      for (size_type i = 0; i != size(); i += runs[i].size)
       {
-        if (n <= runs[j].size && !runs[j].allocated)
+        if (n <= runs[i].size * (runs[i].allocated == 0))
         {
-          if (i == size() || runs[j].size < runs[i].size)
-          {
-            i = j;
-            // Exact fit is best fit
-            if (runs[i].size == n)
-            {
-              break;
-            }
-          }
+          return i;
         }
       }
-      return i;
+      return size();
     }
 
   private: // variables
