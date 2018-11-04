@@ -18,10 +18,10 @@ namespace kp11
       using size_type = SizeType;
 
     public: // variables
+      // Number of indexes available in the run. Same as `size` if available otherwise `0`.
+      size_type available;
       // Number of indexes in the run
       size_type size;
-      // 1 if allocated, 0 otherwise
-      size_type allocated;
     };
   }
   /// @brief FIFO first fit marker. Iterates through a free list.
@@ -49,7 +49,7 @@ namespace kp11
     {
       if constexpr (size() > 0)
       {
-        set_run(0, size(), 0);
+        set_run(0, size(), size());
       }
     }
 
@@ -60,13 +60,10 @@ namespace kp11
     /// @returns Number of allocated indexes.
     size_type count() const noexcept
     {
-      size_type n = 0;
+      size_type n = size();
       for (size_type i = 0; i != size(); i += runs[i].size)
       {
-        if (runs[i].allocated)
-        {
-          n += runs[i].size;
-        }
+        n -= runs[i].available;
       }
       return n;
     }
@@ -103,14 +100,14 @@ namespace kp11
       assert(n <= max_size());
       if (auto const i = find_first_fit(n); i != size())
       {
-        auto const m = runs[i].size - n;
+        auto const m = runs[i].available - n;
         // leftover
         if (m)
         {
-          set_run(i, m, 0);
+          set_run(i, m, m);
         }
         auto const j = i + m;
-        set_run(j, n, 1);
+        set_run(j, n, 0);
         return j;
       }
       return size();
@@ -128,29 +125,29 @@ namespace kp11
       assert(i < size());
       assert(n > 0);
       assert(i + n <= size());
+      assert(runs[i].available == 0);
       assert(runs[i].size == n);
-      assert(runs[i].allocated == true);
+      assert(runs[i + (n - 1)].available == 0);
       assert(runs[i + (n - 1)].size == n);
-      assert(runs[i + (n - 1)].allocated == true);
-      if (auto const prev = i - 1; i > 0 && !runs[prev].allocated)
+      if (auto const prev = i - 1; i > 0 && runs[prev].available)
       {
         i -= runs[prev].size;
         n += runs[prev].size;
       }
-      if (auto const next = i + n; next < size() && !runs[next].allocated)
+      if (auto const next = i + n; next < size() && runs[next].available)
       {
         n += runs[next].size;
       }
-      set_run(i, n, 0);
+      set_run(i, n, n);
     }
 
   private: // helpers
     /// Exists because both the start and end of the run must be set.
-    void set_run(size_type i, size_type n, size_type allocated) noexcept
+    void set_run(size_type i, size_type n, size_type a) noexcept
     {
       assert(i < size());
       assert(i + n <= size());
-      runs[i] = runs[i + (n - 1)] = {n, allocated};
+      runs[i] = runs[i + (n - 1)] = {a, n};
     }
     /// Forward iterate through the list to find the first unallocated run for `n`.
     ///
@@ -165,7 +162,7 @@ namespace kp11
       assert(n <= max_size());
       for (size_type i = 0; i != size(); i += runs[i].size)
       {
-        if (n <= runs[i].size * (runs[i].allocated == 0))
+        if (n <= runs[i].available)
         {
           return i;
         }
@@ -174,14 +171,14 @@ namespace kp11
     }
 
   private: // variables
-    /// The size and allocation status is stored at the beginning and the end of each run.
+    /// The availability and size is stored at the beginning and the end of each run.
     /// If the run is size 1 then the index is only stored in one element.
     /// Only the beginning and end of each run is valid, all other elements are garbage.
     /// Storing at both the beginning and end of the run enables merges in to be `O(1)`.
     /// To iterate the run, the size must be added to the index.
     ///
     /// Example: Assume `size() == 11`
-    /// [(2,0), (2,0), (3,1), X, (3,1), (6,0), X, X, X, X, (6,0)]
+    /// [(2,2), (2,2), (0,3), X, (0,3), (6,6), X, X, X, X, (6,6)]
     ///  |---free---|  |--allocated--|  |---------free---------|
     /// X is just a placeholder here for garbage.
     std::array<run, N> runs;
