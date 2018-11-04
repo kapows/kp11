@@ -151,12 +151,6 @@ namespace kp11
       runs[i] = runs[i + (n - 1)] = {a, n};
     }
     /// Forward iterate through the list to find the first unallocated run for `n`.
-    ///
-    /// @pre `n > 0`
-    /// @pre `n <= max_size()`
-    ///
-    /// @returns (success) Index of `n` unallocated indexes.
-    /// @returns (failure) `size()`.
     size_type find_first_fit(size_type n) const noexcept
     {
       assert(n > 0);
