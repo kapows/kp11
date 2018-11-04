@@ -127,7 +127,7 @@ public:                                            \
       }
     }
   };
-  /// Something
+  /// @private
   template<typename R,
     typename = typename R::pointer,
     typename = typename resource_traits<R>::size_type>
