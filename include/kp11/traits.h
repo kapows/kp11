@@ -46,81 +46,45 @@ public:
   template<template<typename...> typename T, typename... Args>
   inline constexpr auto is_detected_v = is_detected<T, Args...>::value;
 
-  /// @private
-  template<typename T>
-  using remove_cvref_t = std::remove_reference_t<std::remove_cv_t<T>>;
-
-  /// @private
-  template<typename T, typename... Cs>
-  struct Concept : Cs...
-  {
-  public: // typedefs
-    /// Concept argument type
-    using concept_arg_type = std::remove_reference_t<T>;
-
-  public: // constructors
-    /// Forwarding ctor
-    template<typename... Args>
-    Concept(Args &&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>) :
-        my_value(std::forward<Args>(args)...)
-    {
-    }
-    /// Deleted because facade shouldn't be copied.
-    Concept(Concept const & x) = delete;
-    /// Deleted because facade shouldn't be moved.
-    Concept(Concept && x) = delete;
-    /// Deleted because facade shouldn't be copied.
-    Concept & operator=(Concept const &) = delete;
-    /// Deleted because facade shouldn't be moved.
-    Concept & operator=(Concept &&) = delete;
-    /// Inherit all assignment operators.
-    using Cs::operator=...;
-    /// Implicit cast
-    operator concept_arg_type &() noexcept
-    {
-      return value();
-    }
-    /// Implicit cast
-    operator concept_arg_type const &() const noexcept
-    {
-      return value();
-    }
-    /// @returns Reference to inner value.
-    concept_arg_type & value() noexcept
-    {
-      return my_value;
-    }
-    /// @returns Reference to inner value.
-    concept_arg_type const & value() const noexcept
-    {
-      return my_value;
-    }
-
-  private: // variables
-    T my_value;
+/// Adds concept forwarding constructor for single variable
+#define KP11_CONCEPT_FORWARDING_CTOR(CONCEPT_NAME, PRIVATE_NAME)            \
+public:                                                                     \
+  template<typename... Args>                                                \
+  CONCEPT_NAME(Args &&... args) : PRIVATE_NAME(std::forward<Args>(args)...) \
+  {                                                                         \
+  }
+/// Adds concept class template argument deduction guides
+#define KP11_CONCEPT_CTAD(NAME) \
+  template<typename... Args>    \
+  NAME(Args &...)->NAME<Args &...>;
+/// Adds concept variable declarations
+#define KP11_CONCEPT_VAR_DECL(TYPE, NAME)                      \
+private:                                                       \
+  virtual std::remove_reference_t<TYPE> & NAME() noexcept = 0; \
+  virtual std::remove_reference_t<TYPE> const & NAME() const noexcept = 0;
+/// Adds concept variable definitions
+#define KP11_CONCEPT_VAR_DEF(TYPE, NAME, PRIVATE_NAME)        \
+private:                                                      \
+  TYPE PRIVATE_NAME;                                          \
+  std::remove_reference_t<TYPE> & NAME() noexcept             \
+  {                                                           \
+    return PRIVATE_NAME;                                      \
+  };                                                          \
+  std::remove_reference_t<TYPE> const & NAME() const noexcept \
+  {                                                           \
+    return PRIVATE_NAME;                                      \
   };
-/// Create a full concept out of functionality concepts.
-///
-/// @param NAME Concept Name
-/// @param TYPE Type that the concept will hold as its value.
-/// @param ... Functionality Concepts
-#define KP11_CONCEPT(NAME, TYPE, ...)            \
-  class NAME : public Concept<TYPE, __VA_ARGS__> \
-  {                                              \
-  public:                                        \
-    using Concept<TYPE, __VA_ARGS__>::Concept;   \
-    using Concept<TYPE, __VA_ARGS__>::operator=; \
-  };                                             \
-  template<typename T>                           \
-  NAME(T &)->NAME<T &>;                          \
-  template<typename T>                           \
-  NAME(T const &)->NAME<T const &>;
-
-/// Adds value declarations to Functionality Concepts
-#define KP11_CONCEPT_VALUE()        \
-public:                             \
-  virtual T & value() noexcept = 0; \
-  virtual T const & value() const noexcept = 0;
+/// Adds concept variable implicit cast
+#define KP11_CONCEPT_VAR_IMPLICIT_CAST(TYPE, NAME) \
+public:                                            \
+  operator TYPE &() noexcept                       \
+  {                                                \
+    return NAME();                                 \
+  };                                               \
+  operator TYPE const &() const noexcept           \
+  {                                                \
+    return NAME();                                 \
+  };
 
   /// @brief Provides a standardized way of accessing properties of `Resources`.
   /// Autogenerates some things if they are not present.
@@ -188,7 +152,7 @@ public:                             \
   class ResourceConcept
   {
     static_assert(is_resource_v<T>);
-    KP11_CONCEPT_VALUE()
+    KP11_CONCEPT_VAR_DECL(T, value)
 
   public: // expressions
     /// `T::pointer`
@@ -213,7 +177,13 @@ public:                             \
     }
   };
   template<typename T, typename R = std::remove_reference_t<T>>
-  KP11_CONCEPT(Resource, T, ResourceConcept<R>)
+  class Resource : public ResourceConcept<R>
+  {
+    KP11_CONCEPT_VAR_DEF(T, value, my_value)
+    KP11_CONCEPT_VAR_IMPLICIT_CAST(T, value)
+    KP11_CONCEPT_FORWARDING_CTOR(Resource, my_value)
+  };
+  KP11_CONCEPT_CTAD(Resource)
 
   /// @brief Provides a standardized way of accessing properties of `Owners`.
   /// Autogenerates some things if they are not present.
@@ -267,7 +237,7 @@ public:                             \
   class OwnerConcept : public ResourceConcept<T>
   {
     static_assert(is_owner_v<T>);
-    KP11_CONCEPT_VALUE()
+    KP11_CONCEPT_VAR_DECL(T, value)
 
   public: // typedefs
     using typename ResourceConcept<T>::pointer;
@@ -285,9 +255,14 @@ public:                             \
       return owner_traits<T>::deallocate(value(), ptr, size, alignment);
     }
   };
-  /// Owner Concept
   template<typename T, typename R = std::remove_reference_t<T>>
-  KP11_CONCEPT(Owner, T, OwnerConcept<R>)
+  class Owner : public OwnerConcept<R>
+  {
+    KP11_CONCEPT_VAR_DEF(T, value, my_value)
+    KP11_CONCEPT_VAR_IMPLICIT_CAST(T, value)
+    KP11_CONCEPT_FORWARDING_CTOR(Owner, my_value)
+  };
+  KP11_CONCEPT_CTAD(Owner)
 
   /// @brief Provides a standardized way of accessing some properties of `Markers`.
   /// Autogenerates some things if they are not present.
@@ -348,7 +323,7 @@ public:                             \
   class MarkerConcept
   {
     static_assert(is_marker_v<T>);
-    KP11_CONCEPT_VALUE()
+    KP11_CONCEPT_VAR_DECL(T, value)
 
   public: // typedefs
     /// `T::size_type`
@@ -389,9 +364,13 @@ public:                             \
     }
   };
   template<typename T, typename R = std::remove_reference_t<T>>
-  KP11_CONCEPT(Marker, T, MarkerConcept<R>)
+  class Marker : public MarkerConcept<R>
+  {
+    KP11_CONCEPT_VAR_DEF(T, value, my_value)
+    KP11_CONCEPT_VAR_IMPLICIT_CAST(T, value)
+    KP11_CONCEPT_FORWARDING_CTOR(Marker, my_value)
+  };
+  KP11_CONCEPT_CTAD(Marker)
 
-#undef KP11_CONCEPT_VALUE
-#undef KP11_CONCEPT
 #undef KP11_TRAITS_NESTED_TYPE
 }
