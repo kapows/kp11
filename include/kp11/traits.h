@@ -128,13 +128,13 @@ public:                                            \
     }
   };
   /// Something
-  template<typename R>
+  template<typename R,
+    typename = typename R::pointer,
+    typename = typename resource_traits<R>::size_type>
   auto IsResource_h(R r,
     typename R::pointer ptr = {nullptr},
     typename resource_traits<R>::size_type size = {},
-    typename resource_traits<R>::size_type alignment = {}) -> decltype(typename R::pointer{nullptr},
-    typename resource_traits<R>::size_type{},
-    R{},
+    typename resource_traits<R>::size_type alignment = {}) -> decltype(R{},
     size = resource_traits<R>::max_size(),
     ptr = r.allocate(size, alignment),
     r.deallocate(ptr, size, alignment));
