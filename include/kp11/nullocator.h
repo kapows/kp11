@@ -6,7 +6,9 @@
 
 namespace kp11
 {
-  /// Only allocates `nullptr`
+  /// @brief Only allocates `nullptr`.
+  ///
+  /// This is not particularly useful for general use, but can be used to trigger out of memory.
   ///
   /// @tparam Pointer Pointer type
   /// @tparam SizeType Size type
