@@ -1,6 +1,6 @@
 # kp11
 
-Easy to use, policy based memory resource builder.
+Easy to use, policy based, C++17, memory resource builder.
 
 ## Ideas
 
