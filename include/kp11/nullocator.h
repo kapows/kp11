@@ -6,7 +6,7 @@
 
 namespace kp11
 {
-  /// Only allocates `nullptr`
+  /// @brief Only allocates `nullptr`
   ///
   /// @tparam Pointer Pointer type
   /// @tparam SizeType Size type
