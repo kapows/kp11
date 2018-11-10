@@ -18,14 +18,14 @@ Given:
 
 The following expressions must be valid and meet their specified requirements:
 
-| Expression | Requirements | 
-| ---------- | ------------ |  
-| `R::pointer` |  Satisfies `NullablePointer` and `RandomAccessIterator` |  
-| `R::size_type` (optional) | Can represent the size of the largest object `r` can allocate. |
-| `R r()` | |
-| `size = R::max_size()` | |
-| `ptr = r.allocate(size, alignment)` | `size <= R::max_size()`. Unless `ptr` is `nullptr` it is not returned again unless it has been passed to `r.deallocate(ptr, size, alignment)`. |
-| `r.deallocate(ptr, size, alignment)` | |
+| Expression | Requirements | Semantics |
+| ---------- | ------------ | --------- |
+| `R::pointer` |  Satisfies `NullablePointer` and `RandomAccessIterator` | |
+| `R::size_type` (optional) | Can represent the size of the largest object `r` can allocate. | |
+| `R r()` | | |
+| `size = R::max_size()` | | Maximum size that can be passed to allocate. |
+| `ptr = r.allocate(size, alignment)` | `size <= R::max_size()`. Unless `ptr` is `nullptr` it is not returned again unless it has been passed to `r.deallocate(ptr, size, alignment)`. | Allocates memory suitable for `size` bytes, aligned to `alignment`. |
+| `r.deallocate(ptr, size, alignment)` | | Deallocates memory allocated by `allocate`. |
 
 ### Exemplar
 
@@ -59,10 +59,10 @@ Given:
 
 The following expressions must be valid and meet their specified requirements:
 
-| Expression | Requirements |
-| ---------- | ------------ | 
-| `ptr = r[ptr]` | |
-| `b = r.deallocate(ptr, size, alignment)` (optional) | |
+| Expression | Requirements | Semantics |
+| ---------- | ------------ | --------- |
+| `ptr = r[ptr]` | | Returns pointer to the beginning of the memory that `ptr` points to if its owned by `r` otherwise `nullptr`. |
+| `b = r.deallocate(ptr, size, alignment)` (optional) | | Returns `true` if `ptr` is owned by `r` and deallocates memory pointed to by `ptr` otherwise returns `false`. |
 
 ### Exemplar
 
@@ -93,15 +93,15 @@ Given:
 
 The following expressions must be valid and meet their specified requirements:
 
-| Expression | Requirements | 
-| ---------- | ------------ |  
-| `R::size_type` | Can represent the maximum number of indexes `r` can allocate. | 
-| `R r()` | | 
-| `n = R::size()` | | 
-| `n = r.count()` | `n <= R::size()` | 
-| `n = R::max_size()` (optional) | `n <= R::size()` | 
-| `i = r.allocate(n)` | `n <= r.max_size()`. `i < R::size()`. `[i, i + n)` is not returned until a call to `r.deallocate(i, n)`. | 
-| `r.deallocate(i, n)` | | 
+| Expression | Requirements | Semantics |
+| ---------- | ------------ | --------- |
+| `R::size_type` | Can represent the maximum number of indexes `r` can allocate. | |
+| `R r()` | | |
+| `n = R::size()` | | Maximum amount of indexes that `R` can hold. |
+| `n = r.count()` | `n <= R::size()` | Number of indexes that have been set. |
+| `n = R::max_size()` (optional) | `n <= R::size()` | Maximum size that can be passed to `allocate`. |
+| `i = r.allocate(n)` | `n <= r.max_size()`. `i < R::size()`. `[i, i + n)` is not returned until a call to `r.deallocate(i, n)`. | Allocates `n` indexes. |
+| `r.deallocate(i, n)` | `i` must have been returned by `allocate`. `n` must be the associated parameter used in the call to `allocate`. | Deallocates indexes `[i, i + n)`. |
 
 ### Exemplar
 
