@@ -42,27 +42,19 @@ TEST_CASE("resource_traits", "[resource_traits]")
 {
   SECTION("minimal")
   {
-    minimal_test_resource y;
-    auto const & z = y;
-    [[maybe_unused]] Resource k = z;
-    Resource x = y;
-    y = x;
-    REQUIRE(std::is_same_v<decltype(x)::pointer, void *>);
-    REQUIRE(std::is_same_v<decltype(x)::size_type,
+    minimal_test_resource x;
+    using rt = resource_traits<decltype(x)>;
+    REQUIRE(std::is_same_v<rt::size_type,
       std::make_unsigned_t<typename std::pointer_traits<void *>::difference_type>>);
-    REQUIRE(decltype(x)::max_size() == std::numeric_limits<std::size_t>::max());
-    REQUIRE(x.allocate(static_cast<std::size_t>(12), static_cast<std::size_t>(4)) == nullptr);
-    x.deallocate(nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4));
+    REQUIRE(rt::max_size() == std::numeric_limits<std::size_t>::max());
   }
   SECTION("full")
   {
-    Resource<test_resource> x;
-    REQUIRE(std::is_same_v<decltype(x)::pointer, void *>);
-    REQUIRE(std::is_same_v<decltype(x)::size_type,
+    test_resource x;
+    using rt = resource_traits<decltype(x)>;
+    REQUIRE(std::is_same_v<rt::size_type,
       std::make_unsigned_t<typename std::pointer_traits<void *>::difference_type>>);
-    REQUIRE(decltype(x)::max_size() == test_resource::max_size());
-    REQUIRE(x.allocate(static_cast<std::size_t>(12), static_cast<std::size_t>(4)) == nullptr);
-    x.deallocate(nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4));
+    REQUIRE(rt::max_size() == test_resource::max_size());
   }
 }
 TEST_CASE("is_resource", "[resource_traits]")
@@ -99,17 +91,17 @@ TEST_CASE("owner_traits", "[owner_traits]")
 {
   SECTION("minimal")
   {
-    Owner<minimal_test_owner> x;
-    REQUIRE(x[nullptr] == nullptr);
-    REQUIRE(
-      x.deallocate(nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) == false);
+    minimal_test_owner x;
+    using ot = owner_traits<decltype(x)>;
+    REQUIRE(ot::deallocate(x, nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) ==
+            false);
   }
   SECTION("full")
   {
-    Owner<test_owner> x;
-    REQUIRE(x[nullptr] == nullptr);
-    REQUIRE(
-      x.deallocate(nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) == false);
+    test_owner x;
+    using ot = owner_traits<decltype(x)>;
+    REQUIRE(ot::deallocate(x, nullptr, static_cast<std::size_t>(12), static_cast<std::size_t>(4)) ==
+            false);
   }
 }
 TEST_CASE("is_owner", "[owner_traits]")
@@ -171,23 +163,15 @@ TEST_CASE("marker_traits", "[marker_traits]")
 {
   SECTION("minimal")
   {
-    Marker<minimal_test_marker> m;
-    [[maybe_unused]] minimal_test_marker n = m;
-    REQUIRE(m.size() == 10);
-    REQUIRE(m.count() == 0);
-    REQUIRE(m.max_size() == minimal_test_marker::size());
-    REQUIRE(m.allocate(10) == 0);
-    m.deallocate(0, 10);
+    minimal_test_marker m;
+    using mt = marker_traits<decltype(m)>;
+    REQUIRE(mt::max_size() == decltype(m)::size());
   }
   SECTION("full")
   {
-    Marker<test_marker> m;
-    [[maybe_unused]] test_marker n = m;
-    REQUIRE(m.size() == 10);
-    REQUIRE(m.count() == 0);
-    REQUIRE(m.max_size() == test_marker::max_size());
-    REQUIRE(m.allocate(5) == 0);
-    m.deallocate(0, 5);
+    test_marker m;
+    using mt = marker_traits<decltype(m)>;
+    REQUIRE(mt::max_size() == decltype(m)::max_size());
   }
 }
 TEST_CASE("is_marker", "[marker_traits]")
