@@ -10,8 +10,8 @@ namespace kp11
 {
   /// @brief Allocate from a buffer.
   ///
-  /// Only one address will ever be allocated and that is to the start of the buffer. A `bool` is
-  /// used to track the whether the buffer has been allocated or not.
+  /// Only one address will ever be allocated and that is to the start of the buffer if it hasn't
+  /// been allocated.
   ///
   /// @tparam Pointer Pointer type.
   /// @tparam Size Size type.
