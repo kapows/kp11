@@ -77,7 +77,7 @@ namespace kp11
     /// Checks whether or not `ptr` is owned by `Primary` or `Secondary`.
     ///
     /// @param ptr Pointer to memory.
-    pointer operator[](pointer ptr) const noexcept
+    pointer operator[](pointer ptr) noexcept
     {
       static_assert(is_owner_v<Secondary>);
       if (auto p = primary[ptr])
@@ -93,18 +93,8 @@ namespace kp11
     {
       return primary;
     }
-    /// @returns Reference to `Primary`.
-    Primary const & get_primary() const noexcept
-    {
-      return primary;
-    }
     /// @returns Reference to `Secondary`.
     Secondary & get_secondary() noexcept
-    {
-      return secondary;
-    }
-    /// @returns Reference to `Secondary`.
-    Secondary const & get_secondary() const noexcept
     {
       return secondary;
     }

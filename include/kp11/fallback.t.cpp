@@ -25,9 +25,6 @@ TEST_CASE("accessor", "[accessor]")
   fallback<primary_t, secondary_t> m;
   [[maybe_unused]] auto & a = m.get_primary();
   [[maybe_unused]] auto & b = m.get_secondary();
-  auto const & n = m;
-  [[maybe_unused]] auto & c = n.get_primary();
-  [[maybe_unused]] auto & d = n.get_secondary();
 }
 TEST_CASE("allocate", "[allocate]")
 {
