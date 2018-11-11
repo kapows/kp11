@@ -63,16 +63,48 @@ namespace kp11
     /// @param ptr Pointer to the beginning of memory returned by a call to `allocate`.
     /// @param size Corresposing argument to call to `allocate`.
     /// @param alignment Corresposing argument to call to `allocate`.
-    void deallocate(pointer ptr, size_type size, size_type alignment) noexcept
+    ///
+    /// @returns `true` If `Small` and `Large` are both owners and either owns `ptr`.
+    /// @returns `false` If `Small` and `Large` are both owners and neither owns `ptr`.
+    auto deallocate(pointer ptr, size_type size, size_type alignment) noexcept
     {
-      if (size <= threshold)
+      if constexpr (is_owner_v<Small> && is_owner_v<Large>)
       {
-        small.deallocate(ptr, size, alignment);
+        if (size <= threshold)
+        {
+          return owner_traits<Small>::deallocate(small, ptr, size, alignment);
+        }
+        else
+        {
+          return owner_traits<Large>::deallocate(large, ptr, size, alignment);
+        }
       }
       else
       {
-        large.deallocate(ptr, size, alignment);
+        if (size <= threshold)
+        {
+          small.deallocate(ptr, size, alignment);
+        }
+        else
+        {
+          large.deallocate(ptr, size, alignment);
+        }
       }
+    }
+
+  public: // observers
+    /// Checks whether or not `ptr` is owned by `Small` or `Large`.
+    ///
+    /// @param ptr Pointer to memory.
+    pointer operator[](pointer ptr) noexcept
+    {
+      static_assert(is_owner_v<Small>);
+      static_assert(is_owner_v<Large>);
+      if (auto p = small[ptr])
+      {
+        return p;
+      }
+      return large[ptr];
     }
 
   public: // accessors
@@ -81,18 +113,8 @@ namespace kp11
     {
       return small;
     }
-    /// @returns Reference to `Small`.
-    Small const & get_small() const noexcept
-    {
-      return small;
-    }
     /// @returns Reference to `Large`.
     Large & get_large() noexcept
-    {
-      return large;
-    }
-    /// @returns Reference to `Large`.
-    Large const & get_large() const noexcept
     {
       return large;
     }

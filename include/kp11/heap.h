@@ -32,7 +32,7 @@ namespace kp11
     ///
     /// @post (success) `(return value)` will not be returned again until it has been `deallocated`.
     pointer allocate(size_type size, size_type alignment) noexcept;
-    /// Deallocate memory pointed to by `ptr` by calling `delete`.
+    /// Deallocate memory by calling `delete`.
     ///
     /// @param ptr Pointer return by a call to `allocate`.
     /// @param size Corresponding parameter used in `allocate`.
