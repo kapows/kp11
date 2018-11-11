@@ -22,9 +22,6 @@ TEST_CASE("accessor", "[accessor]")
   segregator<128, small_t, large_t> m;
   [[maybe_unused]] auto & a = m.get_small();
   [[maybe_unused]] auto & b = m.get_large();
-  auto const & n = m;
-  [[maybe_unused]] auto & c = n.get_small();
-  [[maybe_unused]] auto & d = n.get_large();
 }
 TEST_CASE("allocate", "[allocate]")
 {

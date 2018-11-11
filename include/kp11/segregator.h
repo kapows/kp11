@@ -96,7 +96,7 @@ namespace kp11
     /// Checks whether or not `ptr` is owned by `Small` or `Large`.
     ///
     /// @param ptr Pointer to memory.
-    pointer operator[](pointer ptr) const noexcept
+    pointer operator[](pointer ptr) noexcept
     {
       static_assert(is_owner_v<Small>);
       static_assert(is_owner_v<Large>);
@@ -113,18 +113,8 @@ namespace kp11
     {
       return small;
     }
-    /// @returns Reference to `Small`.
-    Small const & get_small() const noexcept
-    {
-      return small;
-    }
     /// @returns Reference to `Large`.
     Large & get_large() noexcept
-    {
-      return large;
-    }
-    /// @returns Reference to `Large`.
-    Large const & get_large() const noexcept
     {
       return large;
     }
