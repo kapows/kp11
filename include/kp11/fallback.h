@@ -77,7 +77,7 @@ namespace kp11
     /// Checks whether or not `ptr` is owned by `Primary` or `Secondary`.
     ///
     /// @param ptr Pointer to memory.
-    pointer operator[](pointer ptr) noexcept
+    pointer operator[](pointer ptr) const noexcept
     {
       static_assert(is_owner_v<Secondary>);
       if (auto p = primary[ptr])
