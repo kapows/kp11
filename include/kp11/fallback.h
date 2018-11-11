@@ -6,7 +6,7 @@
 
 namespace kp11
 {
-  /// @brief Allocate from `Primary`. On failure allocate from `Secondary`.
+  /// @brief If allocation from `Primary` fails, allocate from `Secondary`.
   ///
   /// @tparam Primary Meets the `Owner` concept.
   /// @tparam Secondary Meets the `Resource` concept.
@@ -48,18 +48,43 @@ namespace kp11
       }
       return secondary.allocate(size, alignment);
     }
-    /// If `ptr` is owned by `Primary` then calls `Primary:deallocate` else calls
+    /// If `ptr` is owned by `Primary` then calls `Primary::deallocate` otherwise calls
     /// `Secondary::deallocate`.
     ///
     /// @param ptr Pointer to the beginning of memory returned by a call to `allocate`.
     /// @param size Corresposing argument to call to `allocate`.
     /// @param alignment Corresposing argument to call to `allocate`.
-    void deallocate(pointer ptr, size_type size, size_type alignment) noexcept
+    ///
+    /// @returns `true` If `Secondary` is an owner and either `Primary` or `Secondary` own `ptr`.
+    /// @returns `false` If `Secondary` is an owner and neither `Primary` nor `Secondary` own `ptr.
+    auto deallocate(pointer ptr, size_type size, size_type alignment) noexcept
     {
-      if (!owner_traits<Primary>::deallocate(primary, ptr, size, alignment))
+      if constexpr (is_owner_v<Secondary>)
       {
-        secondary.deallocate(ptr, size, alignment);
+        return owner_traits<Primary>::deallocate(primary, ptr, size, alignment) ||
+               owner_traits<Secondary>::deallocate(secondary, ptr, size, alignment);
       }
+      else
+      {
+        if (!owner_traits<Primary>::deallocate(primary, ptr, size, alignment))
+        {
+          secondary.deallocate(ptr, size, alignment);
+        }
+      }
+    }
+
+  public: // observers
+    /// Checks whether or not `ptr` is owned by `Primary` or `Secondary`.
+    ///
+    /// @param ptr Pointer to memory.
+    pointer operator[](pointer ptr) noexcept
+    {
+      static_assert(is_owner_v<Secondary>);
+      if (auto p = primary[ptr])
+      {
+        return p;
+      }
+      return secondary[ptr];
     }
 
   public: // accessors
