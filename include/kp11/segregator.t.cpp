@@ -1,6 +1,7 @@
 #include "segregator.h"
 
 #include "free_block.h" // free_block
+#include "heap.h" // heap
 #include "local.h" // local
 #include "stack.h" // stack
 
@@ -8,8 +9,9 @@
 
 using namespace kp11;
 
-using small_t = free_block<128 * 2, 4, 1, stack<4>, local<128 * 2, 4>>;
-using large_t = free_block<256 * 2, 4, 1, stack<4>, local<256 * 2, 4>>;
+using small_t = free_block<128, 4, 1, stack<4>, local<128, 4>>; // 32 byte blocks
+using large_t = free_block<256, 4, 1, stack<4>, local<256, 4>>; // 64 byte blocks
+using non_owner_large_t = heap;
 
 TEST_CASE("max_size", "[max_size]")
 {
@@ -17,7 +19,7 @@ TEST_CASE("max_size", "[max_size]")
 }
 TEST_CASE("accessor", "[accessor]")
 {
-  segregator<128, local<128, 4>, local<256, 4>> m;
+  segregator<128, small_t, large_t> m;
   [[maybe_unused]] auto & a = m.get_small();
   [[maybe_unused]] auto & b = m.get_large();
   auto const & n = m;
@@ -27,51 +29,46 @@ TEST_CASE("accessor", "[accessor]")
 TEST_CASE("allocate", "[allocate]")
 {
   segregator<128, small_t, large_t> m;
-  SECTION("small")
+  SECTION("large is an owner")
   {
-    auto a = m.allocate(64, 4);
+    auto a = m.allocate(64, 4); // small
     REQUIRE(a != nullptr);
     REQUIRE(m.get_small()[a] != nullptr);
-    auto b = m.allocate(128, 4);
+    REQUIRE(m[a] != nullptr);
+    auto b = m.allocate(160, 4); // large
     REQUIRE(b != nullptr);
-    REQUIRE(b != a);
-    REQUIRE(m.get_small()[a] == m.get_small()[b]);
+    REQUIRE(m.get_small()[b] == nullptr);
+    REQUIRE(m.get_large()[b] != nullptr);
+    REQUIRE(m[b] != nullptr);
   }
-  SECTION("large")
+  SECTION("large is not an owner")
   {
-    auto a = m.allocate(256, 4);
+    auto a = m.allocate(64, 4); // small
     REQUIRE(a != nullptr);
-    REQUIRE(m.get_large()[a] != nullptr);
-    auto b = m.allocate(256, 4);
+    REQUIRE(m.get_small()[a] != nullptr);
+    auto b = m.allocate(160, 4); // large
     REQUIRE(b != nullptr);
-    REQUIRE(b != a);
-    REQUIRE(m.get_large()[a] == m.get_large()[b]);
+    REQUIRE(m.get_small()[b] == nullptr);
+    REQUIRE(m.get_large()[b] != nullptr);
+    m.deallocate(b, 160, 4);
   }
 }
 TEST_CASE("deallocate", "[deallocate]")
 {
   segregator<128, small_t, large_t> m;
-  SECTION("small")
+  SECTION("large is an owner")
   {
-    auto a = m.allocate(64, 4);
-    SECTION("recovers memory")
-    {
-      m.deallocate(a, 64, 4);
-      auto b = m.allocate(64, 4);
-      REQUIRE(b != nullptr);
-      REQUIRE(b == a);
-    }
+    auto a = m.allocate(64, 4); // small
+    auto b = m.allocate(160, 4); // large
+    REQUIRE(m.deallocate(a, 64, 4) == true);
+    REQUIRE(m.deallocate(b, 160, 4) == true);
+    REQUIRE(m.deallocate(&m, 160, 4) == false);
   }
-  SECTION("large")
+  SECTION("large is not an owner")
   {
-    auto a = m.allocate(128, 4);
-    REQUIRE(a != nullptr);
-    SECTION("recovers memory")
-    {
-      m.deallocate(a, 128, 4);
-      auto b = m.allocate(128, 4);
-      REQUIRE(b != nullptr);
-      REQUIRE(b == a);
-    }
+    [[maybe_unused]] auto a = m.allocate(64, 4); // small
+    auto b = m.allocate(160, 4); // large
+    m.deallocate(a, 64, 4);
+    m.deallocate(b, 160, 4);
   }
 }
