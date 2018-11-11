@@ -9,7 +9,7 @@
 
 namespace kp11
 {
-  /// @brief Fixed size LIFO marker. Only supports `allocate` and `deallocate` with `n == 1`.
+  /// @brief LIFO. Only supports `allocate` and `deallocate` with `n == 1`.
   ///
   /// Indexes are stored as a singly linked list inside of an array with each element being a node.
   /// The node points to the next node by using an index. `allocate` and `deallocate` calls are each
