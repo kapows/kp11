@@ -6,9 +6,9 @@
 
 namespace kp11
 {
-  /// @brief Natural order marker. Iterates through individual bits in a bitset.
+  /// @brief First fit. Iterates through individual bits in a bitset.
   ///
-  /// Indexes are stored as a bitset, where each bit corresponds to an index.
+  /// Indexes stored as a bitset, where each bit corresponds to an index.
   ///
   /// @tparam N Total number of indexes
   template<std::size_t N>
@@ -36,8 +36,8 @@ namespace kp11
     }
 
   public: // modifiers
-    /// Forward iterate through the bitset to find `n` adjacent unallocated indexes to allocate. The
-    /// algorithm used is more efficient for `n==1`.
+    /// Forward iterate through the bitset to find an index suitable for `n`.
+    /// The algorithms for `n==1` and `n!=1` are different.
     /// * Complexity `O(n)`
     ///
     /// @param n Number of indexes to allocate.
@@ -60,7 +60,7 @@ namespace kp11
     /// Forward iterate through the bitset from `i` to `i + n` and deallocate them.
     /// * Complexity `O(n)`
     ///
-    /// @param i Return value of a call to `allocate`.
+    /// @param i Return value of a call to `allocate` that isn't `size()`.
     /// @param n Corresponding parameter in the call to `allocate`.
     ///
     /// @post [`i`, `i + n`) may be returned by a call to `allocate`.
@@ -94,8 +94,7 @@ namespace kp11
     size_type allocate_many(size_type n) noexcept
     {
       assert(n > 1);
-      size_type first = 0;
-      for (size_type count = 0; first != size(); ++first)
+      for (size_type first = 0, count = 0; first != size(); ++first)
       {
         if (bits[first])
         {
