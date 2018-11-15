@@ -91,7 +91,7 @@ public:
   template<typename R,
     typename = typename R::pointer,
     typename = typename resource_traits<R>::size_type>
-  auto IsResource_h(R r,
+  auto IsResource_h(R && r,
     typename R::pointer ptr = {nullptr},
     typename resource_traits<R>::size_type size = {},
     typename resource_traits<R>::size_type alignment = {}) -> decltype(R{},
@@ -140,7 +140,7 @@ public:
   };
   /// @private
   template<typename R, typename = IsResource<R>>
-  auto IsOwner_h(R r,
+  auto IsOwner_h(R && r,
     typename resource_traits<R>::pointer ptr = {nullptr},
     typename resource_traits<R>::size_type size = {},
     typename resource_traits<R>::size_type alignment = {},
@@ -192,12 +192,13 @@ public:
   };
   /// @private
   template<typename R, typename = typename R::size_type>
-  auto IsMarker_h(R r, typename R::size_type i = {}, typename R::size_type n = {}) -> decltype(R{},
-    n = R::size(),
-    n = r.count(),
-    n = marker_traits<R>::max_size(),
-    i = r.allocate(n),
-    r.deallocate(i, n));
+  auto IsMarker_h(R && r, typename R::size_type i = {}, typename R::size_type n = {})
+    -> decltype(R{},
+      n = R::size(),
+      n = r.count(),
+      n = marker_traits<R>::max_size(),
+      i = r.allocate(n),
+      r.deallocate(i, n));
   /// Checks if `T` meets the `Marker` concept.
   template<typename R>
   using IsMarker = decltype(IsMarker_h(std::declval<R>()));
