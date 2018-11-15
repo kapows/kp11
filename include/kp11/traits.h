@@ -216,4 +216,5 @@ public:
   inline constexpr auto is_marker_v = is_marker<T>::value;
 
 #undef KP11_TRAITS_NESTED_TYPE
+#undef Noexcept
 }
