@@ -9,6 +9,12 @@
 
 namespace kp11
 {
+/// Allows an expression to SFINAE out non noexcept
+#define Noexcept(EXPR)                  \
+  std::enable_if_t<noexcept(EXPR), int> \
+  {                                     \
+  }
+
 /// Defines TYPE_picker that returns T::TYPE if it exists otherwise ALT
 /// @param TYPE Type to check for the prescence of.
 /// @param ALT Alternative type if TYPE is not present.
@@ -94,10 +100,10 @@ public:
   auto IsResource_h(R && r,
     typename R::pointer ptr = {nullptr},
     typename resource_traits<R>::size_type size = {},
-    typename resource_traits<R>::size_type alignment = {}) -> decltype(R{},
-    size = resource_traits<R>::max_size(),
-    ptr = r.allocate(size, alignment),
-    r.deallocate(ptr, size, alignment));
+    typename resource_traits<R>::size_type alignment = {}) -> decltype(Noexcept(R{}),
+    Noexcept(size = resource_traits<R>::max_size()),
+    Noexcept(ptr = r.allocate(size, alignment)),
+    Noexcept(r.deallocate(ptr, size, alignment)));
   /// Checks if `T` meets the `Resource` concept.
   template<typename T>
   using IsResource = decltype(IsResource_h(std::declval<T>()));
@@ -144,8 +150,8 @@ public:
     typename resource_traits<R>::pointer ptr = {nullptr},
     typename resource_traits<R>::size_type size = {},
     typename resource_traits<R>::size_type alignment = {},
-    bool b = {})
-    -> decltype(ptr = r[ptr], b = owner_traits<R>::deallocate(r, ptr, size, alignment));
+    bool b = {}) -> decltype(Noexcept(ptr = r[ptr]),
+    Noexcept(b = owner_traits<R>::deallocate(r, ptr, size, alignment)));
   /// Checks if `T` meets the `Owner` concept.
   template<typename R>
   using IsOwner = decltype(IsOwner_h(std::declval<R>()));
@@ -193,12 +199,12 @@ public:
   /// @private
   template<typename R, typename = typename R::size_type>
   auto IsMarker_h(R && r, typename R::size_type i = {}, typename R::size_type n = {})
-    -> decltype(R{},
-      n = R::size(),
-      n = r.count(),
-      n = marker_traits<R>::max_size(),
-      i = r.allocate(n),
-      r.deallocate(i, n));
+    -> decltype(Noexcept(R{}),
+      Noexcept(n = R::size()),
+      Noexcept(n = r.count()),
+      Noexcept(n = marker_traits<R>::max_size()),
+      Noexcept(i = r.allocate(n)),
+      Noexcept(r.deallocate(i, n)));
   /// Checks if `T` meets the `Marker` concept.
   template<typename R>
   using IsMarker = decltype(IsMarker_h(std::declval<R>()));
@@ -210,4 +216,5 @@ public:
   inline constexpr auto is_marker_v = is_marker<T>::value;
 
 #undef KP11_TRAITS_NESTED_TYPE
+#undef Noexcept
 }
