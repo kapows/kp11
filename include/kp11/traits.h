@@ -68,25 +68,24 @@ namespace kp11
   private: // typedefs
     using pointer = typename T::pointer;
 
-  private: // size_type detector
+  public: // size_type
     KP11_TRAITS_NESTED_TYPE(
       size_type, std::make_unsigned_t<typename std::pointer_traits<pointer>::difference_type>)
-
-  public: // size_type
     /// `true` if present otherwise `false`.
     static constexpr auto size_type_present_v = size_type_picker<T>::value;
     /// `T::size_type` if present otherwise `std::size_t`.
     using size_type = typename size_type_picker<T>::type;
 
-  private: // max_size detector
+  public: // max_size
+    /// @private
     template<typename R>
     static auto MaxSizePresent_h(R & r) -> decltype(NoexceptSame(R::max_size(), size_type));
+    /// Check if `R` provides the proper max_size function.
     template<typename R>
     using MaxSizePresent = decltype(MaxSizePresent_h(std::declval<R &>()));
+    /// Check if `T` provides the proper max_size function.
     using max_size_present = is_detected<MaxSizePresent, T>;
-
-  public: // max_size
-    /// `true` if present otherwise `false`.
+    /// Check if `T` provides the proper max_size function.
     static constexpr auto max_size_present_v = max_size_present::value;
     /// `T::max_size()` if present otherwise `std::numeric_limits<size_type>::%max()`
     static constexpr size_type max_size() noexcept
@@ -129,18 +128,19 @@ namespace kp11
     using pointer = typename T::pointer;
     using size_type = typename resource_traits<T>::size_type;
 
-  private: // deallocate detector
+  public: // deallocate
+    /// @private
     template<typename R>
     static auto DeallocatePresent_h(
       R & r, pointer ptr = nullptr, size_type size = {}, size_type alignment = {})
       -> decltype(NoexceptConv(r.deallocate(ptr, size, alignment), bool));
+    /// Check if `R` provides the proper deallocate function.
     template<typename R>
     using DeallocatePresent = decltype(DeallocatePresent_h(std::declval<R &>()));
+    /// Check if `T` provides the proper deallocate function.
     using deallocate_present = is_detected<DeallocatePresent, T>;
-
-  public: // deallocate
-    /// `true` if present otherwise `false`.
-    static constexpr auto deallocate_present_v = deallocate_present::value;
+    /// Check if `T` provides the proper deallocate function.
+    static constexpr auto deallocate_present_v = is_detected<DeallocatePresent, T>::value;
     /// If `owner` has a convertible to `bool` deallocate function then uses that. Otherwise checks
     /// to see if ptr is owned by using `operator[]` before deallocating.
     static bool deallocate(T & owner, pointer ptr, size_type size, size_type alignment) noexcept
@@ -189,15 +189,16 @@ namespace kp11
   private: // typedefs
     using size_type = typename T::size_type;
 
-  private: // max_size detector
+  public: // max_size
+    /// @private
     template<typename R>
     static auto MaxSizePresent_h(R & r) -> decltype(NoexceptSame(R::max_size(), size_type));
+    /// Check if `R` provides the proper max_size function.
     template<typename R>
     using MaxSizePresent = decltype(MaxSizePresent_h(std::declval<R &>()));
+    /// Check if `T` provides the proper max_size function.
     using max_size_present = is_detected<MaxSizePresent, T>;
-
-  public: // max_size
-    /// `true` if present otherwise `false`.
+    /// Check if `T` provides the proper max_size function.
     static constexpr auto max_size_present_v = max_size_present::value;
     /// `T::max_size()` if present otherwise `T::size()`
     static constexpr size_type max_size() noexcept
