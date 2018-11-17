@@ -27,18 +27,16 @@ namespace kp11
 #define NoexceptSame(EXPR, TYPE) Enable((std::is_same_v<decltype(EXPR), TYPE> && noexcept(EXPR)))
 
 /// @private
-/// @param TYPE Type to check for the prescence of.
-/// @param ALT Alternative type if TYPE is not present.
-#define KP11_TRAITS_NESTED_TYPE(TYPE, ALT)                                      \
-  template<typename MY_T, typename Enable = void>                               \
-  struct TYPE##_picker : std::false_type                                        \
-  {                                                                             \
-    using type = ALT;                                                           \
-  };                                                                            \
-  template<typename MY_T>                                                       \
-  struct TYPE##_picker<MY_T, std::void_t<typename MY_T::TYPE>> : std::true_type \
-  {                                                                             \
-    using type = typename MY_T::TYPE;                                           \
+#define KP11_TRAITS_NESTED_TYPE(TYPE, ALT)                                          \
+  template<typename MY_T, typename Enable = void>                                   \
+  struct TYPE##_provided_h : std::false_type                                        \
+  {                                                                                 \
+    using type = ALT;                                                               \
+  };                                                                                \
+  template<typename MY_T>                                                           \
+  struct TYPE##_provided_h<MY_T, std::void_t<typename MY_T::TYPE>> : std::true_type \
+  {                                                                                 \
+    using type = typename MY_T::TYPE;                                               \
   };
 
   // Detector Idiom
@@ -61,7 +59,7 @@ namespace kp11
   inline constexpr auto is_detected_v = is_detected<T, Args...>::value;
 
   /// @brief Provides a standardized way of accessing properties of `Resources`.
-  /// Autogenerates some things if they are not present.
+  /// Autogenerates some things if they are not provided.
   template<typename T>
   struct resource_traits
   {
@@ -71,26 +69,28 @@ namespace kp11
   public: // size_type
     KP11_TRAITS_NESTED_TYPE(
       size_type, std::make_unsigned_t<typename std::pointer_traits<pointer>::difference_type>)
-    /// `true` if present otherwise `false`.
-    static constexpr auto size_type_present_v = size_type_picker<T>::value;
-    /// `T::size_type` if present otherwise `std::size_t`.
-    using size_type = typename size_type_picker<T>::type;
+    /// Check if `T` provides a `size_type` type.
+    using size_type_provided = size_type_provided_h<T>;
+    /// Check if `T` provides a `size_type` type.
+    static constexpr auto size_type_present_v = size_type_provided::value;
+    /// `T::size_type` if provided otherwise `std::size_t`.
+    using size_type = typename size_type_provided::type;
 
   public: // max_size
     /// @private
     template<typename R>
-    static auto MaxSizePresent_h(R & r) -> decltype(NoexceptSame(R::max_size(), size_type));
+    static auto MaxSizeProvided_h(R & r) -> decltype(NoexceptSame(R::max_size(), size_type));
     /// Check if `R` provides the proper max_size function.
     template<typename R>
-    using MaxSizePresent = decltype(MaxSizePresent_h(std::declval<R &>()));
+    using MaxSizeProvided = decltype(MaxSizeProvided_h(std::declval<R &>()));
     /// Check if `T` provides the proper max_size function.
-    using max_size_present = is_detected<MaxSizePresent, T>;
+    using max_size_provided = is_detected<MaxSizeProvided, T>;
     /// Check if `T` provides the proper max_size function.
-    static constexpr auto max_size_present_v = max_size_present::value;
-    /// `T::max_size()` if present otherwise `std::numeric_limits<size_type>::%max()`
+    static constexpr auto max_size_provided_v = max_size_provided::value;
+    /// `T::max_size()` if provided otherwise `std::numeric_limits<size_type>::%max()`
     static constexpr size_type max_size() noexcept
     {
-      if constexpr (max_size_present_v)
+      if constexpr (max_size_provided_v)
       {
         return T::max_size();
       }
@@ -131,23 +131,23 @@ namespace kp11
   public: // deallocate
     /// @private
     template<typename R>
-    static auto DeallocatePresent_h(
+    static auto DeallocateProvided_h(
       R & r, pointer ptr = nullptr, size_type size = {}, size_type alignment = {})
       -> decltype(NoexceptConv(r.deallocate(ptr, size, alignment), bool));
     /// Check if `R` provides the proper deallocate function.
     template<typename R>
-    using DeallocatePresent = decltype(DeallocatePresent_h(std::declval<R &>()));
+    using DeallocateProvided = decltype(DeallocateProvided_h(std::declval<R &>()));
     /// Check if `T` provides the proper deallocate function.
-    using deallocate_present = is_detected<DeallocatePresent, T>;
+    using deallocate_provided = is_detected<DeallocateProvided, T>;
     /// Check if `T` provides the proper deallocate function.
-    static constexpr auto deallocate_present_v = is_detected<DeallocatePresent, T>::value;
+    static constexpr auto deallocate_provided_v = deallocate_provided::value;
     /// If `owner` has a convertible to `bool` deallocate function then uses that. Otherwise checks
     /// to see if ptr is owned by using `operator[]` before deallocating.
     static bool deallocate(T & owner, pointer ptr, size_type size, size_type alignment) noexcept
     {
       // It may be trivial for a type to return success or failure in it's deallocate function, if
       // if is then it should do so.
-      if constexpr (deallocate_present_v)
+      if constexpr (deallocate_provided_v)
       {
         return owner.deallocate(ptr, size, alignment);
       }
@@ -192,18 +192,18 @@ namespace kp11
   public: // max_size
     /// @private
     template<typename R>
-    static auto MaxSizePresent_h(R & r) -> decltype(NoexceptSame(R::max_size(), size_type));
+    static auto MaxSizeProvided_h(R & r) -> decltype(NoexceptSame(R::max_size(), size_type));
     /// Check if `R` provides the proper max_size function.
     template<typename R>
-    using MaxSizePresent = decltype(MaxSizePresent_h(std::declval<R &>()));
+    using MaxSizeProvided = decltype(MaxSizeProvided_h(std::declval<R &>()));
     /// Check if `T` provides the proper max_size function.
-    using max_size_present = is_detected<MaxSizePresent, T>;
+    using max_size_provided = is_detected<MaxSizeProvided, T>;
     /// Check if `T` provides the proper max_size function.
-    static constexpr auto max_size_present_v = max_size_present::value;
+    static constexpr auto max_size_provided_v = max_size_provided::value;
     /// `T::max_size()` if present otherwise `T::size()`
     static constexpr size_type max_size() noexcept
     {
-      if constexpr (max_size_present_v)
+      if constexpr (max_size_provided_v)
       {
         return T::max_size();
       }
