@@ -58,8 +58,7 @@ namespace kp11
   template<template<typename...> typename T, typename... Args>
   inline constexpr auto is_detected_v = is_detected<T, Args...>::value;
 
-  /// @brief Provides a standardized way of accessing properties of `Resources`.
-  /// Autogenerates some things if they are not provided.
+  /// @brief Provides a standardized way of accessing optional properties of `Resources`.
   template<typename T>
   struct resource_traits
   {
@@ -119,8 +118,7 @@ namespace kp11
   template<typename T>
   inline constexpr auto is_resource_v = is_resource<T>::value;
 
-  /// @brief Provides a standardized way of accessing properties of `Owners`.
-  /// Autogenerates some things if they are not present.
+  /// @brief Provides a standardized way of accessing optional properties of `Owners`.
   template<typename T>
   struct owner_traits : public resource_traits<T>
   {
@@ -181,8 +179,7 @@ namespace kp11
   template<typename T>
   inline constexpr auto is_owner_v = is_owner<T>::value;
 
-  /// @brief Provides a standardized way of accessing some properties of `Markers`.
-  /// Autogenerates some things if they are not present.
+  /// @brief Provides a standardized way of accessing optional properties of `Markers`.
   template<typename T>
   struct marker_traits
   {
