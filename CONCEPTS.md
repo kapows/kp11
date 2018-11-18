@@ -17,8 +17,8 @@ Given:
 
 The following types must be valid:
 
-| Expression | Requirements | 
-| ---------- | ------------ | 
+| Type | Requirements | 
+| ---- | ------------ | 
 | `R::pointer` |  Satisfies `NullablePointer` and `RandomAccessIterator` |
 | `R::size_type` (optional) | Can represent the size of the largest object `r` can allocate. |
 
@@ -99,8 +99,8 @@ Given:
 
 The following types must be valid:
 
-| Expression | Requirements | 
-| ---------- | ------------ | 
+| Type | Requirements | 
+| ---- | ------------ | 
 | `R::size_type` | Can represent the maximum number of indexes `r` can allocate. |
 
 The following expressions must be valid:
