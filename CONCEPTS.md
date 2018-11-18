@@ -52,21 +52,22 @@ Owners are able to tell whether or not memory was allocated by them.
 ### Requirements
 
 The type `R` satisfies `Owner` if:
+
 * `R` satisfies `Resource`
 
 Given:
-* `r` is an lvalue of type `R`
-* `ptr` a pointer of type `R::pointer`
-* `size` a value of type `R::size_type`
-* `alignment` a value of type `R::size_type`
+
+* `r` is a value of type `R`
+* `ptr` is a value of type `R::pointer`
+* `size, alignment` are values of type `R::size_type`
 * `b` a value of type `bool`
 
-The following expressions must be valid and meet their specified requirements:
+The following expressions must be valid:
 
-| Expression | Requirements | Semantics |
-| ---------- | ------------ | --------- |
-| `ptr = r[ptr]` | | Returns pointer to the beginning of the memory that `ptr` points to if its owned by `r` otherwise `nullptr`. |
-| `b = r.deallocate(ptr, size, alignment)` (optional) | | Returns `true` if `ptr` is owned by `r` and deallocates memory pointed to by `ptr` otherwise returns `false`. |
+| Expression | Return Type | Exception | Requirements | Semantics |
+| ---------- | ----------- | --------- | ------------ | --------- |
+| `r[ptr]` | `pointer` | `noexcept` | | Returns pointer to the beginning of the memory that `ptr` points to if its owned by `r` otherwise `nullptr`. |
+| `r.deallocate(ptr, size, alignment)` (optional) | convertible to `bool` | `noexcept` | | Returns `true` if `ptr` is owned by `r` and deallocates memory pointed to by `ptr` otherwise returns `false`. |
 
 ### Exemplar
 
