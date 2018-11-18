@@ -1,7 +1,5 @@
 # Concepts
 
-Unless otherwise stated, expressions do not throw exceptions.
-
 ## Resource
 
 The `Resource` concept describes types that can allocate and deallocate memory.
@@ -11,21 +9,27 @@ The `Resource` concept describes types that can allocate and deallocate memory.
 The type `R` satisfies `Resource` if
 
 Given:
-* `r` is an lvalue of type `R`
-* `ptr` a pointer of type `R::pointer`
-* `size` a value of type `R::size_type`
-* `alignment` a value of type `R::size_type`
 
-The following expressions must be valid and meet their specified requirements:
+* `u` is an identifier
+* `r` is a value of type `R`
+* `ptr` is a value of type `R::pointer`
+* `size, alignment` are values of type `R::size_type`
 
-| Expression | Requirements | Semantics |
-| ---------- | ------------ | --------- |
-| `R::pointer` |  Satisfies `NullablePointer` and `RandomAccessIterator` | |
-| `R::size_type` (optional) | Can represent the size of the largest object `r` can allocate. | |
-| `R r()` | | |
-| `size = R::max_size()` | | Maximum size that can be passed to allocate. |
-| `ptr = r.allocate(size, alignment)` | `size <= R::max_size()`. Unless `ptr` is `nullptr` it is not returned again unless it has been passed to `r.deallocate(ptr, size, alignment)`. | Allocates memory suitable for `size` bytes, aligned to `alignment`. |
-| `r.deallocate(ptr, size, alignment)` | | Deallocates memory allocated by `allocate`. |
+The following types must be valid:
+
+| Expression | Requirements | 
+| ---------- | ------------ | 
+| `R::pointer` |  Satisfies `NullablePointer` and `RandomAccessIterator` |
+| `R::size_type` (optional) | Can represent the size of the largest object `r` can allocate. |
+
+The following expressions must be valid:
+
+| Expression | Return Type | Exception | Requirements | Semantics | 
+| ---------- | ----------- | --------- | ------------ | --------- |
+| `R u{}` | | `noexcept` | | |
+| `R::max_size()` | `size_type` | `noexcept` | | Maximum size that can be passed to allocate. |
+| `r.allocate(size, alignment)` | `pointer` | `noexcept` | `size <= R::max_size()`. Unless `ptr` is `nullptr` it is not returned again unless it has been passed to `r.deallocate(ptr, size, alignment)`. | Allocates memory suitable for `size` bytes, aligned to `alignment`. |
+| `r.deallocate(ptr, size, alignment)` | | `noexcept` | | Deallocates memory allocated by `allocate`. |
 
 ### Exemplar
 
