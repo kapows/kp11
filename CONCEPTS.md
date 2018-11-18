@@ -28,7 +28,7 @@ The following expressions must be valid:
 | ---------- | ----------- | --------- | ------------ | --------- |
 | `R u{}` | | `noexcept` | | |
 | `R::max_size()` | `size_type` | `noexcept` | | Maximum size that can be passed to allocate. |
-| `r.allocate(size, alignment)` | `pointer` | `noexcept` | `size <= R::max_size()`. Unless `ptr` is `nullptr` it is not returned again unless it has been passed to `r.deallocate(ptr, size, alignment)`. | Allocates memory suitable for `size` bytes, aligned to `alignment`. |
+| `r.allocate(size, alignment)` | `pointer` | `noexcept` | `size <= R::max_size()`. | Allocates memory suitable for `size` bytes, aligned to `alignment`. |
 | `r.deallocate(ptr, size, alignment)` | | `noexcept` | | Deallocates memory allocated by `allocate`. |
 
 ### Exemplar
