@@ -92,21 +92,27 @@ The `Marker` concept describes types that can allocate and deallocate ranges of 
 The type `R` satisfies `Marker` if:
 
 Given:
-* `r` is an lvalue of type `R`
-* `i` a value of type `R::size_type`
-* `n` a value of type `R::size_type`
 
-The following expressions must be valid and meet their specified requirements:
+* `u` is an identifier
+* `r` is a value of type `R`
+* `i, n` are values of type `R::size_type`
 
-| Expression | Requirements | Semantics |
-| ---------- | ------------ | --------- |
-| `R::size_type` | Can represent the maximum number of indexes `r` can allocate. | |
-| `R r()` | | |
-| `n = R::size()` | | Maximum amount of indexes that `R` can hold. |
-| `n = r.count()` | `n <= R::size()` | Number of indexes that have been set. |
-| `n = R::max_size()` (optional) | `n <= R::size()` | Maximum size that can be passed to `allocate`. |
-| `i = r.allocate(n)` | `n <= r.max_size()`. `i < R::size()`. `[i, i + n)` is not returned until a call to `r.deallocate(i, n)`. | Allocates `n` indexes. |
-| `r.deallocate(i, n)` | `i` must have been returned by `allocate`. `n` must be the associated parameter used in the call to `allocate`. | Deallocates indexes `[i, i + n)`. |
+The following types must be valid:
+
+| Expression | Requirements | 
+| ---------- | ------------ | 
+| `R::size_type` | Can represent the maximum number of indexes `r` can allocate. |
+
+The following expressions must be valid:
+
+| Expression | Return Type | Exception | Requirements | Semantics |
+| ---------- | ----------- | --------- | ------------ | --------- |
+| `R u{}` | | `noexcept` | | |
+| `R::size()` | `size_type` | `noexcept` | | Maximum amount of indexes that `R` can hold. |
+| `r.count()` | `size_type` | `noexcept` | `r.count() <= R::size()` | Number of indexes that have been set. |
+| `R::max_size()` (optional) | `size_type` | `noexcept` | `R::max_size() <= R::size()` | Maximum size that can be passed to `allocate`. |
+| `r.allocate(n)` | `size_type` | `noexcept` | `n <= r.max_size()`. `r.allocate(n) <= R::size()`.  | Allocates `n` indexes. |
+| `r.deallocate(i, n)` | | `noexcept` | `i` must have been returned by `allocate`. `n` must be the associated parameter used in the call to `allocate`. | Deallocates indexes `[i, i + n)`. |
 
 ### Exemplar
 
