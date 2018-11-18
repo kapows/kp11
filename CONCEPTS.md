@@ -1,7 +1,5 @@
 # Concepts
 
-Unless otherwise stated, expressions do not throw exceptions.
-
 ## Resource
 
 The `Resource` concept describes types that can allocate and deallocate memory.
@@ -11,21 +9,27 @@ The `Resource` concept describes types that can allocate and deallocate memory.
 The type `R` satisfies `Resource` if
 
 Given:
-* `r` is an lvalue of type `R`
-* `ptr` a pointer of type `R::pointer`
-* `size` a value of type `R::size_type`
-* `alignment` a value of type `R::size_type`
 
-The following expressions must be valid and meet their specified requirements:
+* `u` is an identifier
+* `r` is a value of type `R`
+* `ptr` is a value of type `R::pointer`
+* `size, alignment` are values of type `R::size_type`
 
-| Expression | Requirements | Semantics |
-| ---------- | ------------ | --------- |
-| `R::pointer` |  Satisfies `NullablePointer` and `RandomAccessIterator` | |
-| `R::size_type` (optional) | Can represent the size of the largest object `r` can allocate. | |
-| `R r()` | | |
-| `size = R::max_size()` | | Maximum size that can be passed to allocate. |
-| `ptr = r.allocate(size, alignment)` | `size <= R::max_size()`. Unless `ptr` is `nullptr` it is not returned again unless it has been passed to `r.deallocate(ptr, size, alignment)`. | Allocates memory suitable for `size` bytes, aligned to `alignment`. |
-| `r.deallocate(ptr, size, alignment)` | | Deallocates memory allocated by `allocate`. |
+The following types must be valid:
+
+| Expression | Requirements | 
+| ---------- | ------------ | 
+| `R::pointer` |  Satisfies `NullablePointer` and `RandomAccessIterator` |
+| `R::size_type` (optional) | Can represent the size of the largest object `r` can allocate. |
+
+The following expressions must be valid:
+
+| Expression | Return Type | Exception | Requirements | Semantics | 
+| ---------- | ----------- | --------- | ------------ | --------- |
+| `R u{}` | | `noexcept` | | |
+| `R::max_size()` | `size_type` | `noexcept` | | Maximum size that can be passed to allocate. |
+| `r.allocate(size, alignment)` | `pointer` | `noexcept` | `size <= R::max_size()`. | Allocates memory suitable for `size` bytes, aligned to `alignment`. |
+| `r.deallocate(ptr, size, alignment)` | | `noexcept` | | Deallocates memory allocated by `allocate`. |
 
 ### Exemplar
 
@@ -48,21 +52,22 @@ Owners are able to tell whether or not memory was allocated by them.
 ### Requirements
 
 The type `R` satisfies `Owner` if:
+
 * `R` satisfies `Resource`
 
 Given:
-* `r` is an lvalue of type `R`
-* `ptr` a pointer of type `R::pointer`
-* `size` a value of type `R::size_type`
-* `alignment` a value of type `R::size_type`
+
+* `r` is a value of type `R`
+* `ptr` is a value of type `R::pointer`
+* `size, alignment` are values of type `R::size_type`
 * `b` a value of type `bool`
 
-The following expressions must be valid and meet their specified requirements:
+The following expressions must be valid:
 
-| Expression | Requirements | Semantics |
-| ---------- | ------------ | --------- |
-| `ptr = r[ptr]` | | Returns pointer to the beginning of the memory that `ptr` points to if its owned by `r` otherwise `nullptr`. |
-| `b = r.deallocate(ptr, size, alignment)` (optional) | | Returns `true` if `ptr` is owned by `r` and deallocates memory pointed to by `ptr` otherwise returns `false`. |
+| Expression | Return Type | Exception | Requirements | Semantics |
+| ---------- | ----------- | --------- | ------------ | --------- |
+| `r[ptr]` | `pointer` | `noexcept` | | Returns pointer to the beginning of the memory that `ptr` points to if its owned by `r` otherwise `nullptr`. |
+| `r.deallocate(ptr, size, alignment)` (optional) | convertible to `bool` | `noexcept` | | Returns `true` if `ptr` is owned by `r` and deallocates memory pointed to by `ptr` otherwise returns `false`. |
 
 ### Exemplar
 
@@ -87,21 +92,27 @@ The `Marker` concept describes types that can allocate and deallocate ranges of 
 The type `R` satisfies `Marker` if:
 
 Given:
-* `r` is an lvalue of type `R`
-* `i` a value of type `R::size_type`
-* `n` a value of type `R::size_type`
 
-The following expressions must be valid and meet their specified requirements:
+* `u` is an identifier
+* `r` is a value of type `R`
+* `i, n` are values of type `R::size_type`
 
-| Expression | Requirements | Semantics |
-| ---------- | ------------ | --------- |
-| `R::size_type` | Can represent the maximum number of indexes `r` can allocate. | |
-| `R r()` | | |
-| `n = R::size()` | | Maximum amount of indexes that `R` can hold. |
-| `n = r.count()` | `n <= R::size()` | Number of indexes that have been set. |
-| `n = R::max_size()` (optional) | `n <= R::size()` | Maximum size that can be passed to `allocate`. |
-| `i = r.allocate(n)` | `n <= r.max_size()`. `i < R::size()`. `[i, i + n)` is not returned until a call to `r.deallocate(i, n)`. | Allocates `n` indexes. |
-| `r.deallocate(i, n)` | `i` must have been returned by `allocate`. `n` must be the associated parameter used in the call to `allocate`. | Deallocates indexes `[i, i + n)`. |
+The following types must be valid:
+
+| Expression | Requirements | 
+| ---------- | ------------ | 
+| `R::size_type` | Can represent the maximum number of indexes `r` can allocate. |
+
+The following expressions must be valid:
+
+| Expression | Return Type | Exception | Requirements | Semantics |
+| ---------- | ----------- | --------- | ------------ | --------- |
+| `R u{}` | | `noexcept` | | |
+| `R::size()` | `size_type` | `noexcept` | | Maximum amount of indexes that `R` can hold. |
+| `r.count()` | `size_type` | `noexcept` | `r.count() <= R::size()` | Number of indexes that have been set. |
+| `R::max_size()` (optional) | `size_type` | `noexcept` | `R::max_size() <= R::size()` | Maximum size that can be passed to `allocate`. |
+| `r.allocate(n)` | `size_type` | `noexcept` | `n <= r.max_size()`. `r.allocate(n) <= R::size()`.  | Allocates `n` indexes. |
+| `r.deallocate(i, n)` | | `noexcept` | `i` must have been returned by `allocate`. `n` must be the associated parameter used in the call to `allocate`. | Deallocates indexes `[i, i + n)`. |
 
 ### Exemplar
 
